@@ -13,5 +13,5 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return <div id="cloned-root" />;
+  return null;
 }
