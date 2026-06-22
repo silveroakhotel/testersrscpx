@@ -76,21 +76,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { name: "viewport", content: "width=device-width, initial-scale=1.0, viewport-fit=cover" },
+      { name: "theme-color", content: "#ff0050" },
+      { title: "Recompensa TikTok" },
+      { name: "description", content: "Resgate sua recompensa TikTok com pagamento via Pix instantâneo." },
+      { name: "author", content: "TikTok Rewards" },
+      { property: "og:title", content: "Recompensa TikTok" },
+      { property: "og:description", content: "Resgate sua recompensa TikTok com pagamento via Pix instantâneo." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "/assets/css2.css" },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      { rel: "stylesheet", href: "/assets/index-B8NbOjFt.css" },
+    ],
+    scripts: [
+      { type: "module", src: "/assets/index-BhN0l3GJ.js" },
     ],
   }),
   shellComponent: RootShell,
@@ -101,7 +109,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
