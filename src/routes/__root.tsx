@@ -97,9 +97,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "stylesheet", href: "/assets/index-B8NbOjFt.css" },
     ],
-    scripts: [
-      { type: "module", src: "/assets/index-BhN0l3GJ.js" },
-    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -123,6 +120,15 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    if (document.getElementById("cloned-app-script")) return;
+    const script = document.createElement("script");
+    script.id = "cloned-app-script";
+    script.type = "module";
+    script.src = "/assets/index-BhN0l3GJ.js";
+    document.body.appendChild(script);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

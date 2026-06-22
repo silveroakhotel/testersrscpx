@@ -9,8 +9,74 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as Upsell5RouteImport } from './routes/upsell-5'
+import { Route as Upsell4RouteImport } from './routes/upsell-4'
+import { Route as Upsell3RouteImport } from './routes/upsell-3'
+import { Route as Upsell2RouteImport } from './routes/upsell-2'
+import { Route as Upsell1RouteImport } from './routes/upsell-1'
+import { Route as ResgatarRouteImport } from './routes/resgatar'
+import { Route as InicioRouteImport } from './routes/inicio'
+import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as ConfirmarSaqueRouteImport } from './routes/confirmar-saque'
+import { Route as BackRedirectRouteImport } from './routes/back-redirect'
 import { Route as IndexRouteImport } from './routes/index'
 
+const Upsell5Route = Upsell5RouteImport.update({
+  id: '/upsell-5',
+  path: '/upsell-5',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Upsell4Route = Upsell4RouteImport.update({
+  id: '/upsell-4',
+  path: '/upsell-4',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Upsell3Route = Upsell3RouteImport.update({
+  id: '/upsell-3',
+  path: '/upsell-3',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Upsell2Route = Upsell2RouteImport.update({
+  id: '/upsell-2',
+  path: '/upsell-2',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Upsell1Route = Upsell1RouteImport.update({
+  id: '/upsell-1',
+  path: '/upsell-1',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResgatarRoute = ResgatarRouteImport.update({
+  id: '/resgatar',
+  path: '/resgatar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InicioRoute = InicioRouteImport.update({
+  id: '/inicio',
+  path: '/inicio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoricoRoute = HistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmarSaqueRoute = ConfirmarSaqueRouteImport.update({
+  id: '/confirmar-saque',
+  path: '/confirmar-saque',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BackRedirectRoute = BackRedirectRouteImport.update({
+  id: '/back-redirect',
+  path: '/back-redirect',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +85,186 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/back-redirect': typeof BackRedirectRoute
+  '/confirmar-saque': typeof ConfirmarSaqueRoute
+  '/faq': typeof FaqRoute
+  '/historico': typeof HistoricoRoute
+  '/inicio': typeof InicioRoute
+  '/resgatar': typeof ResgatarRoute
+  '/upsell-1': typeof Upsell1Route
+  '/upsell-2': typeof Upsell2Route
+  '/upsell-3': typeof Upsell3Route
+  '/upsell-4': typeof Upsell4Route
+  '/upsell-5': typeof Upsell5Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/back-redirect': typeof BackRedirectRoute
+  '/confirmar-saque': typeof ConfirmarSaqueRoute
+  '/faq': typeof FaqRoute
+  '/historico': typeof HistoricoRoute
+  '/inicio': typeof InicioRoute
+  '/resgatar': typeof ResgatarRoute
+  '/upsell-1': typeof Upsell1Route
+  '/upsell-2': typeof Upsell2Route
+  '/upsell-3': typeof Upsell3Route
+  '/upsell-4': typeof Upsell4Route
+  '/upsell-5': typeof Upsell5Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/back-redirect': typeof BackRedirectRoute
+  '/confirmar-saque': typeof ConfirmarSaqueRoute
+  '/faq': typeof FaqRoute
+  '/historico': typeof HistoricoRoute
+  '/inicio': typeof InicioRoute
+  '/resgatar': typeof ResgatarRoute
+  '/upsell-1': typeof Upsell1Route
+  '/upsell-2': typeof Upsell2Route
+  '/upsell-3': typeof Upsell3Route
+  '/upsell-4': typeof Upsell4Route
+  '/upsell-5': typeof Upsell5Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/back-redirect'
+    | '/confirmar-saque'
+    | '/faq'
+    | '/historico'
+    | '/inicio'
+    | '/resgatar'
+    | '/upsell-1'
+    | '/upsell-2'
+    | '/upsell-3'
+    | '/upsell-4'
+    | '/upsell-5'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/back-redirect'
+    | '/confirmar-saque'
+    | '/faq'
+    | '/historico'
+    | '/inicio'
+    | '/resgatar'
+    | '/upsell-1'
+    | '/upsell-2'
+    | '/upsell-3'
+    | '/upsell-4'
+    | '/upsell-5'
+  id:
+    | '__root__'
+    | '/'
+    | '/back-redirect'
+    | '/confirmar-saque'
+    | '/faq'
+    | '/historico'
+    | '/inicio'
+    | '/resgatar'
+    | '/upsell-1'
+    | '/upsell-2'
+    | '/upsell-3'
+    | '/upsell-4'
+    | '/upsell-5'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BackRedirectRoute: typeof BackRedirectRoute
+  ConfirmarSaqueRoute: typeof ConfirmarSaqueRoute
+  FaqRoute: typeof FaqRoute
+  HistoricoRoute: typeof HistoricoRoute
+  InicioRoute: typeof InicioRoute
+  ResgatarRoute: typeof ResgatarRoute
+  Upsell1Route: typeof Upsell1Route
+  Upsell2Route: typeof Upsell2Route
+  Upsell3Route: typeof Upsell3Route
+  Upsell4Route: typeof Upsell4Route
+  Upsell5Route: typeof Upsell5Route
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/upsell-5': {
+      id: '/upsell-5'
+      path: '/upsell-5'
+      fullPath: '/upsell-5'
+      preLoaderRoute: typeof Upsell5RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/upsell-4': {
+      id: '/upsell-4'
+      path: '/upsell-4'
+      fullPath: '/upsell-4'
+      preLoaderRoute: typeof Upsell4RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/upsell-3': {
+      id: '/upsell-3'
+      path: '/upsell-3'
+      fullPath: '/upsell-3'
+      preLoaderRoute: typeof Upsell3RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/upsell-2': {
+      id: '/upsell-2'
+      path: '/upsell-2'
+      fullPath: '/upsell-2'
+      preLoaderRoute: typeof Upsell2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/upsell-1': {
+      id: '/upsell-1'
+      path: '/upsell-1'
+      fullPath: '/upsell-1'
+      preLoaderRoute: typeof Upsell1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resgatar': {
+      id: '/resgatar'
+      path: '/resgatar'
+      fullPath: '/resgatar'
+      preLoaderRoute: typeof ResgatarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inicio': {
+      id: '/inicio'
+      path: '/inicio'
+      fullPath: '/inicio'
+      preLoaderRoute: typeof InicioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historico': {
+      id: '/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirmar-saque': {
+      id: '/confirmar-saque'
+      path: '/confirmar-saque'
+      fullPath: '/confirmar-saque'
+      preLoaderRoute: typeof ConfirmarSaqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/back-redirect': {
+      id: '/back-redirect'
+      path: '/back-redirect'
+      fullPath: '/back-redirect'
+      preLoaderRoute: typeof BackRedirectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +277,17 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BackRedirectRoute: BackRedirectRoute,
+  ConfirmarSaqueRoute: ConfirmarSaqueRoute,
+  FaqRoute: FaqRoute,
+  HistoricoRoute: HistoricoRoute,
+  InicioRoute: InicioRoute,
+  ResgatarRoute: ResgatarRoute,
+  Upsell1Route: Upsell1Route,
+  Upsell2Route: Upsell2Route,
+  Upsell3Route: Upsell3Route,
+  Upsell4Route: Upsell4Route,
+  Upsell5Route: Upsell5Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
