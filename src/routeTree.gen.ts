@@ -21,6 +21,8 @@ import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ConfirmarSaqueRouteImport } from './routes/confirmar-saque'
 import { Route as BackRedirectRouteImport } from './routes/back-redirect'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicCreatePixPaymentRouteImport } from './routes/api/public/create-pix-payment'
+import { Route as ApiPublicCheckPixStatusRouteImport } from './routes/api/public/check-pix-status'
 
 const Upsell5Route = Upsell5RouteImport.update({
   id: '/upsell-5',
@@ -82,6 +84,17 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCreatePixPaymentRoute =
+  ApiPublicCreatePixPaymentRouteImport.update({
+    id: '/api/public/create-pix-payment',
+    path: '/api/public/create-pix-payment',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicCheckPixStatusRoute = ApiPublicCheckPixStatusRouteImport.update({
+  id: '/api/public/check-pix-status',
+  path: '/api/public/check-pix-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +109,8 @@ export interface FileRoutesByFullPath {
   '/upsell-3': typeof Upsell3Route
   '/upsell-4': typeof Upsell4Route
   '/upsell-5': typeof Upsell5Route
+  '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
+  '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,6 +125,8 @@ export interface FileRoutesByTo {
   '/upsell-3': typeof Upsell3Route
   '/upsell-4': typeof Upsell4Route
   '/upsell-5': typeof Upsell5Route
+  '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
+  '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,6 +142,8 @@ export interface FileRoutesById {
   '/upsell-3': typeof Upsell3Route
   '/upsell-4': typeof Upsell4Route
   '/upsell-5': typeof Upsell5Route
+  '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
+  '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +160,8 @@ export interface FileRouteTypes {
     | '/upsell-3'
     | '/upsell-4'
     | '/upsell-5'
+    | '/api/public/check-pix-status'
+    | '/api/public/create-pix-payment'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +176,8 @@ export interface FileRouteTypes {
     | '/upsell-3'
     | '/upsell-4'
     | '/upsell-5'
+    | '/api/public/check-pix-status'
+    | '/api/public/create-pix-payment'
   id:
     | '__root__'
     | '/'
@@ -169,6 +192,8 @@ export interface FileRouteTypes {
     | '/upsell-3'
     | '/upsell-4'
     | '/upsell-5'
+    | '/api/public/check-pix-status'
+    | '/api/public/create-pix-payment'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +209,8 @@ export interface RootRouteChildren {
   Upsell3Route: typeof Upsell3Route
   Upsell4Route: typeof Upsell4Route
   Upsell5Route: typeof Upsell5Route
+  ApiPublicCheckPixStatusRoute: typeof ApiPublicCheckPixStatusRoute
+  ApiPublicCreatePixPaymentRoute: typeof ApiPublicCreatePixPaymentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +299,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/create-pix-payment': {
+      id: '/api/public/create-pix-payment'
+      path: '/api/public/create-pix-payment'
+      fullPath: '/api/public/create-pix-payment'
+      preLoaderRoute: typeof ApiPublicCreatePixPaymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/check-pix-status': {
+      id: '/api/public/check-pix-status'
+      path: '/api/public/check-pix-status'
+      fullPath: '/api/public/check-pix-status'
+      preLoaderRoute: typeof ApiPublicCheckPixStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -288,17 +329,9 @@ const rootRouteChildren: RootRouteChildren = {
   Upsell3Route: Upsell3Route,
   Upsell4Route: Upsell4Route,
   Upsell5Route: Upsell5Route,
+  ApiPublicCheckPixStatusRoute: ApiPublicCheckPixStatusRoute,
+  ApiPublicCreatePixPaymentRoute: ApiPublicCreatePixPaymentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

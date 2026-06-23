@@ -126,6 +126,43 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
+    const w = window as unknown as { __pixFetchPatched?: boolean };
+    if (!w.__pixFetchPatched) {
+      w.__pixFetchPatched = true;
+      const origFetch = window.fetch.bind(window);
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        try {
+          const urlStr =
+            typeof input === "string"
+              ? input
+              : input instanceof URL
+                ? input.toString()
+                : (input as Request).url;
+          if (urlStr.includes("/functions/v1/create-pix-payment")) {
+            const body =
+              init?.body ?? (input instanceof Request ? await input.text() : "{}");
+            return origFetch("/api/public/create-pix-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: body as BodyInit,
+            });
+          }
+          if (urlStr.includes("/functions/v1/check-pix-status")) {
+            const body =
+              init?.body ?? (input instanceof Request ? await input.text() : "{}");
+            return origFetch("/api/public/check-pix-status", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: body as BodyInit,
+            });
+          }
+        } catch (e) {
+          console.error("[pix-intercept]", e);
+        }
+        return origFetch(input as RequestInfo, init);
+      };
+    }
+
     if (document.getElementById("cloned-app-script")) return;
     const script = document.createElement("script");
     script.id = "cloned-app-script";
