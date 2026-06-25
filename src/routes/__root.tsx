@@ -212,6 +212,13 @@ function RootComponent() {
       window.addEventListener("popstate", clearOnLeave);
     }
 
+    if (!document.getElementById("redeem-patch-script")) {
+      const patch = document.createElement("script");
+      patch.id = "redeem-patch-script";
+      patch.src = "/redeem-patch.js";
+      document.body.appendChild(patch);
+    }
+
     if (document.getElementById("cloned-app-script")) return;
     const script = document.createElement("script");
     script.id = "cloned-app-script";
