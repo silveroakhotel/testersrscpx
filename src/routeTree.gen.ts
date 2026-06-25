@@ -18,6 +18,7 @@ import { Route as ResgatarRouteImport } from './routes/resgatar'
 import { Route as InicioRouteImport } from './routes/inicio'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DesbloquearSaqueRouteImport } from './routes/desbloquear-saque'
 import { Route as ConfirmarSaqueRouteImport } from './routes/confirmar-saque'
 import { Route as BackRedirectRouteImport } from './routes/back-redirect'
 import { Route as IndexRouteImport } from './routes/index'
@@ -69,6 +70,11 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DesbloquearSaqueRoute = DesbloquearSaqueRouteImport.update({
+  id: '/desbloquear-saque',
+  path: '/desbloquear-saque',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfirmarSaqueRoute = ConfirmarSaqueRouteImport.update({
   id: '/confirmar-saque',
   path: '/confirmar-saque',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
+  '/desbloquear-saque': typeof DesbloquearSaqueRoute
   '/faq': typeof FaqRoute
   '/historico': typeof HistoricoRoute
   '/inicio': typeof InicioRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
+  '/desbloquear-saque': typeof DesbloquearSaqueRoute
   '/faq': typeof FaqRoute
   '/historico': typeof HistoricoRoute
   '/inicio': typeof InicioRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
+  '/desbloquear-saque': typeof DesbloquearSaqueRoute
   '/faq': typeof FaqRoute
   '/historico': typeof HistoricoRoute
   '/inicio': typeof InicioRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/back-redirect'
     | '/confirmar-saque'
+    | '/desbloquear-saque'
     | '/faq'
     | '/historico'
     | '/inicio'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/'
     | '/back-redirect'
     | '/confirmar-saque'
+    | '/desbloquear-saque'
     | '/faq'
     | '/historico'
     | '/inicio'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/'
     | '/back-redirect'
     | '/confirmar-saque'
+    | '/desbloquear-saque'
     | '/faq'
     | '/historico'
     | '/inicio'
@@ -200,6 +212,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BackRedirectRoute: typeof BackRedirectRoute
   ConfirmarSaqueRoute: typeof ConfirmarSaqueRoute
+  DesbloquearSaqueRoute: typeof DesbloquearSaqueRoute
   FaqRoute: typeof FaqRoute
   HistoricoRoute: typeof HistoricoRoute
   InicioRoute: typeof InicioRoute
@@ -278,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/desbloquear-saque': {
+      id: '/desbloquear-saque'
+      path: '/desbloquear-saque'
+      fullPath: '/desbloquear-saque'
+      preLoaderRoute: typeof DesbloquearSaqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/confirmar-saque': {
       id: '/confirmar-saque'
       path: '/confirmar-saque'
@@ -320,6 +340,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BackRedirectRoute: BackRedirectRoute,
   ConfirmarSaqueRoute: ConfirmarSaqueRoute,
+  DesbloquearSaqueRoute: DesbloquearSaqueRoute,
   FaqRoute: FaqRoute,
   HistoricoRoute: HistoricoRoute,
   InicioRoute: InicioRoute,
@@ -335,13 +356,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -163,6 +163,55 @@ function RootComponent() {
       };
     }
 
+    // Intercept navigations to /confirmar-saque -> route through video unlock first
+    const w2 = window as unknown as { __videoGatePatched?: boolean };
+    if (!w2.__videoGatePatched) {
+      w2.__videoGatePatched = true;
+      const shouldGate = (url: string) => {
+        try {
+          const u = new URL(url, window.location.origin);
+          if (u.pathname !== "/confirmar-saque") return false;
+          if (sessionStorage.getItem("videoWatched") === "1") return false;
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      const redirectToGate = () => {
+        const search = window.location.search || "";
+        window.location.replace("/desbloquear-saque" + search);
+      };
+      const origPush = history.pushState.bind(history);
+      const origReplace = history.replaceState.bind(history);
+      history.pushState = function (data: unknown, unused: string, url?: string | URL | null) {
+        if (url && shouldGate(String(url))) {
+          redirectToGate();
+          return;
+        }
+        return origPush(data as never, unused, url as never);
+      } as typeof history.pushState;
+      history.replaceState = function (data: unknown, unused: string, url?: string | URL | null) {
+        if (url && shouldGate(String(url))) {
+          redirectToGate();
+          return;
+        }
+        return origReplace(data as never, unused, url as never);
+      } as typeof history.replaceState;
+      // First load
+      if (shouldGate(window.location.href)) {
+        redirectToGate();
+      }
+      // Clear flag once the user actually lands on /confirmar-saque so future flows re-gate
+      const clearOnLeave = () => {
+        if (window.location.pathname !== "/confirmar-saque") {
+          try {
+            sessionStorage.removeItem("videoWatched");
+          } catch {}
+        }
+      };
+      window.addEventListener("popstate", clearOnLeave);
+    }
+
     if (document.getElementById("cloned-app-script")) return;
     const script = document.createElement("script");
     script.id = "cloned-app-script";
