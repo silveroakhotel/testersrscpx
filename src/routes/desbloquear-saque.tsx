@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import videoAsset from "../assets/taxa-cadastro.mp4.asset.json";
 
 export const Route = createFileRoute("/desbloquear-saque")({
@@ -7,10 +7,8 @@ export const Route = createFileRoute("/desbloquear-saque")({
 });
 
 function UnlockScreen() {
-  const navigate = useNavigate();
   const [secondsLeft, setSecondsLeft] = useState(44);
   const [unlocked, setUnlocked] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (unlocked) return;
@@ -40,13 +38,13 @@ function UnlockScreen() {
       style={{
         position: "fixed",
         inset: 0,
-        background: "#000",
+        background: "#f8f9fa",
         zIndex: 999999,
         display: "flex",
         flexDirection: "column",
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-        color: "#fff",
+        color: "#1a1a1a",
         overflowY: "auto",
       }}
     >
@@ -57,7 +55,8 @@ function UnlockScreen() {
           textAlign: "center",
           fontWeight: 700,
           fontSize: 18,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+          color: "#fff",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
         }}
       >
         Desbloqueio de Saque
@@ -83,6 +82,7 @@ function UnlockScreen() {
             textAlign: "center",
             margin: 0,
             lineHeight: 1.3,
+            color: "#1a1a1a",
           }}
         >
           Assista ao vídeo abaixo para desbloquear seu saque
@@ -90,7 +90,7 @@ function UnlockScreen() {
         <p
           style={{
             fontSize: 14,
-            opacity: 0.8,
+            color: "#6c757d",
             textAlign: "center",
             margin: 0,
             lineHeight: 1.5,
@@ -101,7 +101,6 @@ function UnlockScreen() {
         </p>
 
         <video
-          ref={videoRef}
           src={videoAsset.url}
           controls
           autoPlay
@@ -109,8 +108,8 @@ function UnlockScreen() {
           style={{
             width: "100%",
             borderRadius: 12,
-            background: "#111",
-            boxShadow: "0 4px 24px rgba(255,0,80,0.25)",
+            background: "#e9ecef",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
           }}
         />
 
@@ -122,13 +121,13 @@ function UnlockScreen() {
             padding: "16px 20px",
             borderRadius: 999,
             border: "none",
-            background: unlocked ? "#ff0050" : "#3a3a3a",
-            color: "#fff",
+            background: unlocked ? "#ff0050" : "#dee2e6",
+            color: unlocked ? "#fff" : "#6c757d",
             fontSize: 16,
             fontWeight: 700,
             cursor: unlocked ? "pointer" : "not-allowed",
             transition: "all 0.2s ease",
-            boxShadow: unlocked ? "0 4px 16px rgba(255,0,80,0.4)" : "none",
+            boxShadow: unlocked ? "0 4px 16px rgba(255,0,80,0.35)" : "none",
             marginTop: 8,
           }}
         >
