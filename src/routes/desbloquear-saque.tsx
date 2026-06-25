@@ -4,6 +4,11 @@ import videoAsset from "../assets/taxa-cadastro.mp4.asset.json";
 
 export const Route = createFileRoute("/desbloquear-saque")({
   component: UnlockScreen,
+  head: () => ({
+    links: [
+      { rel: "preload", as: "video", href: videoAsset.url, fetchpriority: "high" } as any,
+    ],
+  }),
 });
 
 function UnlockScreen() {
