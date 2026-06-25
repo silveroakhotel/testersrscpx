@@ -8,7 +8,7 @@ export const Route = createFileRoute("/desbloquear-saque")({
 
 function UnlockScreen() {
   const navigate = useNavigate();
-  const [secondsLeft, setSecondsLeft] = useState(30);
+  const [secondsLeft, setSecondsLeft] = useState(44);
   const [unlocked, setUnlocked] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
