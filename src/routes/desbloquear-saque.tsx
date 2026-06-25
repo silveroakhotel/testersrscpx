@@ -15,6 +15,8 @@ function UnlockScreen() {
   const [secondsLeft, setSecondsLeft] = useState(44);
   const [unlocked, setUnlocked] = useState(false);
 
+  const [videoReady, setVideoReady] = useState(false);
+
   useEffect(() => {
     if (unlocked) return;
     const id = setInterval(() => {
