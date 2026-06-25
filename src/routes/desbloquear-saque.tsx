@@ -14,8 +14,10 @@ export const Route = createFileRoute("/desbloquear-saque")({
 function UnlockScreen() {
   const [secondsLeft, setSecondsLeft] = useState(44);
   const [unlocked, setUnlocked] = useState(false);
-
   const [videoReady, setVideoReady] = useState(false);
+  const [videoEnded, setVideoEnded] = useState(false);
+
+  const targetUrl = "/confirmar-saque" + window.location.search;
 
   useEffect(() => {
     if (unlocked) return;
@@ -36,9 +38,14 @@ function UnlockScreen() {
     try {
       sessionStorage.setItem("videoWatched", "1");
     } catch {}
-    // Use full reload navigation so the cloned SPA picks up the route fresh
-    window.location.href = "/confirmar-saque" + window.location.search;
+    window.location.href = targetUrl;
   };
+
+  useEffect(() => {
+    if (unlocked && videoEnded) {
+      handleContinue();
+    }
+  }, [unlocked, videoEnded]);
 
   return (
     <div
@@ -52,7 +59,6 @@ function UnlockScreen() {
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         color: "#1a1a1a",
-        overflowY: "auto",
       }}
     >
       <header
@@ -64,6 +70,7 @@ function UnlockScreen() {
           fontSize: 18,
           color: "#fff",
           boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+          flexShrink: 0,
         }}
       >
         Desbloqueio de Saque
@@ -72,19 +79,20 @@ function UnlockScreen() {
       <main
         style={{
           flex: 1,
-          padding: "24px 20px",
+          padding: "24px 20px 100px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 20,
+          gap: 16,
           maxWidth: 560,
           margin: "0 auto",
           width: "100%",
+          overflowY: "auto",
         }}
       >
         <h1
           style={{
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: 800,
             textAlign: "center",
             margin: 0,
@@ -148,8 +156,10 @@ function UnlockScreen() {
             preload="auto"
             onLoadedData={() => setVideoReady(true)}
             onCanPlay={() => setVideoReady(true)}
+            onEnded={() => setVideoEnded(true)}
             style={{
               width: "100%",
+              maxHeight: "calc(100vh - 280px)",
               display: "block",
               borderRadius: 12,
               background: "#e9ecef",
@@ -157,31 +167,45 @@ function UnlockScreen() {
             }}
           />
         </div>
-
-
-        <button
-          onClick={handleContinue}
-          disabled={!unlocked}
-          style={{
-            width: "100%",
-            padding: "16px 20px",
-            borderRadius: 999,
-            border: "none",
-            background: unlocked ? "#ff0050" : "#dee2e6",
-            color: unlocked ? "#fff" : "#6c757d",
-            fontSize: 16,
-            fontWeight: 700,
-            cursor: unlocked ? "pointer" : "not-allowed",
-            transition: "all 0.2s ease",
-            boxShadow: unlocked ? "0 4px 16px rgba(255,0,80,0.35)" : "none",
-            marginTop: 8,
-          }}
-        >
-          {unlocked
-            ? "Desbloquear Saque"
-            : `Aguarde ${secondsLeft}s para desbloquear...`}
-        </button>
       </main>
+
+      <div
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: "16px 20px calc(16px + env(safe-area-inset-bottom))",
+          background: "#fff",
+          borderTop: "1px solid #e9ecef",
+          boxShadow: "0 -4px 16px rgba(0,0,0,0.06)",
+          zIndex: 10,
+        }}
+      >
+        <div style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
+          <button
+            onClick={handleContinue}
+            disabled={!unlocked}
+            style={{
+              width: "100%",
+              padding: "16px 20px",
+              borderRadius: 999,
+              border: "none",
+              background: unlocked ? "#ff0050" : "#dee2e6",
+              color: unlocked ? "#fff" : "#6c757d",
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: unlocked ? "pointer" : "not-allowed",
+              transition: "all 0.2s ease",
+              boxShadow: unlocked ? "0 4px 16px rgba(255,0,80,0.35)" : "none",
+            }}
+          >
+            {unlocked
+              ? "Desbloquear Saque"
+              : `Aguarde ${secondsLeft}s para desbloquear...`}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
