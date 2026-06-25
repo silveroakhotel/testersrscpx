@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import videoAsset from "../assets/taxa-cadastro.mp4.asset.json";
 
 export const Route = createFileRoute("/desbloquear-saque")({
@@ -7,10 +7,8 @@ export const Route = createFileRoute("/desbloquear-saque")({
 });
 
 function UnlockScreen() {
-  const navigate = useNavigate();
   const [secondsLeft, setSecondsLeft] = useState(44);
   const [unlocked, setUnlocked] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (unlocked) return;
