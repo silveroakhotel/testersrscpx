@@ -200,16 +200,14 @@ const mobileGuardScript = String.raw`
     return result;
   };
 
-  [window, document].forEach((target) => {
-    target.addEventListener("gesturestart", prevent, { passive: false, capture: true });
-    target.addEventListener("gesturechange", prevent, { passive: false, capture: true });
-    target.addEventListener("gestureend", prevent, { passive: false, capture: true });
-    target.addEventListener("touchstart", preventTouchZoom, { passive: false, capture: true });
-    target.addEventListener("touchmove", preventTouchZoom, { passive: false, capture: true });
-    target.addEventListener("touchend", preventDoubleTap, { passive: false, capture: true });
-    target.addEventListener("wheel", preventWheelZoom, { passive: false, capture: true });
-    target.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
-  });
+  document.addEventListener("gesturestart", prevent, { passive: false, capture: true });
+  document.addEventListener("gesturechange", prevent, { passive: false, capture: true });
+  document.addEventListener("gestureend", prevent, { passive: false, capture: true });
+  document.addEventListener("touchstart", preventTouchZoom, { passive: false, capture: true });
+  document.addEventListener("touchmove", preventTouchZoom, { passive: false, capture: true });
+  document.addEventListener("touchend", preventDoubleTap, { passive: false, capture: true });
+  document.addEventListener("wheel", preventWheelZoom, { passive: false, capture: true });
+  document.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
 
   window.addEventListener("popstate", resetAfterScreenChange, { capture: true });
   document.addEventListener("click", (event) => {
