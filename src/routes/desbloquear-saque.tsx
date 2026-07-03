@@ -73,7 +73,7 @@ function UnlockScreen() {
           flexShrink: 0,
         }}
       >
-        Desbloqueio de Saque
+        Unlock Withdrawal
       </header>
 
       <main
@@ -100,7 +100,7 @@ function UnlockScreen() {
             color: "#1a1a1a",
           }}
         >
-          Assista ao vídeo abaixo para desbloquear seu saque
+          Watch the video below to unlock your payout
         </h1>
         <p
           style={{
@@ -111,8 +111,7 @@ function UnlockScreen() {
             lineHeight: 1.5,
           }}
         >
-          É obrigatório assistir ao vídeo completo para continuar com o resgate da sua
-          recompensa.
+          You must watch the full video to continue claiming your reward.
         </p>
 
         <div style={{ position: "relative", width: "100%" }}>
@@ -144,7 +143,7 @@ function UnlockScreen() {
                   animation: "spin 0.8s linear infinite",
                 }}
               />
-              <span>Carregando vídeo...</span>
+              <span>Loading video...</span>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
@@ -201,8 +200,8 @@ function UnlockScreen() {
             }}
           >
             {unlocked
-              ? "Desbloquear Saque"
-              : `Aguarde ${secondsLeft}s para desbloquear...`}
+              ? "Unlock Withdrawal"
+              : `Wait ${secondsLeft}s to unlock...`}
           </button>
         </div>
       </div>

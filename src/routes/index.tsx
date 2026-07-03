@@ -3,10 +3,10 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Recompensa TikTok" },
-      { name: "description", content: "Resgate sua recompensa TikTok com pagamento via Pix instantâneo." },
-      { property: "og:title", content: "Recompensa TikTok" },
-      { property: "og:description", content: "Resgate sua recompensa TikTok com pagamento via Pix instantâneo." },
+      { title: "TikTok Rewards" },
+      { name: "description", content: "Claim your TikTok reward and get paid instantly to Cash App, PayPal, Venmo, Zelle, or your bank." },
+      { property: "og:title", content: "TikTok Rewards" },
+      { property: "og:description", content: "Claim your TikTok reward and get paid instantly to Cash App, PayPal, Venmo, Zelle, or your bank." },
     ],
   }),
   component: Index,
