@@ -567,7 +567,6 @@ function RootComponent() {
       document.addEventListener("touchstart", preventMultiTouchZoom, { passive: false, capture: true });
       window.addEventListener("touchmove", preventMultiTouchZoom, { passive: false });
       document.addEventListener("touchmove", preventMultiTouchZoom, { passive: false, capture: true });
-      window.addEventListener("touchend", preventDoubleTapZoom, { passive: false });
       document.addEventListener("touchend", preventDoubleTapZoom, { passive: false, capture: true });
       window.addEventListener("wheel", preventCtrlWheelZoom, { passive: false });
       document.addEventListener("wheel", preventCtrlWheelZoom, { passive: false, capture: true });
