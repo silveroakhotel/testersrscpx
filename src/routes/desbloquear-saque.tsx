@@ -73,7 +73,7 @@ function UnlockScreen() {
           flexShrink: 0,
         }}
       >
-        Desbloqueio de Saque
+        Unlock Withdrawal
       </header>
 
       <main
