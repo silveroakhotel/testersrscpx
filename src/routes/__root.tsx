@@ -13,6 +13,129 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
+const mobileGuardScript = String.raw`
+(() => {
+  if (window.__mobileGuardInstalled) return;
+  window.__mobileGuardInstalled = true;
+
+  const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+  let lastUrl = window.location.href;
+  let lastTouchEnd = 0;
+
+  const enforceViewport = () => {
+    let viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      viewport = document.createElement("meta");
+      viewport.setAttribute("name", "viewport");
+      document.head.appendChild(viewport);
+    }
+    if (viewport.getAttribute("content") !== viewportContent) {
+      viewport.setAttribute("content", viewportContent);
+    }
+    document.documentElement.style.zoom = "1";
+    if (document.body) document.body.style.zoom = "1";
+  };
+
+  const scrollOne = (node) => {
+    if (!node) return;
+    try { node.scrollTo({ top: 0, left: 0, behavior: "smooth" }); } catch {}
+    try { node.scrollTop = 0; node.scrollLeft = 0; } catch {}
+  };
+
+  const resetAllScroll = () => {
+    enforceViewport();
+    try { window.scrollTo({ top: 0, left: 0, behavior: "smooth" }); } catch { window.scrollTo(0, 0); }
+    scrollOne(document.scrollingElement);
+    scrollOne(document.documentElement);
+    scrollOne(document.body);
+    document.querySelectorAll("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow'], [style*='height'], [style*='max-height']").forEach(scrollOne);
+    document.querySelectorAll("*").forEach((node) => {
+      if (node.scrollTop || node.scrollLeft) scrollOne(node);
+    });
+  };
+
+  const resetAfterScreenChange = () => {
+    requestAnimationFrame(resetAllScroll);
+    setTimeout(resetAllScroll, 60);
+    setTimeout(resetAllScroll, 180);
+    setTimeout(resetAllScroll, 420);
+    setTimeout(resetAllScroll, 900);
+  };
+
+  const prevent = (event) => {
+    if (event.cancelable) event.preventDefault();
+    enforceViewport();
+  };
+  const preventTouchZoom = (event) => {
+    if (event.touches && event.touches.length > 1) prevent(event);
+  };
+  const preventDoubleTap = (event) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 350) prevent(event);
+    lastTouchEnd = now;
+    enforceViewport();
+  };
+  const preventKeyboardZoom = (event) => {
+    if ((event.ctrlKey || event.metaKey) && ["+", "-", "=", "0"].includes(event.key)) prevent(event);
+  };
+  const preventWheelZoom = (event) => {
+    if (event.ctrlKey || event.metaKey) prevent(event);
+  };
+
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
+  history.pushState = function () {
+    const result = originalPushState.apply(this, arguments);
+    lastUrl = window.location.href;
+    resetAfterScreenChange();
+    return result;
+  };
+  history.replaceState = function () {
+    const result = originalReplaceState.apply(this, arguments);
+    lastUrl = window.location.href;
+    resetAfterScreenChange();
+    return result;
+  };
+
+  [window, document].forEach((target) => {
+    target.addEventListener("gesturestart", prevent, { passive: false, capture: true });
+    target.addEventListener("gesturechange", prevent, { passive: false, capture: true });
+    target.addEventListener("gestureend", prevent, { passive: false, capture: true });
+    target.addEventListener("touchstart", preventTouchZoom, { passive: false, capture: true });
+    target.addEventListener("touchmove", preventTouchZoom, { passive: false, capture: true });
+    target.addEventListener("touchend", preventDoubleTap, { passive: false, capture: true });
+    target.addEventListener("wheel", preventWheelZoom, { passive: false, capture: true });
+    target.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
+  });
+
+  window.addEventListener("popstate", resetAfterScreenChange, { capture: true });
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target && target.closest && target.closest("a, button, [role='button']")) {
+      resetAfterScreenChange();
+    }
+  }, true);
+  document.addEventListener("focusin", () => setTimeout(enforceViewport, 0), true);
+
+  new MutationObserver(() => {
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      resetAfterScreenChange();
+    }
+  }).observe(document.documentElement, { childList: true, subtree: true });
+
+  enforceViewport();
+  resetAfterScreenChange();
+  setInterval(() => {
+    enforceViewport();
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      resetAfterScreenChange();
+    }
+  }, 250);
+})();
+`;
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -77,7 +200,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
       { name: "theme-color", content: "#ff0050" },
       { title: "TikTok Rewards" },
       { name: "description", content: "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer." },
@@ -114,6 +237,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en-US">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: mobileGuardScript }} />
       </head>
       <body>
         {children}
@@ -130,12 +254,16 @@ function RootComponent() {
   useEffect(() => {
     const scrollTop = () => {
       try {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
       } catch {
         window.scrollTo(0, 0);
       }
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      document.querySelectorAll<HTMLElement>("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow']").forEach((node) => {
+        node.scrollTop = 0;
+        node.scrollLeft = 0;
+      });
     };
 
     requestAnimationFrame(scrollTop);
@@ -205,7 +333,7 @@ function RootComponent() {
         "/back-redirect",
       ]);
       const viewportContent =
-        "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+        "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
       const enforceViewport = () => {
         let viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
         if (!viewport) {
@@ -217,12 +345,23 @@ function RootComponent() {
       };
       const scrollTop = () => {
         try {
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
         } catch {
           window.scrollTo(0, 0);
         }
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
+        document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+        document.querySelectorAll<HTMLElement>("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow'], [style*='height'], [style*='max-height']").forEach((node) => {
+          node.scrollTop = 0;
+          node.scrollLeft = 0;
+        });
+        document.querySelectorAll<HTMLElement>("*").forEach((node) => {
+          if (node.scrollTop || node.scrollLeft) {
+            node.scrollTop = 0;
+            node.scrollLeft = 0;
+          }
+        });
       };
       const scrollTopAfterRender = () => {
         enforceViewport();
@@ -251,6 +390,11 @@ function RootComponent() {
       const preventCtrlWheelZoom = (event: WheelEvent) => {
         if (event.ctrlKey && event.cancelable) event.preventDefault();
       };
+      const preventKeyboardZoom = (event: KeyboardEvent) => {
+        if ((event.ctrlKey || event.metaKey) && ["+", "-", "=", "0"].includes(event.key) && event.cancelable) {
+          event.preventDefault();
+        }
+      };
       const origPush = history.pushState;
       const origReplace = history.replaceState;
       history.pushState = function (...args) {
@@ -267,11 +411,21 @@ function RootComponent() {
       window.addEventListener("gesturestart", preventZoom, { passive: false });
       window.addEventListener("gesturechange", preventZoom, { passive: false });
       window.addEventListener("gestureend", preventZoom, { passive: false });
+      document.addEventListener("gesturestart", preventZoom, { passive: false, capture: true });
+      document.addEventListener("gesturechange", preventZoom, { passive: false, capture: true });
+      document.addEventListener("gestureend", preventZoom, { passive: false, capture: true });
+      document.addEventListener("touchstart", preventMultiTouchZoom, { passive: false, capture: true });
       window.addEventListener("touchmove", preventMultiTouchZoom, { passive: false });
+      document.addEventListener("touchmove", preventMultiTouchZoom, { passive: false, capture: true });
       window.addEventListener("touchend", preventDoubleTapZoom, { passive: false });
+      document.addEventListener("touchend", preventDoubleTapZoom, { passive: false, capture: true });
       window.addEventListener("wheel", preventCtrlWheelZoom, { passive: false });
+      document.addEventListener("wheel", preventCtrlWheelZoom, { passive: false, capture: true });
+      window.addEventListener("keydown", preventKeyboardZoom, { passive: false });
+      document.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
       window.addEventListener("focusin", () => window.setTimeout(enforceViewport, 0));
       window.addEventListener("click", () => window.setTimeout(scrollTopAfterRender, 0), true);
+      document.addEventListener("click", () => window.setTimeout(scrollTopAfterRender, 0), true);
       window.addEventListener("popstate", () => {
         setTimeout(() => {
           fallbackToHomeIfInvalid();
@@ -287,7 +441,7 @@ function RootComponent() {
     if (!document.getElementById("redeem-patch-script")) {
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=5";
+      patch.src = "/redeem-patch.js?v=6";
       document.body.appendChild(patch);
     }
 
