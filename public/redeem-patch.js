@@ -6,7 +6,8 @@
 //     Venmo     -> ensure leading "@" (handle)
 //     Zelle     -> US phone mask (555) 555-5555 when numeric, otherwise pass-through email
 (function () {
-  if (window.__redeemPatchInstalled) return;
+  if (window.__redeemPatchVersion === 8) return;
+  window.__redeemPatchVersion = 8;
   window.__redeemPatchInstalled = true;
 
   const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
@@ -36,7 +37,90 @@
     } catch {}
   }
 
+  function isTextField(node) {
+    return Boolean(node && node.matches && node.matches("input, textarea, select, [contenteditable='true']"));
+  }
+
+  function getScrollParents(node) {
+    const parents = [];
+    let current = node && node.parentElement;
+    while (current && current !== document.body) {
+      const style = window.getComputedStyle(current);
+      if (/(auto|scroll|overlay)/.test(style.overflowY + style.overflow)) parents.push(current);
+      current = current.parentElement;
+    }
+    parents.push(document.scrollingElement || document.documentElement, document.documentElement, document.body);
+    return parents;
+  }
+
+  let liftedFixedPanel = null;
+  let liftedFixedPanelStyles = null;
+
+  function restoreKeyboardLift() {
+    if (!liftedFixedPanel || isTextField(document.activeElement)) return;
+    try {
+      liftedFixedPanel.style.bottom = liftedFixedPanelStyles.bottom;
+      liftedFixedPanel.style.maxHeight = liftedFixedPanelStyles.maxHeight;
+    } catch {}
+    liftedFixedPanel = null;
+    liftedFixedPanelStyles = null;
+  }
+
+  function findFixedBottomPanel(node) {
+    let current = node && node.parentElement;
+    while (current && current !== document.body) {
+      const style = window.getComputedStyle(current);
+      const rect = current.getBoundingClientRect();
+      if (style.position === "fixed" && rect.bottom >= window.innerHeight - 2) return current;
+      current = current.parentElement;
+    }
+    return null;
+  }
+
+  function liftPanelAboveKeyboard(el) {
+    if (!isTextField(el) || !window.visualViewport) return;
+    const panel = findFixedBottomPanel(el);
+    if (!panel) return;
+    const vv = window.visualViewport;
+    const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    if (!liftedFixedPanel) {
+      liftedFixedPanel = panel;
+      liftedFixedPanelStyles = { bottom: panel.style.bottom || "", maxHeight: panel.style.maxHeight || "" };
+    }
+    if (inset > 0) {
+      panel.style.bottom = inset + "px";
+      panel.style.maxHeight = Math.max(240, vv.height - 16) + "px";
+    }
+  }
+
+  function scrollFocusedIntoView(el) {
+    if (!isTextField(el)) return;
+    const doScroll = () => {
+      try {
+        liftPanelAboveKeyboard(el);
+        el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+        const vv = window.visualViewport;
+        const visibleTop = vv ? vv.offsetTop + 12 : 12;
+        const visibleBottom = visibleTop + (vv ? vv.height : window.innerHeight) - 180;
+        const rect = el.getBoundingClientRect();
+        const delta = rect.bottom > visibleBottom ? rect.bottom - visibleBottom : rect.top < visibleTop ? rect.top - visibleTop : 0;
+        if (delta) {
+          getScrollParents(el).forEach((parent) => {
+            try { parent.scrollTop += delta; } catch {}
+          });
+          try { window.scrollBy({ top: delta, left: 0, behavior: "smooth" }); } catch { window.scrollBy(0, delta); }
+        }
+      } catch {}
+    };
+    requestAnimationFrame(doScroll);
+    setTimeout(doScroll, 80);
+    setTimeout(doScroll, 220);
+    setTimeout(doScroll, 480);
+    setTimeout(doScroll, 850);
+  }
+
   function scrollEverywhereTop() {
+    if (isTextField(document.activeElement)) return;
     enforceViewport();
     try {
       window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -118,10 +202,26 @@
   window.addEventListener("popstate", scrollAfterScreenChange, { capture: true });
   document.addEventListener("click", (event) => {
     const target = event.target;
+    if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) {
+      setTimeout(() => scrollFocusedIntoView(document.activeElement), 0);
+      return;
+    }
     if (target && target.closest && target.closest("a, button, [role='button']")) {
       scrollAfterScreenChange();
     }
   }, true);
+
+  document.addEventListener("focusin", (event) => {
+    enforceViewport();
+    scrollFocusedIntoView(event.target);
+  }, true);
+  document.addEventListener("focusout", () => setTimeout(restoreKeyboardLift, 180), true);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+      scrollFocusedIntoView(document.activeElement);
+      restoreKeyboardLift();
+    });
+  }
 
   new MutationObserver(() => {
     if (window.location.href !== lastUrl) {
