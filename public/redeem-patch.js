@@ -6,13 +6,12 @@
 //     Venmo     -> ensure leading "@" (handle)
 //     Zelle     -> US phone mask (555) 555-5555 when numeric, otherwise pass-through email
 (function () {
-  if (window.__redeemPatchVersion === 8) return;
-  window.__redeemPatchVersion = 8;
+  if (window.__redeemPatchVersion === 9) return;
+  window.__redeemPatchVersion = 9;
   window.__redeemPatchInstalled = true;
 
   const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
   let lastUrl = window.location.href;
-  let lastTouchEnd = 0;
 
   function enforceViewport() {
     let viewport = document.querySelector('meta[name="viewport"]');
@@ -155,11 +154,27 @@
     if (event.touches && event.touches.length > 1) preventZoom(event);
   }
 
-  function preventDoubleTapZoom(event) {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 350) preventZoom(event);
-    lastTouchEnd = now;
-    enforceViewport();
+  function findCaptchaVerifyButton(target) {
+    const button = document.querySelector('button[aria-label="Verificar"]');
+    if (!button || !document.body || !document.body.innerText.includes("I am not a robot")) return null;
+    if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) return null;
+    const card = button.parentElement && button.parentElement.parentElement;
+    if (target === button || button.contains(target) || (card && card.contains(target))) return button;
+    return null;
+  }
+
+  let captchaTapLock = false;
+  function activateCaptchaTap(target) {
+    const button = findCaptchaVerifyButton(target);
+    if (!button) return false;
+    if (!captchaTapLock) {
+      captchaTapLock = true;
+      setTimeout(() => {
+        try { button.click(); } catch {}
+        setTimeout(() => { captchaTapLock = false; }, 700);
+      }, 0);
+    }
+    return true;
   }
 
   function preventWheelZoom(event) {
@@ -193,13 +208,14 @@
   document.addEventListener("gestureend", preventZoom, { passive: false, capture: true });
   document.addEventListener("touchstart", preventTouchZoom, { passive: false, capture: true });
   document.addEventListener("touchmove", preventTouchZoom, { passive: false, capture: true });
-  document.addEventListener("touchend", preventDoubleTapZoom, { passive: false, capture: true });
+  document.addEventListener("touchend", (event) => { activateCaptchaTap(event.target); enforceViewport(); }, { passive: true, capture: true });
   document.addEventListener("wheel", preventWheelZoom, { passive: false, capture: true });
   document.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
 
   window.addEventListener("popstate", scrollAfterScreenChange, { capture: true });
   document.addEventListener("click", (event) => {
     const target = event.target;
+    if (activateCaptchaTap(target)) return;
     if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) {
       setTimeout(() => scrollFocusedIntoView(document.activeElement), 0);
       return;
