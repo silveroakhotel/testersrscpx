@@ -1,6 +1,10 @@
-// Runtime patch for the cloned RedeemRewards modal:
-// 1) Hide the "@ do TikTok" username field and auto-fill it with a default value
-// 2) Apply input masks to the PIX key field based on the selected key type
+// Runtime patch for the RedeemRewards modal (US localization):
+// - Hide the "@yourusername" TikTok field and auto-fill it so validation passes
+// - Apply light input formatting for the payout key field based on selected method:
+//     Cash App  -> ensure leading "$" (cashtag)
+//     PayPal    -> lowercase, trim spaces (email)
+//     Venmo     -> ensure leading "@" (handle)
+//     Zelle     -> US phone mask (555) 555-5555 when numeric, otherwise pass-through email
 (function () {
   if (window.__redeemPatchInstalled) return;
   window.__redeemPatchInstalled = true;
@@ -22,72 +26,84 @@
     el.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
-  function maskCPF(v) {
-    const d = v.replace(/\D/g, "").slice(0, 11);
-    let out = d;
-    if (d.length > 9) out = `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
-    else if (d.length > 6) out = `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6)}`;
-    else if (d.length > 3) out = `${d.slice(0,3)}.${d.slice(3)}`;
-    return out;
-  }
-
-  function maskPhone(v) {
-    const d = v.replace(/\D/g, "").slice(0, 11);
+  function maskUSPhone(v) {
+    const d = v.replace(/\D/g, "").slice(0, 10);
     if (d.length === 0) return "";
-    if (d.length <= 2) return `(${d}`;
-    if (d.length <= 7) return `(${d.slice(0,2)})${d.slice(2)}`;
-    if (d.length <= 10) return `(${d.slice(0,2)})${d.slice(2,6)}-${d.slice(6)}`;
-    return `(${d.slice(0,2)})${d.slice(2,7)}-${d.slice(7)}`;
+    if (d.length <= 3) return `(${d}`;
+    if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+    return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
   }
 
   function maskEmail(v) {
     return v.toLowerCase().replace(/\s+/g, "");
   }
 
+  function maskCashtag(v) {
+    const stripped = v.replace(/\s+/g, "");
+    if (!stripped) return "";
+    return stripped.startsWith("$") ? stripped : `$${stripped.replace(/^\$+/, "")}`;
+  }
+
+  function maskVenmo(v) {
+    const stripped = v.replace(/\s+/g, "");
+    if (!stripped) return "";
+    return stripped.startsWith("@") ? stripped : `@${stripped.replace(/^@+/, "")}`;
+  }
+
+  function maskZelle(v) {
+    const trimmed = v.trim();
+    // If it looks like it has letters or "@", treat as email
+    if (/[a-zA-Z@]/.test(trimmed)) return maskEmail(trimmed);
+    // Otherwise treat as US phone
+    return maskUSPhone(trimmed);
+  }
+
+  // The underlying app still emits internal type keys: cpf | email | phone | random
   function selectedKeyTypeFromButtons() {
     const buttons = Array.from(document.querySelectorAll("button"));
     const selected = buttons.find((button) => {
       const text = (button.textContent || "").trim().toLowerCase();
       return (
-        ["cpf", "e-mail", "email", "telefone", "chave aleatória"].includes(text) &&
+        ["cash app", "paypal", "venmo", "zelle"].includes(text) &&
         /border-pink|text-pink|bg-pink\/5/.test(button.className || "")
       );
     });
     const text = (selected?.textContent || "").trim().toLowerCase();
-    if (text === "cpf") return "cpf";
-    if (text === "telefone") return "phone";
-    if (text === "e-mail" || text === "email") return "email";
-    if (text.includes("aleatória")) return "random";
+    if (text === "cash app") return "cashapp";
+    if (text === "venmo") return "venmo";
+    if (text === "paypal") return "paypal";
+    if (text === "zelle") return "zelle";
     return null;
   }
 
   function detectKeyType(input) {
     const ph = (input.getAttribute("placeholder") || "").toLowerCase();
-    if (ph.includes("000.000.000")) return "cpf";
-    if (ph.includes("00000-0000") || ph.includes("99999-9999")) return "phone";
-    if (ph.includes("@exemplo") || ph.includes("@")) return "email";
-    if (ph.startsWith("xxxx")) return "random";
+    if (ph.includes("cashtag") || ph.startsWith("$")) return "cashapp";
+    if (ph.includes("paypal") || ph.includes("@paypal") || ph.includes("email")) return "paypal";
+    if (ph.includes("venmo") || ph.startsWith("@your-venmo")) return "venmo";
+    if (ph.includes("555-5555") || ph.includes("email or (")) return "zelle";
     const wrapperText = (input.closest("div")?.parentElement?.textContent || "").toLowerCase();
-    if (wrapperText.includes("sua chave pix")) return selectedKeyTypeFromButtons();
+    if (wrapperText.includes("payment details") || wrapperText.includes("payout")) return selectedKeyTypeFromButtons();
     return null;
   }
 
   function formatByType(value, type) {
-    if (type === "cpf") return maskCPF(value);
-    if (type === "phone") return maskPhone(value);
-    if (type === "email") return maskEmail(value);
+    if (type === "cashapp") return maskCashtag(value);
+    if (type === "paypal") return maskEmail(value);
+    if (type === "venmo") return maskVenmo(value);
+    if (type === "zelle") return maskZelle(value);
     return value;
   }
 
-  function isPixKeyInput(input) {
+  function isPayoutKeyInput(input) {
     if (!(input instanceof HTMLInputElement)) return false;
-    if (input.getAttribute("placeholder") === "@seuusuario") return false;
+    if (input.getAttribute("placeholder") === "@yourusername") return false;
     return Boolean(detectKeyType(input));
   }
 
   function applyMask(input, notifyReact) {
     const type = detectKeyType(input);
-    if (!type || type === "random") return;
+    if (!type) return;
     const raw = input.value;
     const formatted = formatByType(raw, type);
     if (formatted !== raw) {
@@ -105,7 +121,6 @@
     input.addEventListener("input", function () {
       applyMask(input, true);
     });
-    // Re-mask the current value when the placeholder changes (key type switched)
     const obs = new MutationObserver(() => {
       applyMask(input, true);
     });
@@ -115,39 +130,30 @@
   function hideUsernameField(input) {
     if (input.dataset.hidden === "1") return;
     input.dataset.hidden = "1";
-    // Auto-fill with default so the form validation passes
-    if (!input.value) setNativeValue(input, "usuario");
-    // The label + input live inside the same wrapper <div>
+    if (!input.value) setNativeValue(input, "user");
     const wrapper = input.closest("div");
-    if (wrapper) {
-      wrapper.style.display = "none";
-    }
+    if (wrapper) wrapper.style.display = "none";
   }
 
   function scan() {
-    // Hide TikTok @ field
     document
-      .querySelectorAll('input[placeholder="@seuusuario"]')
+      .querySelectorAll('input[placeholder="@yourusername"], input[placeholder="@seuusuario"]')
       .forEach(hideUsernameField);
-    // Apply mask to PIX key input — match placeholders and fallback by surrounding text
     document
-      .querySelectorAll(
-        'input[type="text"], input:not([type])'
-      )
+      .querySelectorAll('input[type="text"], input:not([type])')
       .forEach((input) => {
-        if (isPixKeyInput(input)) {
+        if (isPayoutKeyInput(input)) {
           attachMask(input);
           applyMask(input, true);
         }
       });
   }
 
-  // Capture phase runs before React's delegated onChange, so React receives the formatted value.
   document.addEventListener(
     "input",
     function (event) {
       const input = event.target;
-      if (isPixKeyInput(input)) applyMask(input, false);
+      if (isPayoutKeyInput(input)) applyMask(input, false);
     },
     true
   );
@@ -156,7 +162,7 @@
     "paste",
     function (event) {
       const input = event.target;
-      if (isPixKeyInput(input)) setTimeout(() => applyMask(input, true), 0);
+      if (isPayoutKeyInput(input)) setTimeout(() => applyMask(input, true), 0);
     },
     true
   );
