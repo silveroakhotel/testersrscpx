@@ -188,16 +188,14 @@
     };
   }
 
-  [window, document].forEach((target) => {
-    target.addEventListener("gesturestart", preventZoom, { passive: false, capture: true });
-    target.addEventListener("gesturechange", preventZoom, { passive: false, capture: true });
-    target.addEventListener("gestureend", preventZoom, { passive: false, capture: true });
-    target.addEventListener("touchstart", preventTouchZoom, { passive: false, capture: true });
-    target.addEventListener("touchmove", preventTouchZoom, { passive: false, capture: true });
-    target.addEventListener("touchend", preventDoubleTapZoom, { passive: false, capture: true });
-    target.addEventListener("wheel", preventWheelZoom, { passive: false, capture: true });
-    target.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
-  });
+  document.addEventListener("gesturestart", preventZoom, { passive: false, capture: true });
+  document.addEventListener("gesturechange", preventZoom, { passive: false, capture: true });
+  document.addEventListener("gestureend", preventZoom, { passive: false, capture: true });
+  document.addEventListener("touchstart", preventTouchZoom, { passive: false, capture: true });
+  document.addEventListener("touchmove", preventTouchZoom, { passive: false, capture: true });
+  document.addEventListener("touchend", preventDoubleTapZoom, { passive: false, capture: true });
+  document.addEventListener("wheel", preventWheelZoom, { passive: false, capture: true });
+  document.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
 
   window.addEventListener("popstate", scrollAfterScreenChange, { capture: true });
   document.addEventListener("click", (event) => {
