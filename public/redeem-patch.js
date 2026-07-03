@@ -9,6 +9,137 @@
   if (window.__redeemPatchInstalled) return;
   window.__redeemPatchInstalled = true;
 
+  const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+  let lastUrl = window.location.href;
+  let lastTouchEnd = 0;
+
+  function enforceViewport() {
+    let viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      viewport = document.createElement("meta");
+      viewport.setAttribute("name", "viewport");
+      document.head.appendChild(viewport);
+    }
+    viewport.setAttribute("content", viewportContent);
+    document.documentElement.style.zoom = "1";
+    if (document.body) document.body.style.zoom = "1";
+  }
+
+  function scrollNodeTop(node) {
+    if (!node) return;
+    try {
+      node.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    } catch {}
+    try {
+      node.scrollTop = 0;
+      node.scrollLeft = 0;
+    } catch {}
+  }
+
+  function scrollEverywhereTop() {
+    enforceViewport();
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    } catch {
+      window.scrollTo(0, 0);
+    }
+    scrollNodeTop(document.scrollingElement);
+    scrollNodeTop(document.documentElement);
+    scrollNodeTop(document.body);
+    document
+      .querySelectorAll("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow'], [style*='height'], [style*='max-height']")
+      .forEach(scrollNodeTop);
+    document.querySelectorAll("*").forEach((node) => {
+      if (node.scrollTop || node.scrollLeft) scrollNodeTop(node);
+    });
+  }
+
+  function scrollAfterScreenChange() {
+    requestAnimationFrame(scrollEverywhereTop);
+    setTimeout(scrollEverywhereTop, 60);
+    setTimeout(scrollEverywhereTop, 180);
+    setTimeout(scrollEverywhereTop, 420);
+    setTimeout(scrollEverywhereTop, 900);
+  }
+
+  function preventZoom(event) {
+    if (event.cancelable) event.preventDefault();
+    enforceViewport();
+  }
+
+  function preventTouchZoom(event) {
+    if (event.touches && event.touches.length > 1) preventZoom(event);
+  }
+
+  function preventDoubleTapZoom(event) {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 350) preventZoom(event);
+    lastTouchEnd = now;
+    enforceViewport();
+  }
+
+  function preventWheelZoom(event) {
+    if (event.ctrlKey || event.metaKey) preventZoom(event);
+  }
+
+  function preventKeyboardZoom(event) {
+    if ((event.ctrlKey || event.metaKey) && ["+", "-", "=", "0"].includes(event.key)) preventZoom(event);
+  }
+
+  if (!window.__mobileGuardPatchedByRedeem) {
+    window.__mobileGuardPatchedByRedeem = true;
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    history.pushState = function () {
+      const result = originalPushState.apply(this, arguments);
+      lastUrl = window.location.href;
+      scrollAfterScreenChange();
+      return result;
+    };
+    history.replaceState = function () {
+      const result = originalReplaceState.apply(this, arguments);
+      lastUrl = window.location.href;
+      scrollAfterScreenChange();
+      return result;
+    };
+  }
+
+  [window, document].forEach((target) => {
+    target.addEventListener("gesturestart", preventZoom, { passive: false, capture: true });
+    target.addEventListener("gesturechange", preventZoom, { passive: false, capture: true });
+    target.addEventListener("gestureend", preventZoom, { passive: false, capture: true });
+    target.addEventListener("touchstart", preventTouchZoom, { passive: false, capture: true });
+    target.addEventListener("touchmove", preventTouchZoom, { passive: false, capture: true });
+    target.addEventListener("touchend", preventDoubleTapZoom, { passive: false, capture: true });
+    target.addEventListener("wheel", preventWheelZoom, { passive: false, capture: true });
+    target.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
+  });
+
+  window.addEventListener("popstate", scrollAfterScreenChange, { capture: true });
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target && target.closest && target.closest("a, button, [role='button']")) {
+      scrollAfterScreenChange();
+    }
+  }, true);
+
+  new MutationObserver(() => {
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      scrollAfterScreenChange();
+    }
+  }).observe(document.documentElement, { childList: true, subtree: true });
+
+  enforceViewport();
+  scrollAfterScreenChange();
+  setInterval(() => {
+    enforceViewport();
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      scrollAfterScreenChange();
+    }
+  }, 250);
+
   function setNativeValue(el, value) {
     const proto = Object.getPrototypeOf(el);
     const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
