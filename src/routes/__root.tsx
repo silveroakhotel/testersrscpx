@@ -21,7 +21,6 @@ const mobileGuardScript = String.raw`
 
   const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
   let lastUrl = window.location.href;
-  let lastTouchEnd = 0;
 
   const enforceViewport = () => {
     let viewport = document.querySelector('meta[name="viewport"]');
@@ -172,11 +171,27 @@ const mobileGuardScript = String.raw`
   const preventTouchZoom = (event) => {
     if (event.touches && event.touches.length > 1) prevent(event);
   };
-  const preventDoubleTap = (event) => {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 350) prevent(event);
-    lastTouchEnd = now;
-    enforceViewport();
+  const findCaptchaVerifyButton = (target) => {
+    const button = document.querySelector('button[aria-label="Verificar"]');
+    if (!button || !document.body || !document.body.innerText.includes("I am not a robot")) return null;
+    if (target && target.closest && target.closest('input, textarea, select, [contenteditable="true"]')) return null;
+    const card = button.parentElement && button.parentElement.parentElement;
+    if (target === button || button.contains(target) || (card && card.contains(target))) return button;
+    return null;
+  };
+
+  let captchaTapLock = false;
+  const activateCaptchaTap = (target) => {
+    const button = findCaptchaVerifyButton(target);
+    if (!button) return false;
+    if (!captchaTapLock) {
+      captchaTapLock = true;
+      setTimeout(() => {
+        try { button.click(); } catch {}
+        setTimeout(() => { captchaTapLock = false; }, 700);
+      }, 0);
+    }
+    return true;
   };
   const preventKeyboardZoom = (event) => {
     if ((event.ctrlKey || event.metaKey) && ["+", "-", "=", "0"].includes(event.key)) prevent(event);
@@ -205,13 +220,14 @@ const mobileGuardScript = String.raw`
   document.addEventListener("gestureend", prevent, { passive: false, capture: true });
   document.addEventListener("touchstart", preventTouchZoom, { passive: false, capture: true });
   document.addEventListener("touchmove", preventTouchZoom, { passive: false, capture: true });
-  document.addEventListener("touchend", preventDoubleTap, { passive: false, capture: true });
+  document.addEventListener("touchend", (event) => { activateCaptchaTap(event.target); enforceViewport(); }, { passive: true, capture: true });
   document.addEventListener("wheel", preventWheelZoom, { passive: false, capture: true });
   document.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
 
   window.addEventListener("popstate", resetAfterScreenChange, { capture: true });
   document.addEventListener("click", (event) => {
     const target = event.target;
+    if (activateCaptchaTap(target)) return;
     if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) return;
     if (target && target.closest && target.closest("a, button, [role='button']")) {
       resetAfterScreenChange();
@@ -530,12 +546,26 @@ function RootComponent() {
       const preventMultiTouchZoom = (event: TouchEvent) => {
         if (event.touches.length > 1 && event.cancelable) event.preventDefault();
       };
-      let lastTouchEnd = 0;
-      const preventDoubleTapZoom = (event: TouchEvent) => {
-        const now = Date.now();
-        if (now - lastTouchEnd <= 300 && event.cancelable) event.preventDefault();
-        lastTouchEnd = now;
-        enforceViewport();
+      const findCaptchaVerifyButton = (target: EventTarget | null) => {
+        const button = document.querySelector<HTMLButtonElement>('button[aria-label="Verificar"]');
+        if (!button || !document.body.innerText.includes("I am not a robot")) return null;
+        if (target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']")) return null;
+        const card = button.parentElement?.parentElement;
+        if (target === button || (target instanceof Node && button.contains(target)) || (target instanceof Node && card?.contains(target))) return button;
+        return null;
+      };
+      let captchaTapLock = false;
+      const activateCaptchaTap = (target: EventTarget | null) => {
+        const button = findCaptchaVerifyButton(target);
+        if (!button) return false;
+        if (!captchaTapLock) {
+          captchaTapLock = true;
+          window.setTimeout(() => {
+            try { button.click(); } catch {}
+            window.setTimeout(() => { captchaTapLock = false; }, 700);
+          }, 0);
+        }
+        return true;
       };
       const preventCtrlWheelZoom = (event: WheelEvent) => {
         if (event.ctrlKey && event.cancelable) event.preventDefault();
@@ -567,7 +597,7 @@ function RootComponent() {
       document.addEventListener("touchstart", preventMultiTouchZoom, { passive: false, capture: true });
       window.addEventListener("touchmove", preventMultiTouchZoom, { passive: false });
       document.addEventListener("touchmove", preventMultiTouchZoom, { passive: false, capture: true });
-      document.addEventListener("touchend", preventDoubleTapZoom, { passive: false, capture: true });
+      document.addEventListener("touchend", (event) => { activateCaptchaTap(event.target); enforceViewport(); }, { passive: true, capture: true });
       window.addEventListener("wheel", preventCtrlWheelZoom, { passive: false });
       document.addEventListener("wheel", preventCtrlWheelZoom, { passive: false, capture: true });
       window.addEventListener("keydown", preventKeyboardZoom, { passive: false });
@@ -587,6 +617,7 @@ function RootComponent() {
       window.visualViewport?.addEventListener("resize", scrollFocusedFieldIntoView);
       window.addEventListener("click", (event) => {
         const target = event.target as Element | null;
+        if (activateCaptchaTap(target)) return;
         if (target?.closest("input, textarea, select, [contenteditable='true']")) {
           window.setTimeout(scrollFocusedFieldIntoView, 0);
           return;
@@ -595,6 +626,7 @@ function RootComponent() {
       }, true);
       document.addEventListener("click", (event) => {
         const target = event.target as Element | null;
+        if (activateCaptchaTap(target)) return;
         if (target?.closest("input, textarea, select, [contenteditable='true']")) {
           window.setTimeout(scrollFocusedFieldIntoView, 0);
           return;
@@ -617,13 +649,13 @@ function RootComponent() {
     if (!existingPatch) {
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=8";
+      patch.src = "/redeem-patch.js?v=9";
       document.body.appendChild(patch);
-    } else if (!existingPatch.src.includes("v=8")) {
+    } else if (!existingPatch.src.includes("v=9")) {
       existingPatch.remove();
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=8";
+      patch.src = "/redeem-patch.js?v=9";
       document.body.appendChild(patch);
     }
 
