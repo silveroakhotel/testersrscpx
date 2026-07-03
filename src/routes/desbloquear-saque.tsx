@@ -100,7 +100,7 @@ function UnlockScreen() {
             color: "#1a1a1a",
           }}
         >
-          Assista ao vídeo abaixo para desbloquear seu saque
+          Watch the video below to unlock your payout
         </h1>
         <p
           style={{
@@ -111,8 +111,7 @@ function UnlockScreen() {
             lineHeight: 1.5,
           }}
         >
-          É obrigatório assistir ao vídeo completo para continuar com o resgate da sua
-          recompensa.
+          You must watch the full video to continue claiming your reward.
         </p>
 
         <div style={{ position: "relative", width: "100%" }}>
