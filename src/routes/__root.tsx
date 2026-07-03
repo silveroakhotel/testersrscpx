@@ -17,6 +17,7 @@ const mobileGuardScript = String.raw`
 (() => {
   if (window.__mobileGuardInstalled) return;
   window.__mobileGuardInstalled = true;
+  window.__earlyMobileGuard = true;
 
   const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
   let lastUrl = window.location.href;
@@ -414,6 +415,7 @@ function RootComponent() {
         if (viewport.content !== viewportContent) viewport.content = viewportContent;
       };
       const scrollTop = () => {
+        if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         try {
           window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
         } catch {
@@ -422,7 +424,6 @@ function RootComponent() {
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
         document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-        if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         document.querySelectorAll<HTMLElement>("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow'], [style*='height'], [style*='max-height']").forEach((node) => {
           node.scrollTop = 0;
           node.scrollLeft = 0;
