@@ -215,7 +215,7 @@ function RootComponent() {
     if (!document.getElementById("redeem-patch-script")) {
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=4";
+      patch.src = "/redeem-patch.js?v=5";
       document.body.appendChild(patch);
     }
 
