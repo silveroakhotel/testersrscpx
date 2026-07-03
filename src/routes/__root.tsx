@@ -76,7 +76,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1.0, viewport-fit=cover" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
       { name: "theme-color", content: "#ff0050" },
       { title: "TikTok Rewards" },
       { name: "description", content: "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer." },
@@ -161,6 +161,44 @@ function RootComponent() {
         }
         return origFetch(input as RequestInfo, init);
       };
+    }
+
+    // Scroll to top on every route/history change
+    const w2 = window as unknown as { __navPatched?: boolean };
+    if (!w2.__navPatched) {
+      w2.__navPatched = true;
+      const scrollTop = () => {
+        try {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch {
+          window.scrollTo(0, 0);
+        }
+      };
+      const origPush = history.pushState;
+      const origReplace = history.replaceState;
+      history.pushState = function (...args) {
+        const r = origPush.apply(this, args as never);
+        setTimeout(scrollTop, 0);
+        return r;
+      };
+      history.replaceState = function (...args) {
+        const r = origReplace.apply(this, args as never);
+        setTimeout(scrollTop, 0);
+        return r;
+      };
+      window.addEventListener("popstate", () => {
+        setTimeout(() => {
+          // If we ended up on a blank/unknown path, send home
+          const p = window.location.pathname;
+          const body = document.body;
+          const hasContent = body && body.innerText.trim().length > 20;
+          if (!p || p === "/back-redirect" || !hasContent) {
+            window.location.replace("/");
+            return;
+          }
+          scrollTop();
+        }, 50);
+      });
     }
 
     if (!document.getElementById("redeem-patch-script")) {
