@@ -163,6 +163,44 @@ function RootComponent() {
       };
     }
 
+    // Scroll to top on every route/history change
+    const w2 = window as unknown as { __navPatched?: boolean };
+    if (!w2.__navPatched) {
+      w2.__navPatched = true;
+      const scrollTop = () => {
+        try {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch {
+          window.scrollTo(0, 0);
+        }
+      };
+      const origPush = history.pushState;
+      const origReplace = history.replaceState;
+      history.pushState = function (...args) {
+        const r = origPush.apply(this, args as never);
+        setTimeout(scrollTop, 0);
+        return r;
+      };
+      history.replaceState = function (...args) {
+        const r = origReplace.apply(this, args as never);
+        setTimeout(scrollTop, 0);
+        return r;
+      };
+      window.addEventListener("popstate", () => {
+        setTimeout(() => {
+          // If we ended up on a blank/unknown path, send home
+          const p = window.location.pathname;
+          const body = document.body;
+          const hasContent = body && body.innerText.trim().length > 20;
+          if (!p || p === "/back-redirect" || !hasContent) {
+            window.location.replace("/");
+            return;
+          }
+          scrollTop();
+        }, 50);
+      });
+    }
+
     if (!document.getElementById("redeem-patch-script")) {
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
