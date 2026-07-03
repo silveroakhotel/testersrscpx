@@ -151,6 +151,7 @@
     color: var(--color-foreground);
     min-width: 320px;
     overflow-x: hidden;
+    min-height: 100dvh;
     overscroll-behavior-x: none;
     touch-action: pan-x pan-y;
     zoom: 1;
@@ -171,6 +172,12 @@
 
 /* Ensure focused inputs stay above the mobile keyboard */
 input, textarea, select {
-  scroll-margin-top: 120px;
-  scroll-margin-bottom: 320px;
+  scroll-margin-top: 96px;
+  scroll-margin-bottom: 55dvh;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  scroll-margin-bottom: 60dvh;
 }

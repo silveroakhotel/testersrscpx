@@ -42,7 +42,68 @@ const mobileGuardScript = String.raw`
     try { node.scrollTop = 0; node.scrollLeft = 0; } catch {}
   };
 
+  const isTextField = (node) => {
+    if (!node || !node.matches) return false;
+    return node.matches("input, textarea, select, [contenteditable='true']");
+  };
+
+  const getScrollParents = (node) => {
+    const parents = [];
+    let current = node && node.parentElement;
+    while (current && current !== document.body) {
+      const style = window.getComputedStyle(current);
+      if (/(auto|scroll|overlay)/.test(style.overflowY + style.overflow)) parents.push(current);
+      current = current.parentElement;
+    }
+    parents.push(document.scrollingElement || document.documentElement, document.documentElement, document.body);
+    return parents;
+  };
+
+  const scrollFocusedIntoView = (el) => {
+    if (!isTextField(el)) return;
+    const doScroll = () => {
+      try { el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }); } catch {}
+      try {
+        const viewport = window.visualViewport;
+        const visibleTop = viewport ? viewport.offsetTop + 12 : 12;
+        const visibleHeight = viewport ? viewport.height : window.innerHeight;
+        const visibleBottom = visibleTop + visibleHeight - 180;
+        const rect = el.getBoundingClientRect();
+        const delta = rect.bottom > visibleBottom
+          ? rect.bottom - visibleBottom
+          : rect.top < visibleTop
+            ? rect.top - visibleTop
+            : 0;
+
+        if (delta !== 0) {
+          getScrollParents(el).forEach((parent) => {
+            try { parent.scrollTop += delta; } catch {}
+          });
+          try { window.scrollBy({ top: delta, left: 0, behavior: "smooth" }); } catch { window.scrollBy(0, delta); }
+        }
+
+        setTimeout(() => {
+          try {
+            const nextRect = el.getBoundingClientRect();
+            const nextViewport = window.visualViewport;
+            const nextTop = nextViewport ? nextViewport.offsetTop + 12 : 12;
+            const nextBottom = nextTop + (nextViewport ? nextViewport.height : window.innerHeight) - 180;
+            if (nextRect.bottom > nextBottom || nextRect.top < nextTop) {
+              el.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+            }
+          } catch {}
+        }, 40);
+      } catch {}
+    };
+    requestAnimationFrame(doScroll);
+    setTimeout(doScroll, 80);
+    setTimeout(doScroll, 220);
+    setTimeout(doScroll, 480);
+    setTimeout(doScroll, 850);
+  };
+
   const resetAllScroll = () => {
+    if (isTextField(document.activeElement)) return;
     enforceViewport();
     try { window.scrollTo({ top: 0, left: 0, behavior: "smooth" }); } catch { window.scrollTo(0, 0); }
     scrollOne(document.scrollingElement);
@@ -111,28 +172,11 @@ const mobileGuardScript = String.raw`
   window.addEventListener("popstate", resetAfterScreenChange, { capture: true });
   document.addEventListener("click", (event) => {
     const target = event.target;
+    if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) return;
     if (target && target.closest && target.closest("a, button, [role='button']")) {
       resetAfterScreenChange();
     }
   }, true);
-  const scrollFocusedIntoView = (el) => {
-    if (!el) return;
-    const tag = (el.tagName || "").toLowerCase();
-    if (tag !== "input" && tag !== "textarea" && tag !== "select" && !el.isContentEditable) return;
-    const doScroll = () => {
-      try { el.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
-      try {
-        const rect = el.getBoundingClientRect();
-        const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-        if (rect.bottom > vh - 40 || rect.top < 40) {
-          window.scrollBy({ top: rect.top - vh / 2 + rect.height / 2, behavior: "smooth" });
-        }
-      } catch {}
-    };
-    setTimeout(doScroll, 100);
-    setTimeout(doScroll, 350);
-    setTimeout(doScroll, 700);
-  };
   document.addEventListener("focusin", (e) => {
     setTimeout(enforceViewport, 0);
     scrollFocusedIntoView(e.target);
@@ -378,6 +422,7 @@ function RootComponent() {
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
         document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+        if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         document.querySelectorAll<HTMLElement>("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow'], [style*='height'], [style*='max-height']").forEach((node) => {
           node.scrollTop = 0;
           node.scrollLeft = 0;
@@ -390,10 +435,31 @@ function RootComponent() {
         });
       };
       const scrollTopAfterRender = () => {
+        if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         enforceViewport();
         requestAnimationFrame(scrollTop);
         window.setTimeout(scrollTop, 80);
         window.setTimeout(scrollTop, 240);
+      };
+      const scrollFocusedFieldIntoView = () => {
+        const el = document.activeElement as HTMLElement | null;
+        if (!el?.matches("input, textarea, select, [contenteditable='true']")) return;
+        const move = () => {
+          try {
+            el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+            const vv = window.visualViewport;
+            const top = vv ? vv.offsetTop + 12 : 12;
+            const bottom = top + (vv ? vv.height : window.innerHeight) - 180;
+            const rect = el.getBoundingClientRect();
+            const delta = rect.bottom > bottom ? rect.bottom - bottom : rect.top < top ? rect.top - top : 0;
+            if (delta) window.scrollBy({ top: delta, left: 0, behavior: "smooth" });
+          } catch {}
+        };
+        requestAnimationFrame(move);
+        window.setTimeout(move, 80);
+        window.setTimeout(move, 220);
+        window.setTimeout(move, 480);
+        window.setTimeout(move, 850);
       };
       const fallbackToHomeIfInvalid = () => {
         const path = window.location.pathname;
@@ -449,9 +515,27 @@ function RootComponent() {
       document.addEventListener("wheel", preventCtrlWheelZoom, { passive: false, capture: true });
       window.addEventListener("keydown", preventKeyboardZoom, { passive: false });
       document.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
-      window.addEventListener("focusin", () => window.setTimeout(enforceViewport, 0));
-      window.addEventListener("click", () => window.setTimeout(scrollTopAfterRender, 0), true);
-      document.addEventListener("click", () => window.setTimeout(scrollTopAfterRender, 0), true);
+      window.addEventListener("focusin", () => {
+        window.setTimeout(enforceViewport, 0);
+        scrollFocusedFieldIntoView();
+      });
+      window.visualViewport?.addEventListener("resize", scrollFocusedFieldIntoView);
+      window.addEventListener("click", (event) => {
+        const target = event.target as Element | null;
+        if (target?.closest("input, textarea, select, [contenteditable='true']")) {
+          window.setTimeout(scrollFocusedFieldIntoView, 0);
+          return;
+        }
+        window.setTimeout(scrollTopAfterRender, 0);
+      }, true);
+      document.addEventListener("click", (event) => {
+        const target = event.target as Element | null;
+        if (target?.closest("input, textarea, select, [contenteditable='true']")) {
+          window.setTimeout(scrollFocusedFieldIntoView, 0);
+          return;
+        }
+        window.setTimeout(scrollTopAfterRender, 0);
+      }, true);
       window.addEventListener("popstate", () => {
         setTimeout(() => {
           fallbackToHomeIfInvalid();
@@ -467,7 +551,7 @@ function RootComponent() {
     if (!document.getElementById("redeem-patch-script")) {
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=6";
+      patch.src = "/redeem-patch.js?v=7";
       document.body.appendChild(patch);
     }
 

@@ -36,7 +36,49 @@
     } catch {}
   }
 
+  function isTextField(node) {
+    return Boolean(node && node.matches && node.matches("input, textarea, select, [contenteditable='true']"));
+  }
+
+  function getScrollParents(node) {
+    const parents = [];
+    let current = node && node.parentElement;
+    while (current && current !== document.body) {
+      const style = window.getComputedStyle(current);
+      if (/(auto|scroll|overlay)/.test(style.overflowY + style.overflow)) parents.push(current);
+      current = current.parentElement;
+    }
+    parents.push(document.scrollingElement || document.documentElement, document.documentElement, document.body);
+    return parents;
+  }
+
+  function scrollFocusedIntoView(el) {
+    if (!isTextField(el)) return;
+    const doScroll = () => {
+      try {
+        el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+        const vv = window.visualViewport;
+        const visibleTop = vv ? vv.offsetTop + 12 : 12;
+        const visibleBottom = visibleTop + (vv ? vv.height : window.innerHeight) - 180;
+        const rect = el.getBoundingClientRect();
+        const delta = rect.bottom > visibleBottom ? rect.bottom - visibleBottom : rect.top < visibleTop ? rect.top - visibleTop : 0;
+        if (delta) {
+          getScrollParents(el).forEach((parent) => {
+            try { parent.scrollTop += delta; } catch {}
+          });
+          try { window.scrollBy({ top: delta, left: 0, behavior: "smooth" }); } catch { window.scrollBy(0, delta); }
+        }
+      } catch {}
+    };
+    requestAnimationFrame(doScroll);
+    setTimeout(doScroll, 80);
+    setTimeout(doScroll, 220);
+    setTimeout(doScroll, 480);
+    setTimeout(doScroll, 850);
+  }
+
   function scrollEverywhereTop() {
+    if (isTextField(document.activeElement)) return;
     enforceViewport();
     try {
       window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -118,10 +160,22 @@
   window.addEventListener("popstate", scrollAfterScreenChange, { capture: true });
   document.addEventListener("click", (event) => {
     const target = event.target;
+    if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) {
+      setTimeout(() => scrollFocusedIntoView(document.activeElement), 0);
+      return;
+    }
     if (target && target.closest && target.closest("a, button, [role='button']")) {
       scrollAfterScreenChange();
     }
   }, true);
+
+  document.addEventListener("focusin", (event) => {
+    enforceViewport();
+    scrollFocusedIntoView(event.target);
+  }, true);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => scrollFocusedIntoView(document.activeElement));
+  }
 
   new MutationObserver(() => {
     if (window.location.href !== lastUrl) {
