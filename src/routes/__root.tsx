@@ -60,9 +60,50 @@ const mobileGuardScript = String.raw`
     return parents;
   };
 
+  let liftedFixedPanel = null;
+  let liftedFixedPanelStyles = null;
+
+  const restoreKeyboardLift = () => {
+    if (!liftedFixedPanel || isTextField(document.activeElement)) return;
+    try {
+      liftedFixedPanel.style.bottom = liftedFixedPanelStyles.bottom;
+      liftedFixedPanel.style.maxHeight = liftedFixedPanelStyles.maxHeight;
+    } catch {}
+    liftedFixedPanel = null;
+    liftedFixedPanelStyles = null;
+  };
+
+  const findFixedBottomPanel = (node) => {
+    let current = node && node.parentElement;
+    while (current && current !== document.body) {
+      const style = window.getComputedStyle(current);
+      const rect = current.getBoundingClientRect();
+      if (style.position === "fixed" && rect.bottom >= window.innerHeight - 2) return current;
+      current = current.parentElement;
+    }
+    return null;
+  };
+
+  const liftPanelAboveKeyboard = (el) => {
+    if (!isTextField(el) || !window.visualViewport) return;
+    const panel = findFixedBottomPanel(el);
+    if (!panel) return;
+    const viewport = window.visualViewport;
+    const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+    if (!liftedFixedPanel) {
+      liftedFixedPanel = panel;
+      liftedFixedPanelStyles = { bottom: panel.style.bottom || "", maxHeight: panel.style.maxHeight || "" };
+    }
+    if (inset > 0) {
+      panel.style.bottom = inset + "px";
+      panel.style.maxHeight = Math.max(240, viewport.height - 16) + "px";
+    }
+  };
+
   const scrollFocusedIntoView = (el) => {
     if (!isTextField(el)) return;
     const doScroll = () => {
+      liftPanelAboveKeyboard(el);
       try { el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }); } catch {}
       try {
         const viewport = window.visualViewport;
@@ -182,9 +223,11 @@ const mobileGuardScript = String.raw`
     setTimeout(enforceViewport, 0);
     scrollFocusedIntoView(e.target);
   }, true);
+  document.addEventListener("focusout", () => setTimeout(restoreKeyboardLift, 180), true);
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", () => {
       scrollFocusedIntoView(document.activeElement);
+      restoreKeyboardLift();
     });
   }
 
@@ -445,8 +488,24 @@ function RootComponent() {
       const scrollFocusedFieldIntoView = () => {
         const el = document.activeElement as HTMLElement | null;
         if (!el?.matches("input, textarea, select, [contenteditable='true']")) return;
+        const fixedPanel = (() => {
+          let current = el.parentElement;
+          while (current && current !== document.body) {
+            const rect = current.getBoundingClientRect();
+            if (window.getComputedStyle(current).position === "fixed" && rect.bottom >= window.innerHeight - 2) return current;
+            current = current.parentElement;
+          }
+          return null;
+        })();
         const move = () => {
           try {
+            if (fixedPanel && window.visualViewport) {
+              const inset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+              if (inset > 0) {
+                fixedPanel.style.bottom = `${inset}px`;
+                fixedPanel.style.maxHeight = `${Math.max(240, window.visualViewport.height - 16)}px`;
+              }
+            }
             el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
             const vv = window.visualViewport;
             const top = vv ? vv.offsetTop + 12 : 12;
@@ -520,6 +579,14 @@ function RootComponent() {
         window.setTimeout(enforceViewport, 0);
         scrollFocusedFieldIntoView();
       });
+      window.addEventListener("focusout", () => window.setTimeout(() => {
+        document.querySelectorAll<HTMLElement>("[style*='bottom:'][style*='max-height:']").forEach((node) => {
+          if (window.getComputedStyle(node).position === "fixed") {
+            node.style.bottom = "";
+            node.style.maxHeight = "";
+          }
+        });
+      }, 220));
       window.visualViewport?.addEventListener("resize", scrollFocusedFieldIntoView);
       window.addEventListener("click", (event) => {
         const target = event.target as Element | null;
@@ -552,7 +619,7 @@ function RootComponent() {
     if (!document.getElementById("redeem-patch-script")) {
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=7";
+      patch.src = "/redeem-patch.js?v=8";
       document.body.appendChild(patch);
     }
 
