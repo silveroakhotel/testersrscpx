@@ -143,7 +143,7 @@ function UnlockScreen() {
                   animation: "spin 0.8s linear infinite",
                 }}
               />
-              <span>Carregando vídeo...</span>
+              <span>Loading video...</span>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
@@ -200,8 +200,8 @@ function UnlockScreen() {
             }}
           >
             {unlocked
-              ? "Desbloquear Saque"
-              : `Aguarde ${secondsLeft}s para desbloquear...`}
+              ? "Unlock Withdrawal"
+              : `Wait ${secondsLeft}s to unlock...`}
           </button>
         </div>
       </div>
