@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -124,6 +125,27 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  useEffect(() => {
+    const scrollTop = () => {
+      try {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch {
+        window.scrollTo(0, 0);
+      }
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    requestAnimationFrame(scrollTop);
+    const t1 = window.setTimeout(scrollTop, 80);
+    const t2 = window.setTimeout(scrollTop, 240);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     const w = window as unknown as { __pixFetchPatched?: boolean };
@@ -163,42 +185,103 @@ function RootComponent() {
       };
     }
 
-    // Scroll to top on every route/history change
+    // Keep mobile routing stable, always reset scroll on screen changes, and block browser zoom.
     const w2 = window as unknown as { __navPatched?: boolean };
     if (!w2.__navPatched) {
       w2.__navPatched = true;
+      const validPaths = new Set([
+        "/",
+        "/inicio",
+        "/resgatar",
+        "/historico",
+        "/confirmar-saque",
+        "/desbloquear-saque",
+        "/faq",
+        "/upsell-1",
+        "/upsell-2",
+        "/upsell-3",
+        "/upsell-4",
+        "/upsell-5",
+        "/back-redirect",
+      ]);
+      const viewportContent =
+        "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+      const enforceViewport = () => {
+        let viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+        if (!viewport) {
+          viewport = document.createElement("meta");
+          viewport.name = "viewport";
+          document.head.appendChild(viewport);
+        }
+        if (viewport.content !== viewportContent) viewport.content = viewportContent;
+      };
       const scrollTop = () => {
         try {
           window.scrollTo({ top: 0, behavior: "smooth" });
         } catch {
           window.scrollTo(0, 0);
         }
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      };
+      const scrollTopAfterRender = () => {
+        enforceViewport();
+        requestAnimationFrame(scrollTop);
+        window.setTimeout(scrollTop, 80);
+        window.setTimeout(scrollTop, 240);
+      };
+      const fallbackToHomeIfInvalid = () => {
+        const path = window.location.pathname;
+        if (!validPaths.has(path)) window.location.replace("/");
+      };
+      const preventZoom = (event: Event) => {
+        if (event.cancelable) event.preventDefault();
+        enforceViewport();
+      };
+      const preventMultiTouchZoom = (event: TouchEvent) => {
+        if (event.touches.length > 1 && event.cancelable) event.preventDefault();
+      };
+      let lastTouchEnd = 0;
+      const preventDoubleTapZoom = (event: TouchEvent) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300 && event.cancelable) event.preventDefault();
+        lastTouchEnd = now;
+        enforceViewport();
+      };
+      const preventCtrlWheelZoom = (event: WheelEvent) => {
+        if (event.ctrlKey && event.cancelable) event.preventDefault();
       };
       const origPush = history.pushState;
       const origReplace = history.replaceState;
       history.pushState = function (...args) {
         const r = origPush.apply(this, args as never);
-        setTimeout(scrollTop, 0);
+        scrollTopAfterRender();
         return r;
       };
       history.replaceState = function (...args) {
         const r = origReplace.apply(this, args as never);
-        setTimeout(scrollTop, 0);
+        scrollTopAfterRender();
         return r;
       };
+      enforceViewport();
+      window.addEventListener("gesturestart", preventZoom, { passive: false });
+      window.addEventListener("gesturechange", preventZoom, { passive: false });
+      window.addEventListener("gestureend", preventZoom, { passive: false });
+      window.addEventListener("touchmove", preventMultiTouchZoom, { passive: false });
+      window.addEventListener("touchend", preventDoubleTapZoom, { passive: false });
+      window.addEventListener("wheel", preventCtrlWheelZoom, { passive: false });
+      window.addEventListener("focusin", () => window.setTimeout(enforceViewport, 0));
+      window.addEventListener("click", () => window.setTimeout(scrollTopAfterRender, 0), true);
       window.addEventListener("popstate", () => {
         setTimeout(() => {
-          // If we ended up on a blank/unknown path, send home
-          const p = window.location.pathname;
-          const body = document.body;
-          const hasContent = body && body.innerText.trim().length > 20;
-          if (!p || p === "/back-redirect" || !hasContent) {
-            window.location.replace("/");
-            return;
-          }
-          scrollTop();
+          fallbackToHomeIfInvalid();
+          scrollTopAfterRender();
         }, 50);
       });
+      window.setInterval(() => {
+        enforceViewport();
+        fallbackToHomeIfInvalid();
+      }, 1000);
     }
 
     if (!document.getElementById("redeem-patch-script")) {
