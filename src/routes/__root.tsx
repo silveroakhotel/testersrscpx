@@ -616,7 +616,14 @@ function RootComponent() {
       }, 1000);
     }
 
-    if (!document.getElementById("redeem-patch-script")) {
+    const existingPatch = document.getElementById("redeem-patch-script") as HTMLScriptElement | null;
+    if (!existingPatch) {
+      const patch = document.createElement("script");
+      patch.id = "redeem-patch-script";
+      patch.src = "/redeem-patch.js?v=8";
+      document.body.appendChild(patch);
+    } else if (!existingPatch.src.includes("v=8")) {
+      existingPatch.remove();
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
       patch.src = "/redeem-patch.js?v=8";

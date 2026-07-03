@@ -6,7 +6,8 @@
 //     Venmo     -> ensure leading "@" (handle)
 //     Zelle     -> US phone mask (555) 555-5555 when numeric, otherwise pass-through email
 (function () {
-  if (window.__redeemPatchInstalled) return;
+  if (window.__redeemPatchVersion === 8) return;
+  window.__redeemPatchVersion = 8;
   window.__redeemPatchInstalled = true;
 
   const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
