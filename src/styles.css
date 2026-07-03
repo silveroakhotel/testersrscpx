@@ -168,3 +168,9 @@
     font-size: 16px;
   }
 }
+
+/* Ensure focused inputs stay above the mobile keyboard */
+input, textarea, select {
+  scroll-margin-top: 120px;
+  scroll-margin-bottom: 320px;
+}

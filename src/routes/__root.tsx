@@ -115,7 +115,33 @@ const mobileGuardScript = String.raw`
       resetAfterScreenChange();
     }
   }, true);
-  document.addEventListener("focusin", () => setTimeout(enforceViewport, 0), true);
+  const scrollFocusedIntoView = (el) => {
+    if (!el) return;
+    const tag = (el.tagName || "").toLowerCase();
+    if (tag !== "input" && tag !== "textarea" && tag !== "select" && !el.isContentEditable) return;
+    const doScroll = () => {
+      try { el.scrollIntoView({ block: "center", behavior: "smooth" }); } catch {}
+      try {
+        const rect = el.getBoundingClientRect();
+        const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+        if (rect.bottom > vh - 40 || rect.top < 40) {
+          window.scrollBy({ top: rect.top - vh / 2 + rect.height / 2, behavior: "smooth" });
+        }
+      } catch {}
+    };
+    setTimeout(doScroll, 100);
+    setTimeout(doScroll, 350);
+    setTimeout(doScroll, 700);
+  };
+  document.addEventListener("focusin", (e) => {
+    setTimeout(enforceViewport, 0);
+    scrollFocusedIntoView(e.target);
+  }, true);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+      scrollFocusedIntoView(document.activeElement);
+    });
+  }
 
   new MutationObserver(() => {
     if (window.location.href !== lastUrl) {
