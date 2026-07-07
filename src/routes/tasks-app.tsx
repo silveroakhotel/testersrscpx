@@ -33,10 +33,13 @@ type AuthMode = "login" | "register";
 type Review = { date: string; title: string; reward: number; status: string };
 type User = { name: string; email: string; password: string };
 type VideoTask = {
+  day: number;
   id: string;
+  sequence: number;
   creator: string;
   title: string;
   videoUrl: string;
+  reward: number;
 };
 
 const INITIAL_BALANCE = 2800;
@@ -44,31 +47,34 @@ const MIN_WITHDRAWAL = 4000;
 const DAYS_TO_GOAL = 7;
 const DAILY_LIMIT = 6;
 const TOTAL_TASKS_TO_GOAL = DAYS_TO_GOAL * DAILY_LIMIT;
-const REWARD_PER_VIDEO = (MIN_WITHDRAWAL - INITIAL_BALANCE) / TOTAL_TASKS_TO_GOAL;
+const TOTAL_REWARD_TO_GOAL = MIN_WITHDRAWAL - INITIAL_BALANCE;
 const ACCOUNTS_KEY = "ttp_accounts";
 const SESSION_KEY = "ttp_session";
 const APP_STATE_KEY = "ttp_app_state";
 
-const tasks: VideoTask[] = [
-  {
-    id: "task-1",
-    creator: "MrBeast",
-    title: "MrBeast Challenge Audit",
-    videoUrl: "/videos/task1.mp4",
-  },
-  {
-    id: "task-2",
-    creator: "Zach King",
-    title: "Zach King Illusion Review",
-    videoUrl: "/videos/task2.mp4",
-  },
-  {
-    id: "task-3",
-    creator: "US Creator Network",
-    title: "Satisfying ASMR Audit",
-    videoUrl: "/videos/task3.mp4",
-  },
+const videoPool = [
+  { creator: "MrBeast", title: "Challenge Audit", videoUrl: "/videos/task1.mp4" },
+  { creator: "Zach King", title: "Illusion Review", videoUrl: "/videos/task2.mp4" },
+  { creator: "US Creator Network", title: "Satisfying ASMR Audit", videoUrl: "/videos/task3.mp4" },
+  { creator: "Viral Audio Lab", title: "Viral Audio Audit", videoUrl: "/videos/task4.mp4" },
+  { creator: "Creator Metrics", title: "Engagement Review", videoUrl: "/videos/task5.mp4" },
+  { creator: "Retention Studio", title: "Watch Time Quality Check", videoUrl: "/videos/task6.mp4" },
 ];
+
+const tasks: VideoTask[] = Array.from({ length: TOTAL_TASKS_TO_GOAL }, (_, index) => {
+  const day = Math.floor(index / DAILY_LIMIT) + 1;
+  const sequence = (index % DAILY_LIMIT) + 1;
+  const source = videoPool[index % videoPool.length];
+  return {
+    day,
+    id: `day-${day}-task-${sequence}`,
+    sequence,
+    creator: source.creator,
+    title: `Day ${day} - ${source.title}`,
+    videoUrl: source.videoUrl,
+    reward: rewardForTask(index),
+  };
+});
 
 const processingSteps = ["Analyzing consistency...", "Validating retention...", "Checking review quality...", "Adding reward..."];
 const paymentOptions = ["Cash App", "PayPal", "Venmo", "Zelle", "Bank Transfer (ACH)"];
@@ -115,9 +121,9 @@ function TaskPartnersApp() {
   const [refundApproved, setRefundApproved] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
 
-  const task = tasks[taskIndex % tasks.length];
+  const task = tasks[Math.min(taskIndex, tasks.length - 1)];
   const taskReviewKey = `${task.id}-${taskIndex}`;
-  const completedToday = (reviews.length % DAILY_LIMIT) + 1;
+  const completedToday = (taskIndex % DAILY_LIMIT) + 1;
   const reviewUnlocked = progress >= 100 && !reviewedIds.includes(taskReviewKey);
   const hasValidComment = countWords(comment) >= 3;
   const canSubmit = reviewUnlocked && rating > 0 && Boolean(useful) && Boolean(recommend) && hasValidComment;
@@ -230,7 +236,7 @@ function TaskPartnersApp() {
     if (!canSubmit) return;
     const completedTask = task;
     const completedKey = taskReviewKey;
-    const reward = REWARD_PER_VIDEO;
+    const reward = completedTask.reward;
 
     setSuccessReward(null);
     setReviewedIds((value) => [...value, completedKey]);
@@ -244,7 +250,7 @@ function TaskPartnersApp() {
     setRecommend("");
     setComment("");
     setProgress(0);
-    setTaskIndex((value) => value + 1);
+    setTaskIndex((value) => Math.min(value + 1, TOTAL_TASKS_TO_GOAL - 1));
 
     setProcessing(true);
     setProcessingStep(0);
@@ -345,6 +351,7 @@ function TaskPartnersApp() {
             <div className="shrink-0 rounded-[8px] bg-[#F1F5F9] px-3 py-2 text-right">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Daily Tasks</p>
               <p className="text-lg font-black text-[#FE2C55]">{Math.min(completedToday, DAILY_LIMIT)}/{DAILY_LIMIT}</p>
+              <p className="text-[10px] font-black text-[#475569]">Day {task.day}/7</p>
             </div>
           </div>
         </header>
@@ -441,7 +448,8 @@ function TasksScreen(props: {
   taskIndex: number;
   useful: string;
 }) {
-  const lockedTasks = Array.from({ length: Math.max(0, DAILY_LIMIT - 1) }, (_, index) => tasks[(props.taskIndex + index + 1) % tasks.length]);
+  const dayEndIndex = props.task.day * DAILY_LIMIT;
+  const lockedTasks = tasks.slice(props.taskIndex + 1, dayEndIndex);
 
   return (
     <div className="space-y-4">
@@ -450,7 +458,7 @@ function TasksScreen(props: {
           <div className="min-w-0">
             <p className="text-xs font-black text-[#FE2C55]">{props.task.creator}</p>
             <h1 className="text-xl font-black leading-tight text-[#0F172A]">{props.task.title}</h1>
-            <p className="mt-1 text-xs font-semibold text-[#475569]">Reward: {brl(REWARD_PER_VIDEO)} per approved video</p>
+            <p className="mt-1 text-xs font-semibold text-[#475569]">Day {props.task.day} · Task {props.task.sequence}/6 · Reward: {brl(props.task.reward)}</p>
           </div>
         </div>
         <div className="relative aspect-[9/14] max-h-[390px] w-full overflow-hidden rounded-[8px] bg-slate-950">
@@ -543,7 +551,7 @@ function TasksScreen(props: {
               <div className="min-w-0">
                 <p className="truncate text-xs font-black text-[#FE2C55]">{lockedTask.creator}</p>
                 <p className="truncate text-sm font-black text-[#0F172A]">{lockedTask.title}</p>
-                <p className="text-xs font-semibold text-[#475569]">{brl(REWARD_PER_VIDEO)} reward</p>
+                <p className="text-xs font-semibold text-[#475569]">Day {lockedTask.day} · {brl(lockedTask.reward)} reward</p>
               </div>
             </div>
             <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-sm">
@@ -864,6 +872,18 @@ function Server404() {
 
 function brl(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function rewardForTask(index: number): number {
+  const high = 31.43;
+  const low = 25.71;
+  if (index === TOTAL_TASKS_TO_GOAL - 1) {
+    const step = (high - low) / (TOTAL_TASKS_TO_GOAL - 1);
+    const previousTotal = Array.from({ length: TOTAL_TASKS_TO_GOAL - 1 }, (_, itemIndex) => Number((high - step * itemIndex).toFixed(2))).reduce((sum, value) => sum + value, 0);
+    return Number((TOTAL_REWARD_TO_GOAL - previousTotal).toFixed(2));
+  }
+  const step = (high - low) / (TOTAL_TASKS_TO_GOAL - 1);
+  return Number((high - step * index).toFixed(2));
 }
 
 function countWords(value: string) {
