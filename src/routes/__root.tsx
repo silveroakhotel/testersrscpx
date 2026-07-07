@@ -172,7 +172,7 @@ const mobileGuardScript = String.raw`
     if (event.touches && event.touches.length > 1) prevent(event);
   };
   const findCaptchaVerifyButton = (target) => {
-    const button = document.querySelector('button[aria-label="Verificar"]');
+    const button = document.querySelector('button[aria-label="Verify"]');
     if (!button || !document.body || !document.body.innerText.includes("I am not a robot")) return null;
     if (target && target.closest && target.closest('input, textarea, select, [contenteditable="true"]')) return null;
     const card = button.parentElement && button.parentElement.parentElement;
@@ -365,6 +365,22 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en-US">
       <head>
         <HeadContent />
+        <script
+          src="https://cdn.jsdelivr.net/gh/xTracky/static@latest/utm-handler.js"
+          data-token="d6f97363-95f9-43c6-9767-aaca66ca0e50"
+        />
+        <script src="/param-forwarder.js" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `!function (w, d, t) {
+  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
+var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
+;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+  ttq.load('D92LJQBC77U8UQ773LM0');
+  ttq.page();
+}(window, document, 'ttq');`,
+          }}
+        />
         <script dangerouslySetInnerHTML={{ __html: mobileGuardScript }} />
       </head>
       <body>
@@ -547,7 +563,7 @@ function RootComponent() {
         if (event.touches.length > 1 && event.cancelable) event.preventDefault();
       };
       const findCaptchaVerifyButton = (target: EventTarget | null) => {
-        const button = document.querySelector<HTMLButtonElement>('button[aria-label="Verificar"]');
+        const button = document.querySelector<HTMLButtonElement>('button[aria-label="Verify"]');
         if (!button || !document.body.innerText.includes("I am not a robot")) return null;
         if (target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']")) return null;
         const card = button.parentElement?.parentElement;

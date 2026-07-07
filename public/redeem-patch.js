@@ -155,7 +155,7 @@
   }
 
   function findCaptchaVerifyButton(target) {
-    const button = document.querySelector('button[aria-label="Verificar"]');
+    const button = document.querySelector('button[aria-label="Verify"]');
     if (!button || !document.body || !document.body.innerText.includes("I am not a robot")) return null;
     if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) return null;
     const card = button.parentElement && button.parentElement.parentElement;

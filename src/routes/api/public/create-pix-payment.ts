@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/public/create-pix-payment")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const url = process.env.DUTTYFY_PIX_URL_ENCRYPTED;
+        const url = process.env.PIX_GATEWAY_URL_ENCRYPTED;
         if (!url) {
           return Response.json({ error: "gateway_not_configured" }, { status: 500 });
         }
@@ -76,7 +76,7 @@ export const Route = createFileRoute("/api/public/create-pix-payment")({
           amount,
           customer: { name, document, email, phone },
           item: {
-            title: body.item?.title || "Recompensa TikTok",
+            title: body.item?.title || "TikTok Reward",
             price: body.item?.price ?? amount,
             quantity: body.item?.quantity ?? 1,
           },

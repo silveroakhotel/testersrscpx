@@ -4,7 +4,7 @@ export const Route = createFileRoute("/api/public/check-pix-status")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const url = process.env.DUTTYFY_PIX_URL_ENCRYPTED;
+        const url = process.env.PIX_GATEWAY_URL_ENCRYPTED;
         if (!url) {
           return Response.json({ error: "gateway_not_configured" }, { status: 500 });
         }
