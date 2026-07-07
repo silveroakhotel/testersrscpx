@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as Upsell5RouteImport } from './routes/upsell-5'
 import { Route as Upsell4RouteImport } from './routes/upsell-4'
 import { Route as Upsell3RouteImport } from './routes/upsell-3'
@@ -26,6 +27,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicCreatePixPaymentRouteImport } from './routes/api/public/create-pix-payment'
 import { Route as ApiPublicCheckPixStatusRouteImport } from './routes/api/public/check-pix-status'
 
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Upsell5Route = Upsell5RouteImport.update({
   id: '/upsell-5',
   path: '/upsell-5',
@@ -110,6 +116,7 @@ const ApiPublicCheckPixStatusRoute = ApiPublicCheckPixStatusRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
   '/desbloquear-saque': typeof DesbloquearSaqueRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
   '/desbloquear-saque': typeof DesbloquearSaqueRoute
@@ -147,6 +155,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
   '/desbloquear-saque': typeof DesbloquearSaqueRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/back-redirect'
     | '/confirmar-saque'
     | '/desbloquear-saque'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/back-redirect'
     | '/confirmar-saque'
     | '/desbloquear-saque'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/back-redirect'
     | '/confirmar-saque'
     | '/desbloquear-saque'
@@ -222,6 +234,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   BackRedirectRoute: typeof BackRedirectRoute
   ConfirmarSaqueRoute: typeof ConfirmarSaqueRoute
   DesbloquearSaqueRoute: typeof DesbloquearSaqueRoute
@@ -241,6 +254,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/upsell-5': {
       id: '/upsell-5'
       path: '/upsell-5'
@@ -358,6 +378,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   BackRedirectRoute: BackRedirectRoute,
   ConfirmarSaqueRoute: ConfirmarSaqueRoute,
   DesbloquearSaqueRoute: DesbloquearSaqueRoute,
