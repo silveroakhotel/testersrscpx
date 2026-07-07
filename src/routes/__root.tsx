@@ -399,7 +399,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const isNativeAppRoute = pathname === "/tasks-app" || pathname === "/admin" || pathname === "/landingpage";
+  const isNativeAppRoute = pathname === "/tasks-app" || pathname === "/admin" || pathname === "/landingpage" || pathname === "/up1";
 
   useEffect(() => {
     if (isNativeAppRoute) return;
@@ -471,6 +471,7 @@ function RootComponent() {
       const validPaths = new Set([
         "/",
         "/landingpage",
+        "/up1",
         "/inicio",
         "/resgatar",
         "/tasks-app",
@@ -498,7 +499,7 @@ function RootComponent() {
         if (viewport.content !== viewportContent) viewport.content = viewportContent;
       };
       const scrollTop = () => {
-        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage") return;
+        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage" || window.location.pathname === "/up1") return;
         if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         try {
           window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -520,7 +521,7 @@ function RootComponent() {
         });
       };
       const scrollTopAfterRender = () => {
-        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage") return;
+        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage" || window.location.pathname === "/up1") return;
         if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         enforceViewport();
         requestAnimationFrame(scrollTop);
@@ -528,7 +529,7 @@ function RootComponent() {
         window.setTimeout(scrollTop, 240);
       };
       const scrollFocusedFieldIntoView = () => {
-        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage") return;
+        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage" || window.location.pathname === "/up1") return;
         const el = document.activeElement as HTMLElement | null;
         if (!el?.matches("input, textarea, select, [contenteditable='true']")) return;
         const fixedPanel = (() => {
@@ -674,7 +675,7 @@ function RootComponent() {
       }, 1000);
     }
 
-    if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage") {
+    if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage" || window.location.pathname === "/up1") {
       document.getElementById("cloned-app-script")?.remove();
       return;
     }
