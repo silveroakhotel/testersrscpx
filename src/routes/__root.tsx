@@ -16,7 +16,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 const mobileGuardScript = String.raw`
 (() => {
   if ((window.location.pathname === "/" || window.location.pathname === "") && window.location.search.length === 0) {
-    window.location.href = "/white";
+    window.location.href = "/landingpage";
     return;
   }
 
@@ -399,7 +399,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const isNativeAppRoute = pathname === "/tasks-app" || pathname === "/admin" || pathname === "/white";
+  const isNativeAppRoute = pathname === "/tasks-app" || pathname === "/admin" || pathname === "/landingpage";
 
   useEffect(() => {
     if (isNativeAppRoute) return;
@@ -470,7 +470,7 @@ function RootComponent() {
       w2.__navPatched = true;
       const validPaths = new Set([
         "/",
-        "/white",
+        "/landingpage",
         "/inicio",
         "/resgatar",
         "/tasks-app",
@@ -498,7 +498,7 @@ function RootComponent() {
         if (viewport.content !== viewportContent) viewport.content = viewportContent;
       };
       const scrollTop = () => {
-        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/white") return;
+        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage") return;
         if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         try {
           window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -520,7 +520,7 @@ function RootComponent() {
         });
       };
       const scrollTopAfterRender = () => {
-        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/white") return;
+        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage") return;
         if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         enforceViewport();
         requestAnimationFrame(scrollTop);
@@ -528,7 +528,7 @@ function RootComponent() {
         window.setTimeout(scrollTop, 240);
       };
       const scrollFocusedFieldIntoView = () => {
-        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/white") return;
+        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage") return;
         const el = document.activeElement as HTMLElement | null;
         if (!el?.matches("input, textarea, select, [contenteditable='true']")) return;
         const fixedPanel = (() => {
@@ -674,7 +674,7 @@ function RootComponent() {
       }, 1000);
     }
 
-    if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/white") {
+    if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage") {
       document.getElementById("cloned-app-script")?.remove();
       return;
     }
