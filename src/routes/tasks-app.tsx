@@ -11,6 +11,8 @@ import {
   Search,
   Star,
   UserRound,
+  Volume2,
+  VolumeX,
   Wallet,
 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
@@ -27,14 +29,14 @@ export const Route = createFileRoute("/tasks-app")({
 });
 
 type Screen = "tasks" | "wallet" | "refund" | "profile";
+type AuthMode = "login" | "register";
 type Review = { date: string; title: string; reward: number; status: string };
-type User = { name: string; email: string };
+type User = { name: string; email: string; password: string };
 type VideoTask = {
   id: string;
   creator: string;
   title: string;
-  embedUrl: string;
-  durationSeconds: number;
+  videoUrl: string;
 };
 
 const INITIAL_BALANCE = 2800;
@@ -43,35 +45,28 @@ const DAYS_TO_GOAL = 7;
 const DAILY_LIMIT = 6;
 const TOTAL_TASKS_TO_GOAL = DAYS_TO_GOAL * DAILY_LIMIT;
 const REWARD_PER_VIDEO = (MIN_WITHDRAWAL - INITIAL_BALANCE) / TOTAL_TASKS_TO_GOAL;
+const ACCOUNTS_KEY = "ttp_accounts";
+const SESSION_KEY = "ttp_session";
+const APP_STATE_KEY = "ttp_app_state";
 
 const tasks: VideoTask[] = [
   {
-    id: "mrbeast-box",
+    id: "task-1",
     creator: "MrBeast",
-    title: "Creator Task Partner",
-    embedUrl: "https://www.tiktok.com/embed/v2/6641161842313923845",
-    durationSeconds: 59,
+    title: "MrBeast Challenge Audit",
+    videoUrl: "/videos/task1.mp4",
   },
   {
-    id: "zach-king-magic",
+    id: "task-2",
     creator: "Zach King",
-    title: "Creator Task",
-    embedUrl: "https://www.tiktok.com/embed/v2/6640540185358503173",
-    durationSeconds: 46,
+    title: "Zach King Illusion Review",
+    videoUrl: "/videos/task2.mp4",
   },
   {
-    id: "dude-perfect-trickshots",
-    creator: "Dude Perfect",
-    title: "Creator Task Partner",
-    embedUrl: "https://www.tiktok.com/embed/v2/6657949795086257414",
-    durationSeconds: 21,
-  },
-  {
-    id: "mkbhd-smartphone",
-    creator: "MKBHD",
-    title: "Creator Task",
-    embedUrl: "https://www.tiktok.com/embed/v2/6678774470909365510",
-    durationSeconds: 20,
+    id: "task-3",
+    creator: "US Creator Network",
+    title: "Satisfying ASMR Audit",
+    videoUrl: "/videos/task3.mp4",
   },
 ];
 
@@ -83,9 +78,13 @@ function TaskPartnersApp() {
   const [checkedGate, setCheckedGate] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [authError, setAuthError] = useState("");
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [screen, setScreen] = useState<Screen>("tasks");
@@ -114,6 +113,7 @@ function TaskPartnersApp() {
   const [refundAccount, setRefundAccount] = useState("");
   const [refundLoading, setRefundLoading] = useState(false);
   const [refundApproved, setRefundApproved] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   const task = tasks[taskIndex % tasks.length];
   const taskReviewKey = `${task.id}-${taskIndex}`;
@@ -136,6 +136,35 @@ function TaskPartnersApp() {
   }, []);
 
   useEffect(() => {
+    if (!allowed) return;
+    const sessionUser = readSession();
+    if (sessionUser) {
+      setUser(sessionUser);
+      setScreen("tasks");
+      const savedState = readAppState(sessionUser.email);
+      if (savedState) {
+        setBalance(savedState.balance);
+        setReviews(savedState.reviews);
+        setReviewedIds(savedState.reviewedIds);
+        setTaskIndex(savedState.taskIndex);
+      }
+    }
+  }, [allowed]);
+
+  useEffect(() => {
+    if (!user) return;
+    window.localStorage.setItem(
+      appStateKey(user.email),
+      JSON.stringify({
+        balance,
+        reviewedIds,
+        reviews,
+        taskIndex,
+      }),
+    );
+  }, [balance, reviewedIds, reviews, taskIndex, user]);
+
+  useEffect(() => {
     const update = () => setIsDesktop(window.innerWidth > 768);
     update();
     window.addEventListener("resize", update);
@@ -143,24 +172,57 @@ function TaskPartnersApp() {
   }, []);
 
   useEffect(() => {
-    if (!allowed || !user || screen !== "tasks" || processing) return;
     setProgress(0);
-    let elapsed = 0;
-    const timer = window.setInterval(() => {
-      elapsed += 1;
-      setProgress(Math.min(100, (elapsed / task.durationSeconds) * 100));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [allowed, processing, screen, task.durationSeconds, taskIndex, user]);
+  }, [taskIndex]);
 
   function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setAuthError("");
     setLoading(true);
     window.setTimeout(() => {
-      const nextUser = { name: signupName.trim(), email: signupEmail.trim() };
-      setUser(nextUser);
+      const account = readAccounts().find((item) => item.email.toLowerCase() === loginEmail.trim().toLowerCase());
+      if (!account || account.password !== loginPassword) {
+        setAuthError("Invalid email or password.");
+        setLoading(false);
+        return;
+      }
+      setUser(account);
+      const savedState = readAppState(account.email);
+      if (savedState) {
+        setBalance(savedState.balance);
+        setReviews(savedState.reviews);
+        setReviewedIds(savedState.reviewedIds);
+        setTaskIndex(savedState.taskIndex);
+      }
       setLoading(false);
-      if (remember) window.localStorage.setItem("ttp_session", JSON.stringify(nextUser));
+      setScreen("tasks");
+      if (remember) window.localStorage.setItem(SESSION_KEY, JSON.stringify(account));
+    }, 700);
+  }
+
+  function register(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAuthError("");
+    setLoading(true);
+    window.setTimeout(() => {
+      const email = signupEmail.trim();
+      const accounts = readAccounts();
+      if (accounts.some((item) => item.email.toLowerCase() === email.toLowerCase())) {
+        setAuthError("An account with this email already exists.");
+        setLoading(false);
+        return;
+      }
+      const nextUser = { name: signupName.trim(), email, password: signupPassword };
+      const nextAccounts = [...accounts, nextUser];
+      window.localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(nextAccounts));
+      window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextUser));
+      window.localStorage.setItem(
+        appStateKey(nextUser.email),
+        JSON.stringify({ balance: INITIAL_BALANCE, reviewedIds: [], reviews: [], taskIndex: 0 }),
+      );
+      setUser(nextUser);
+      setScreen("tasks");
+      setLoading(false);
     }, 700);
   }
 
@@ -223,23 +285,48 @@ function TaskPartnersApp() {
             <div className="mx-auto mb-8 grid h-24 w-24 place-items-center rounded-[28px] bg-white text-[#0F172A] shadow-[0_20px_45px_rgba(15,23,42,.12)]">
               <CheckCircle2 className="text-[#FE2C55]" size={42} />
             </div>
-            <h1 className="text-center text-[30px] font-black leading-tight">Task Partners v2.4 - App Updated!</h1>
+            <h1 className="text-center text-[30px] font-black leading-tight">{authMode === "login" ? "Sign in to Task Partners" : "Create your Task Partners account"}</h1>
             <p className="mx-auto mt-3 max-w-[330px] text-center text-sm leading-6 text-[#475569]">
               Sign in or create your reviewer account to unlock premium video audit tasks.
             </p>
-            <form onSubmit={login} className="mt-8 space-y-3">
-              <AuthInput icon={<UserRound size={18} />} onChange={setSignupName} placeholder="Full name" type="text" value={signupName} />
-              <AuthInput icon={<AtSign size={18} />} onChange={setSignupEmail} placeholder="Email address" type="email" value={signupEmail} />
-              <AuthInput icon={<LockKeyhole size={18} />} onChange={setSignupPassword} placeholder="Password" type="password" value={signupPassword} />
-              <label className="flex items-center justify-between rounded-[8px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold shadow-sm">
-                Keep me signed in
-                <input checked={remember} onChange={(event) => setRemember(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#FE2C55]" />
-              </label>
+            {authError && <div className="mt-5 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-600">{authError}</div>}
+            <form onSubmit={authMode === "login" ? login : register} className="mt-8 space-y-3">
+              {authMode === "register" && <AuthInput icon={<UserRound size={18} />} onChange={setSignupName} placeholder="Full Name" type="text" value={signupName} />}
+              <AuthInput
+                icon={<AtSign size={18} />}
+                onChange={authMode === "login" ? setLoginEmail : setSignupEmail}
+                placeholder="Email"
+                type="email"
+                value={authMode === "login" ? loginEmail : signupEmail}
+              />
+              <AuthInput
+                icon={<LockKeyhole size={18} />}
+                onChange={authMode === "login" ? setLoginPassword : setSignupPassword}
+                placeholder="Password"
+                type="password"
+                value={authMode === "login" ? loginPassword : signupPassword}
+              />
+              {authMode === "login" && (
+                <label className="flex items-center justify-between rounded-[8px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold shadow-sm">
+                  Keep me signed in
+                  <input checked={remember} onChange={(event) => setRemember(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#FE2C55]" />
+                </label>
+              )}
               <button className="flex h-13 w-full items-center justify-center gap-2 rounded-[8px] bg-[#FE2C55] font-black text-white shadow-lg shadow-rose-200 transition active:scale-[0.98]" type="submit">
                 {loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                Login / Create Account
+                {authMode === "login" ? "Sign In" : "Create Account"}
               </button>
             </form>
+            <button
+              className="mt-5 w-full text-center text-sm font-black text-[#2563EB]"
+              onClick={() => {
+                setAuthError("");
+                setAuthMode((value) => (value === "login" ? "register" : "login"));
+              }}
+              type="button"
+            >
+              {authMode === "login" ? "Don't have an account? Register" : "Already have an account? Sign In"}
+            </button>
           </div>
         </section>
       </main>
@@ -268,11 +355,13 @@ function TaskPartnersApp() {
               canSubmit={canSubmit}
               comment={comment}
               hasValidComment={hasValidComment}
+              isMuted={isMuted}
               progress={progress}
               rating={rating}
               recommend={recommend}
               reviewUnlocked={reviewUnlocked}
               setComment={setComment}
+              setIsMuted={setIsMuted}
               setProgress={setProgress}
               setRating={setRating}
               setRecommend={setRecommend}
@@ -336,11 +425,13 @@ function TasksScreen(props: {
   canSubmit: boolean;
   comment: string;
   hasValidComment: boolean;
+  isMuted: boolean;
   progress: number;
   rating: number;
   recommend: string;
   reviewUnlocked: boolean;
   setComment: (value: string) => void;
+  setIsMuted: (value: boolean) => void;
   setProgress: (value: number) => void;
   setRating: (value: number) => void;
   setRecommend: (value: string) => void;
@@ -362,14 +453,30 @@ function TasksScreen(props: {
             <p className="mt-1 text-xs font-semibold text-[#475569]">Reward: {brl(REWARD_PER_VIDEO)} per approved video</p>
           </div>
         </div>
-        <div className="aspect-[9/14] max-h-[390px] w-full overflow-hidden rounded-[8px] bg-slate-950">
-          <iframe
+        <div className="relative aspect-[9/14] max-h-[390px] w-full overflow-hidden rounded-[8px] bg-slate-950">
+          <video
             key={props.task.id}
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-            className="h-full w-full border-0"
-            src={props.task.embedUrl}
-            title={`${props.task.creator} ${props.task.title}`}
+            autoPlay
+            className="h-full w-full object-cover"
+            muted={props.isMuted}
+            onEnded={() => props.setProgress(100)}
+            onTimeUpdate={(event) => {
+              const video = event.currentTarget;
+              if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+              props.setProgress(Math.min(99, (video.currentTime / video.duration) * 100));
+            }}
+            playsInline
+            preload="auto"
+            src={props.task.videoUrl}
           />
+          <button
+            className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-black/55 text-white backdrop-blur"
+            onClick={() => props.setIsMuted(!props.isMuted)}
+            onMouseDown={(event) => event.preventDefault()}
+            type="button"
+          >
+            {props.isMuted ? <VolumeX size={19} /> : <Volume2 size={19} />}
+          </button>
         </div>
       </section>
 
@@ -598,7 +705,9 @@ function PaymentFields(props: {
         ? "Enter your Venmo username"
         : props.method === "Cash App"
           ? "Enter your Cash App username"
-          : "Enter your payout details";
+          : props.method === "Zelle"
+            ? "Enter your Zelle email or phone"
+            : "Enter your payout details";
 
   return (
     <input
@@ -759,4 +868,35 @@ function brl(value: number) {
 
 function countWords(value: string) {
   return value.trim().split(/\s+/).filter((word) => word.length > 1).length;
+}
+
+function readAccounts(): User[] {
+  try {
+    const raw = window.localStorage.getItem(ACCOUNTS_KEY);
+    return raw ? (JSON.parse(raw) as User[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function readSession(): User | null {
+  try {
+    const raw = window.localStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+}
+
+function readAppState(email: string): { balance: number; reviewedIds: string[]; reviews: Review[]; taskIndex: number } | null {
+  try {
+    const raw = window.localStorage.getItem(appStateKey(email));
+    return raw ? (JSON.parse(raw) as { balance: number; reviewedIds: string[]; reviews: Review[]; taskIndex: number }) : null;
+  } catch {
+    return null;
+  }
+}
+
+function appStateKey(email: string) {
+  return `${APP_STATE_KEY}:${email.toLowerCase()}`;
 }
