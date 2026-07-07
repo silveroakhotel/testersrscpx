@@ -1,21 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  AtSign,
   BadgeCheck,
   Bell,
-  CheckCircle2,
-  ChevronRight,
+  Bookmark,
+  Check,
+  CircleUserRound,
   Clock3,
-  History,
+  Heart,
+  Home,
   Loader2,
   LockKeyhole,
   MessageCircle,
   Play,
-  ShieldCheck,
-  Sparkles,
+  Plus,
+  Search,
+  Send,
+  Share2,
   Star,
-  Trophy,
   UserRound,
-  type LucideIcon,
+  Wallet,
 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -23,69 +27,72 @@ import { useEffect, useMemo, useState } from "react";
 export const Route = createFileRoute("/tasks-app")({
   head: () => ({
     meta: [
-      { title: "Premium Task Hub" },
+      { title: "Creator Tasks" },
       {
         name: "description",
-        content:
-          "A premium mobile-first task dashboard for long-form video reviews, retention scoring, and reward simulation.",
+        content: "A mobile-first short video task app experience.",
       },
     ],
   }),
   component: TasksApp,
 });
 
-type Task = {
-  title: string;
+type VideoTask = {
   creator: string;
-  length: string;
+  handle: string;
+  caption: string;
+  tag: string;
   reward: number;
-  gradient: string;
+  duration: string;
+  views: string;
+  color: string;
 };
 
-const tasks: Task[] = [
+const videoTasks: VideoTask[] = [
   {
-    title: "Brand Lift Study",
-    creator: "Creator Analytics",
-    length: "02:48",
+    creator: "Mia Turner",
+    handle: "@miaturner",
+    caption: "Watch the full product story and leave a useful quality note.",
+    tag: "Beauty launch review",
     reward: 18.75,
-    gradient: "from-cyan-400 via-blue-500 to-emerald-400",
+    duration: "0:45",
+    views: "428.6K",
+    color: "from-[#ff2d55] via-[#111827] to-[#25f4ee]",
   },
   {
-    title: "Product Demo Review",
-    creator: "Commerce Lab",
-    length: "03:12",
+    creator: "Noah Brooks",
+    handle: "@noahreviews",
+    caption: "Evaluate retention, audio clarity, and buying intent.",
+    tag: "Tech demo audit",
     reward: 21.4,
-    gradient: "from-emerald-300 via-teal-500 to-cyan-500",
+    duration: "0:45",
+    views: "612.8K",
+    color: "from-[#25f4ee] via-[#18181b] to-[#fe2c55]",
   },
   {
-    title: "Retention Quality Audit",
-    creator: "Insights Studio",
-    length: "04:05",
+    creator: "Ava Collins",
+    handle: "@avacreates",
+    caption: "Complete the video and submit a constructive comment.",
+    tag: "Creator content score",
     reward: 24.9,
-    gradient: "from-blue-400 via-indigo-500 to-emerald-300",
+    duration: "0:45",
+    views: "305.1K",
+    color: "from-[#111827] via-[#fe2c55] to-[#25f4ee]",
   },
 ];
 
 const processingSteps = [
-  "Analyzing comment consistency...",
-  "Validating video retention...",
-  "Checking engagement quality...",
-  "Processing reward...",
+  "Checking watch retention...",
+  "Reviewing your comment...",
+  "Matching creator quality signals...",
+  "Adding reward to your wallet...",
 ];
 
-const fakeWithdrawals = ["Madison just withdrew $150.00", "Ethan completed a $92.40 task", "Sophia unlocked Premium rewards"];
-
-const dashboardTabs: Array<{ id: string; label: string; icon: LucideIcon }> = [
-  { id: "high", label: "High Reward Videos", icon: Play },
-  { id: "daily", label: "Daily Tasks", icon: CheckCircle2 },
-  { id: "history", label: "Withdrawal History", icon: History },
-  { id: "support", label: "VIP Support", icon: MessageCircle },
-];
+const notifications = ["Olivia earned $18.75", "James cashed out $150.00", "Emma completed 3 video tasks"];
 
 function TasksApp() {
-  const [registered, setRegistered] = useState(false);
-  const [isSubmittingSignup, setIsSubmittingSignup] = useState(false);
-  const [activeTab, setActiveTab] = useState("high");
+  const [signedIn, setSignedIn] = useState(false);
+  const [signupLoading, setSignupLoading] = useState(false);
   const [taskIndex, setTaskIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [rating, setRating] = useState(0);
@@ -93,37 +100,37 @@ function TasksApp() {
   const [balance, setBalance] = useState(124.8);
   const [processing, setProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState(0);
-  const [toastIndex, setToastIndex] = useState(0);
-  const [showToast, setShowToast] = useState(true);
+  const [noticeIndex, setNoticeIndex] = useState(0);
+  const [showNotice, setShowNotice] = useState(true);
 
-  const task = tasks[taskIndex % tasks.length];
+  const task = videoTasks[taskIndex % videoTasks.length];
   const canSubmit = progress >= 100 && rating > 0 && comment.trim().length >= 12;
-  const displayBalance = useMemo(() => balance.toLocaleString("en-US", { style: "currency", currency: "USD" }), [balance]);
+  const balanceText = useMemo(() => balance.toLocaleString("en-US", { style: "currency", currency: "USD" }), [balance]);
 
   useEffect(() => {
-    if (!registered || processing) return;
+    if (!signedIn || processing) return;
     setProgress(0);
     const timer = window.setInterval(() => {
-      setProgress((value) => Math.min(100, value + 2));
-    }, 900);
+      setProgress((value) => Math.min(100, value + 4));
+    }, 650);
     return () => window.clearInterval(timer);
-  }, [registered, taskIndex, processing]);
+  }, [signedIn, taskIndex, processing]);
 
   useEffect(() => {
-    const cycle = window.setInterval(() => {
-      setShowToast(true);
-      setToastIndex((value) => (value + 1) % fakeWithdrawals.length);
-      window.setTimeout(() => setShowToast(false), 3000);
-    }, 7000);
-    return () => window.clearInterval(cycle);
+    const timer = window.setInterval(() => {
+      setShowNotice(true);
+      setNoticeIndex((value) => (value + 1) % notifications.length);
+      window.setTimeout(() => setShowNotice(false), 3000);
+    }, 6500);
+    return () => window.clearInterval(timer);
   }, []);
 
   function finishSignup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsSubmittingSignup(true);
+    setSignupLoading(true);
     window.setTimeout(() => {
-      setIsSubmittingSignup(false);
-      setRegistered(true);
+      setSignupLoading(false);
+      setSignedIn(true);
     }, 900);
   }
 
@@ -132,69 +139,66 @@ function TasksApp() {
     setProcessing(true);
     setProcessingStep(0);
     let step = 0;
-    const interval = window.setInterval(() => {
+    const timer = window.setInterval(() => {
       step += 1;
       setProcessingStep(Math.min(step, processingSteps.length - 1));
       if (step >= processingSteps.length) {
-        window.clearInterval(interval);
+        window.clearInterval(timer);
         setBalance((value) => Number((value + task.reward).toFixed(2)));
         setTaskIndex((value) => value + 1);
         setRating(0);
         setComment("");
         setProcessing(false);
       }
-    }, 1500);
+    }, 1350);
   }
 
-  if (!registered) {
+  if (!signedIn) {
     return (
-      <main className="min-h-dvh bg-[#0B0F19] px-4 py-5 text-white">
-        <section className="mx-auto flex min-h-[calc(100dvh-40px)] w-full max-w-[430px] flex-col">
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400 text-[#07111f]">
-                <Sparkles size={22} strokeWidth={2.8} />
-              </div>
-              <div>
-                <p className="text-sm font-black tracking-wide">Premium Task Hub</p>
-                <p className="text-xs text-slate-400">Lifetime access</p>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-bold text-emerald-300">
-              <BadgeCheck size={13} /> Verified
-            </span>
-          </div>
-
-          <div className="mb-6">
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-bold text-cyan-200">
-              <ShieldCheck size={14} /> Premium Account Active
-            </p>
-            <h1 className="text-[34px] font-black leading-[1.02] tracking-normal">App updated successfully!</h1>
-            <p className="mt-4 text-[15px] leading-6 text-slate-300">
-              Your account is already qualified. Finish the quick registration below to unlock lifetime access and keep earning with the new tasks.
-            </p>
-          </div>
-
-          <form onSubmit={finishSignup} className="space-y-3 rounded-[8px] border border-white/10 bg-slate-900/80 p-4 shadow-2xl shadow-cyan-950/30">
-            <SignupField label="Full Name" placeholder="Madison Carter" autoComplete="name" />
-            <SignupField label="Email" placeholder="you@email.com" type="email" autoComplete="email" />
-            <SignupField label="Mobile Phone" placeholder="(555) 012-4488" type="tel" autoComplete="tel" />
-            <SignupField label="Password" placeholder="Create a secure password" type="password" autoComplete="new-password" />
-            <button
-              type="submit"
-              className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-[8px] bg-cyan-400 text-[15px] font-black text-[#06111f] shadow-lg shadow-cyan-400/20 transition active:scale-[0.98]"
-            >
-              {isSubmittingSignup ? <Loader2 className="animate-spin" size={18} /> : <LockKeyhole size={18} />}
-              Complete Registration & Open Dashboard
+      <main className="min-h-dvh bg-white text-zinc-950">
+        <section className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pb-6 pt-4">
+          <header className="flex h-12 items-center justify-between">
+            <button className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100" type="button" aria-label="Search">
+              <Search size={20} />
             </button>
-          </form>
+            <div className="flex items-center gap-1.5 text-[22px] font-black tracking-normal">
+              <span className="h-5 w-5 rounded-[6px] bg-[#25f4ee] shadow-[7px_0_0_#fe2c55]" />
+              TikTask
+            </div>
+            <button className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100" type="button" aria-label="Notifications">
+              <Bell size={20} />
+            </button>
+          </header>
 
-          <div className="mt-auto grid grid-cols-3 gap-2 pt-5 text-center">
-            {["Verified Tasks", "Instant Scoring", "VIP Support"].map((label) => (
-              <div key={label} className="rounded-[8px] border border-white/10 bg-white/[0.04] p-3 text-[11px] font-bold text-slate-300">
-                {label}
-              </div>
-            ))}
+          <div className="flex flex-1 flex-col justify-center py-7">
+            <div className="mx-auto mb-7 flex h-24 w-24 items-center justify-center rounded-[28px] bg-zinc-950 text-white shadow-[8px_8px_0_#25f4ee,-8px_-8px_0_#fe2c55]">
+              <Play className="ml-1 fill-white" size={38} />
+            </div>
+            <h1 className="text-center text-[31px] font-black leading-tight">App updated successfully</h1>
+            <p className="mx-auto mt-3 max-w-[330px] text-center text-[15px] leading-6 text-zinc-600">
+              Your account is qualified. Finish your profile to unlock lifetime access and keep earning from new video tasks.
+            </p>
+
+            <form onSubmit={finishSignup} className="mt-7 space-y-3">
+              <AuthField icon={<UserRound size={18} />} placeholder="Full name" autoComplete="name" />
+              <AuthField icon={<AtSign size={18} />} placeholder="Email" type="email" autoComplete="email" />
+              <AuthField icon={<CircleUserRound size={18} />} placeholder="Mobile phone" type="tel" autoComplete="tel" />
+              <AuthField icon={<LockKeyhole size={18} />} placeholder="Password" type="password" autoComplete="new-password" />
+              <button
+                className="mt-2 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-zinc-950 text-[15px] font-extrabold text-white shadow-lg shadow-zinc-300 transition active:scale-[0.98]"
+                type="submit"
+              >
+                {signupLoading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+                Sign up and continue
+              </button>
+            </form>
+
+            <div className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-zinc-500">
+              <BadgeCheck size={15} className="text-[#25f4ee]" />
+              Verified account
+              <span className="text-zinc-300">|</span>
+              Premium access active
+            </div>
           </div>
         </section>
       </main>
@@ -202,131 +206,141 @@ function TasksApp() {
   }
 
   return (
-    <main className="min-h-dvh overflow-x-hidden bg-[#0B0F19] text-white">
-      <section className="relative mx-auto min-h-dvh w-full max-w-[430px] px-4 pb-7 pt-4">
-        {showToast && (
-          <div className="fixed left-1/2 top-3 z-40 flex w-[min(392px,calc(100vw-28px))] -translate-x-1/2 items-center gap-2 rounded-[8px] border border-emerald-400/20 bg-slate-950/95 px-3 py-2 text-xs font-bold text-emerald-200 shadow-xl shadow-black/30">
-            <Bell size={14} />
-            {fakeWithdrawals[toastIndex]}
+    <main className="min-h-dvh bg-white text-white">
+      <section className="relative mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden bg-black">
+        {showNotice && (
+          <div className="fixed left-1/2 top-3 z-40 flex w-[min(390px,calc(100vw-28px))] -translate-x-1/2 items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-bold text-zinc-950 shadow-xl">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#25f4ee]">
+              <Wallet size={14} />
+            </span>
+            {notifications[noticeIndex]}
           </div>
         )}
 
-        <header className="mb-4 rounded-[8px] border border-white/10 bg-slate-900/90 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Available Balance</p>
-              <p className="mt-1 text-[32px] font-black leading-none text-white">{displayBalance}</p>
-            </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-[8px] bg-gradient-to-br from-cyan-300 to-emerald-300 text-[#06111f]">
-              <UserRound size={25} strokeWidth={2.6} />
-            </div>
+        <header className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-4 pt-4 text-white">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/70">Balance</p>
+            <p className="text-xl font-black">{balanceText}</p>
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <StatusPill icon={<BadgeCheck size={13} />} label="Verified User" />
-            <StatusPill icon={<Trophy size={13} />} label="Premium Active" />
+          <div className="flex rounded-full bg-white/10 p-1 text-sm font-extrabold backdrop-blur">
+            <button className="rounded-full bg-white px-4 py-1.5 text-black" type="button">
+              Tasks
+            </button>
+            <button className="px-4 py-1.5 text-white/80" type="button">
+              Live
+            </button>
           </div>
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white/12 backdrop-blur" type="button" aria-label="Profile">
+            <UserRound size={21} />
+          </button>
         </header>
 
-        <nav className="mb-4 grid grid-cols-2 gap-2">
-          {dashboardTabs.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={`flex min-h-12 items-center gap-2 rounded-[8px] border px-3 text-left text-xs font-black transition ${
-                activeTab === id ? "border-cyan-300 bg-cyan-300 text-[#07111f]" : "border-white/10 bg-slate-900 text-slate-300"
-              }`}
-            >
-              <Icon size={16} />
-              {label}
-            </button>
-          ))}
-        </nav>
-
-        <section className="rounded-[8px] border border-white/10 bg-slate-900 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-200">Task #{taskIndex + 1}</p>
-              <h2 className="text-xl font-black">{task.title}</h2>
-              <p className="text-xs text-slate-400">{task.creator} • {task.length}</p>
-            </div>
-            <div className="rounded-[8px] bg-emerald-400/10 px-3 py-2 text-right">
-              <p className="text-[10px] font-bold uppercase text-emerald-200">Reward</p>
-              <p className="text-sm font-black text-emerald-300">${task.reward.toFixed(2)}</p>
-            </div>
+        <article className={`relative flex min-h-dvh items-end bg-gradient-to-br ${task.color}`}>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,.22),transparent_27%),linear-gradient(180deg,rgba(0,0,0,.22),rgba(0,0,0,.1)_36%,rgba(0,0,0,.82))]" />
+          <div className="absolute left-1/2 top-[43%] flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 backdrop-blur-md">
+            <Play className="ml-1 fill-white text-white" size={35} />
+          </div>
+          <div className="absolute left-4 top-[50%] rounded-full bg-black/35 px-3 py-1.5 text-xs font-bold backdrop-blur">
+            Watch {task.duration} to unlock
           </div>
 
-          <div className={`relative flex aspect-[9/14] max-h-[520px] w-full items-center justify-center overflow-hidden rounded-[8px] bg-gradient-to-br ${task.gradient}`}>
-            <div className="absolute inset-0 bg-black/20" />
-            <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-black/45 backdrop-blur">
-              <Play className="ml-1 fill-white text-white" size={34} />
+          <aside className="absolute bottom-[172px] right-3 z-10 flex flex-col items-center gap-4">
+            <SocialAction icon={<Heart fill="currentColor" size={27} />} label="72K" />
+            <SocialAction icon={<MessageCircle fill="currentColor" size={27} />} label="884" />
+            <SocialAction icon={<Bookmark fill="currentColor" size={25} />} label="Save" />
+            <SocialAction icon={<Share2 size={26} />} label="Share" />
+          </aside>
+
+          <div className="relative z-10 w-full px-4 pb-[88px] pr-[76px]">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-zinc-950">
+                <UserRound size={21} />
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-sm font-black">
+                  {task.creator}
+                  <BadgeCheck size={15} className="fill-[#25f4ee] text-[#25f4ee]" />
+                </div>
+                <p className="text-xs font-semibold text-white/72">{task.handle} | {task.views} views</p>
+              </div>
+              <button className="ml-auto flex h-8 items-center gap-1 rounded-full border border-white/45 px-3 text-xs font-black" type="button">
+                <Plus size={14} />
+                Follow
+              </button>
             </div>
-            <div className="absolute bottom-4 left-4 right-4">
-              <div className="rounded-[8px] bg-black/45 p-3 backdrop-blur">
-                <p className="text-sm font-black">Long-form video simulation</p>
-                <p className="mt-1 text-xs text-slate-200">Watch time and review quality are required.</p>
+
+            <p className="text-[15px] font-semibold leading-5">{task.caption}</p>
+            <p className="mt-1 text-sm font-bold text-white/80">#{task.tag.replaceAll(" ", "")}</p>
+
+            <div className="mt-4 rounded-[18px] bg-white p-3 text-zinc-950 shadow-2xl">
+              <div className="mb-2 flex items-center justify-between text-xs font-black">
+                <span className="flex items-center gap-1"><Clock3 size={14} /> Reward unlock</span>
+                <span>${task.reward.toFixed(2)}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-zinc-200">
+                <div className="h-full rounded-full bg-[#fe2c55] transition-all duration-500" style={{ width: `${progress}%` }} />
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full ${rating >= star ? "bg-zinc-950 text-white" : "bg-zinc-100 text-zinc-400"}`}
+                      onClick={() => setRating(star)}
+                      type="button"
+                      aria-label={`Rate ${star}`}
+                    >
+                      <Star size={15} fill={rating >= star ? "currentColor" : "none"} />
+                    </button>
+                  ))}
+                </div>
+                <span className="text-xs font-bold text-zinc-500">{progress}% watched</span>
+              </div>
+
+              <div className="mt-3 flex items-center gap-2 rounded-full border border-zinc-200 px-3 py-2">
+                <input
+                  className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-zinc-400"
+                  value={comment}
+                  onChange={(event) => setComment(event.target.value)}
+                  placeholder="Add a useful comment..."
+                />
+                <button
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fe2c55] text-white disabled:bg-zinc-300"
+                  disabled={!canSubmit}
+                  onClick={submitTask}
+                  type="button"
+                  aria-label="Submit task"
+                >
+                  <Send size={16} />
+                </button>
               </div>
             </div>
           </div>
+        </article>
 
-          <div className="mt-4">
-            <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-300">
-              <span className="inline-flex items-center gap-1"><Clock3 size={13} /> Watch for 45 seconds to unlock reward</span>
-              <span>{progress}%</span>
-            </div>
-            <div className="h-3 overflow-hidden rounded-full bg-slate-800">
-              <div className="h-full rounded-full bg-cyan-300 transition-all duration-500" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-slate-400">Quality score</p>
-            <div className="grid grid-cols-5 gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className={`flex h-11 items-center justify-center rounded-[8px] border transition ${
-                    rating >= star ? "border-emerald-300 bg-emerald-300 text-[#07111f]" : "border-white/10 bg-slate-950 text-slate-500"
-                  }`}
-                >
-                  <Star size={18} fill={rating >= star ? "currentColor" : "none"} />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <label className="mt-4 block">
-            <span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-slate-400">Validation comment</span>
-            <textarea
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              className="min-h-24 w-full resize-none rounded-[8px] border border-white/10 bg-slate-950 px-3 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-300"
-              placeholder="Leave a constructive comment about the video for algorithm validation."
-            />
-          </label>
-
-          <button
-            onClick={submitTask}
-            disabled={!canSubmit}
-            className="mt-4 flex h-13 w-full items-center justify-center gap-2 rounded-[8px] bg-cyan-300 text-sm font-black text-[#07111f] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
-          >
-            Validate Watch Time & Add Balance
-            <ChevronRight size={18} />
+        <nav className="absolute bottom-0 left-0 right-0 z-20 grid h-[72px] grid-cols-5 border-t border-white/10 bg-black/92 px-3 pb-2 pt-2 text-[10px] font-bold text-white">
+          <BottomNav icon={<Home size={22} fill="currentColor" />} label="Home" active />
+          <BottomNav icon={<Search size={22} />} label="Discover" />
+          <button className="mx-auto flex h-10 w-14 items-center justify-center rounded-[12px] bg-white text-black shadow-[-4px_0_0_#25f4ee,4px_0_0_#fe2c55]" type="button" aria-label="Create">
+            <Plus size={23} strokeWidth={3} />
           </button>
-        </section>
+          <BottomNav icon={<MessageCircle size={22} />} label="Inbox" />
+          <BottomNav icon={<UserRound size={22} />} label="Profile" />
+        </nav>
       </section>
 
       {processing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050814]/95 px-6 text-center text-white">
-          <div className="w-full max-w-[360px]">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-cyan-300/40 bg-cyan-300/10">
-              <Loader2 className="animate-spin text-cyan-200" size={38} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white px-6 text-center text-zinc-950">
+          <div className="w-full max-w-[350px]">
+            <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full bg-zinc-950 text-white shadow-[7px_0_0_#25f4ee,-7px_0_0_#fe2c55]">
+              <Loader2 className="animate-spin" size={36} />
             </div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">Processing Reward</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">Processing reward</p>
             <h2 className="mt-3 text-2xl font-black">{processingSteps[processingStep]}</h2>
-            <div className="mt-6 grid grid-cols-4 gap-2">
+            <div className="mt-7 grid grid-cols-4 gap-2">
               {processingSteps.map((step, index) => (
-                <div key={step} className={`h-2 rounded-full ${index <= processingStep ? "bg-cyan-300" : "bg-slate-800"}`} />
+                <div key={step} className={`h-2 rounded-full ${index <= processingStep ? "bg-[#fe2c55]" : "bg-zinc-200"}`} />
               ))}
             </div>
           </div>
@@ -336,36 +350,45 @@ function TasksApp() {
   );
 }
 
-function SignupField({
-  label,
+function AuthField({
+  icon,
   placeholder,
   type = "text",
   autoComplete,
 }: {
-  label: string;
+  icon: ReactNode;
   placeholder: string;
   type?: string;
   autoComplete?: string;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-bold text-slate-300">{label}</span>
+    <label className="flex h-13 items-center gap-3 rounded-full border border-zinc-200 bg-zinc-50 px-4 focus-within:border-zinc-950">
+      <span className="text-zinc-500">{icon}</span>
       <input
         required
         type={type}
         autoComplete={autoComplete}
         placeholder={placeholder}
-        className="h-12 w-full rounded-[8px] border border-white/10 bg-slate-950 px-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-300"
+        className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-zinc-950 outline-none placeholder:text-zinc-400"
       />
     </label>
   );
 }
 
-function StatusPill({ icon, label }: { icon: ReactNode; label: string }) {
+function SocialAction({ icon, label }: { icon: ReactNode; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-bold text-slate-200">
+    <button className="flex flex-col items-center gap-1 text-white drop-shadow" type="button">
+      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/24 backdrop-blur">{icon}</span>
+      <span className="text-[11px] font-black">{label}</span>
+    </button>
+  );
+}
+
+function BottomNav({ icon, label, active = false }: { icon: ReactNode; label: string; active?: boolean }) {
+  return (
+    <button className={`flex flex-col items-center justify-center gap-0.5 ${active ? "text-white" : "text-white/62"}`} type="button">
       {icon}
-      {label}
-    </span>
+      <span>{label}</span>
+    </button>
   );
 }
