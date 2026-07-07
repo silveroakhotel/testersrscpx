@@ -70,11 +70,21 @@ const tasks: VideoTask[] = [
 ];
 
 const processingSteps = ["Analyzing consistency...", "Validating retention...", "Checking review quality...", "Adding reward..."];
+const paymentOptions = [
+  "Cash App (Funds arrive instantly)",
+  "PayPal (Funds arrive within 1 minute)",
+  "Venmo (Funds arrive instantly)",
+  "Zelle (Funds arrive within minutes)",
+  "Bank Transfer (ACH) (Arrives in 1-3 business days)",
+];
 
 function TaskPartnersApp() {
   const [allowed, setAllowed] = useState(false);
   const [checkedGate, setCheckedGate] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [signupName, setSignupName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [screen, setScreen] = useState<Screen>("tasks");
@@ -91,16 +101,17 @@ function TaskPartnersApp() {
   const [processing, setProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState(0);
   const [successReward, setSuccessReward] = useState<number | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState("Pix Key");
+  const [paymentMethod, setPaymentMethod] = useState(paymentOptions[0]);
   const [paymentData, setPaymentData] = useState("");
-  const [refundMethod, setRefundMethod] = useState("Pix Key");
+  const [refundMethod, setRefundMethod] = useState(paymentOptions[0]);
   const [refundData, setRefundData] = useState("");
   const [refundLoading, setRefundLoading] = useState(false);
   const [refundApproved, setRefundApproved] = useState(false);
 
   const task = tasks[taskIndex % tasks.length];
+  const taskReviewKey = `${task.id}-${taskIndex}`;
   const completedToday = (reviews.length % DAILY_LIMIT) + 1;
-  const reviewUnlocked = progress >= 100 && !reviewedIds.includes(task.id);
+  const reviewUnlocked = progress >= 100 && !reviewedIds.includes(taskReviewKey);
   const canSubmit = reviewUnlocked && rating > 0 && Boolean(useful) && Boolean(recommend) && comment.trim().length >= 15;
   const balanceText = useMemo(() => brl(balance), [balance]);
 
@@ -129,14 +140,33 @@ function TaskPartnersApp() {
     event.preventDefault();
     setLoading(true);
     window.setTimeout(() => {
-      setUser({ name: "Mia Carter", email: "reviewer@taskpartners.app" });
+      const nextUser = { name: signupName.trim(), email: signupEmail.trim() };
+      setUser(nextUser);
       setLoading(false);
-      if (remember) window.localStorage.setItem("ttp_session", "reviewer@taskpartners.app");
+      if (remember) window.localStorage.setItem("ttp_session", JSON.stringify(nextUser));
     }, 700);
   }
 
   function submitReview() {
     if (!canSubmit) return;
+    const completedTask = task;
+    const completedKey = taskReviewKey;
+    const reward = REWARD_PER_VIDEO;
+
+    setReviewedIds((value) => [...value, completedKey]);
+    setReviews((value) => [
+      { date: new Date().toLocaleDateString("en-US"), title: completedTask.title, reward, status: "Approved" },
+      ...value,
+    ]);
+    setBalance((value) => Number((value + reward).toFixed(2)));
+    setSuccessReward(reward);
+    setRating(0);
+    setUseful("");
+    setRecommend("");
+    setComment("");
+    setProgress(0);
+    setTaskIndex((value) => value + 1);
+
     setProcessing(true);
     setProcessingStep(0);
     let step = 0;
@@ -145,18 +175,6 @@ function TaskPartnersApp() {
       setProcessingStep(Math.min(step, processingSteps.length - 1));
       if (step >= processingSteps.length) {
         window.clearInterval(timer);
-        setReviewedIds((value) => [...value, task.id]);
-        setReviews((value) => [
-          { date: new Date().toLocaleDateString("en-US"), title: task.title, reward: REWARD_PER_VIDEO, status: "Approved" },
-          ...value,
-        ]);
-        setBalance((value) => Number((value + REWARD_PER_VIDEO).toFixed(2)));
-        setSuccessReward(REWARD_PER_VIDEO);
-        setRating(0);
-        setUseful("");
-        setRecommend("");
-        setComment("");
-        setTaskIndex((value) => value + 1);
         setProcessing(false);
         window.setTimeout(() => setSuccessReward(null), 2600);
       }
@@ -191,8 +209,9 @@ function TaskPartnersApp() {
               Sign in or create your reviewer account to unlock premium video audit tasks.
             </p>
             <form onSubmit={login} className="mt-8 space-y-3">
-              <AuthInput icon={<AtSign size={18} />} placeholder="Email address" type="email" />
-              <AuthInput icon={<LockKeyhole size={18} />} placeholder="Password" type="password" />
+              <AuthInput icon={<UserRound size={18} />} onChange={setSignupName} placeholder="Full name" type="text" value={signupName} />
+              <AuthInput icon={<AtSign size={18} />} onChange={setSignupEmail} placeholder="Email address" type="email" value={signupEmail} />
+              <AuthInput icon={<LockKeyhole size={18} />} onChange={setSignupPassword} placeholder="Password" type="password" value={signupPassword} />
               <label className="flex items-center justify-between rounded-[8px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold shadow-sm">
                 Keep me signed in
                 <input checked={remember} onChange={(event) => setRemember(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#FE2C55]" />
@@ -214,8 +233,8 @@ function TaskPartnersApp() {
         <header className="shrink-0 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Available Balance</p>
-              <p className="truncate text-[15px] font-black text-[#0F172A]">Available Balance: {balanceText}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Balance</p>
+              <p className="flex items-center gap-1 truncate text-[17px] font-black text-[#0F172A]"><Wallet size={18} className="text-[#2563EB]" />{balanceText}</p>
             </div>
             <div className="shrink-0 rounded-[8px] bg-[#F1F5F9] px-3 py-2 text-right">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Daily Tasks</p>
@@ -239,6 +258,7 @@ function TaskPartnersApp() {
               setUseful={setUseful}
               submitReview={submitReview}
               task={task}
+              taskIndex={taskIndex}
               useful={useful}
             />
           )}
@@ -292,8 +312,11 @@ function TasksScreen(props: {
   setUseful: (value: string) => void;
   submitReview: () => void;
   task: VideoTask;
+  taskIndex: number;
   useful: string;
 }) {
+  const lockedTasks = Array.from({ length: Math.max(0, DAILY_LIMIT - 1) }, (_, index) => tasks[(props.taskIndex + index + 1) % tasks.length]);
+
   return (
     <div className="space-y-4">
       <section className="rounded-[8px] border border-slate-200 bg-white p-3 shadow-sm">
@@ -363,6 +386,33 @@ function TasksScreen(props: {
           </div>
         )}
       </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-black text-[#0F172A]">Pending Reviews</h2>
+          <p className="text-xs font-semibold text-[#475569]">Complete the current review to unlock the next task in your daily queue.</p>
+        </div>
+        {lockedTasks.map((lockedTask, index) => (
+          <div className="relative overflow-hidden rounded-[8px] border border-slate-200 bg-white p-3 shadow-sm" key={`${lockedTask.id}-${index}`}>
+            <div className="flex items-center gap-3 blur-[3px]">
+              <div className="h-16 w-24 shrink-0 rounded-[8px] bg-gradient-to-br from-slate-200 via-slate-300 to-slate-100" />
+              <div className="min-w-0">
+                <p className="truncate text-xs font-black text-[#FE2C55]">{lockedTask.creator}</p>
+                <p className="truncate text-sm font-black text-[#0F172A]">{lockedTask.title}</p>
+                <p className="text-xs font-semibold text-[#475569]">{brl(REWARD_PER_VIDEO)} reward</p>
+              </div>
+            </div>
+            <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-sm">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-2 grid h-10 w-10 place-items-center rounded-full bg-[#0F172A] text-white">
+                  <LockKeyholeIcon size={19} />
+                </div>
+                <p className="max-w-[230px] text-xs font-black text-[#0F172A]">Complete the previous review to unlock this task.</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </section>
     </div>
   );
 }
@@ -387,7 +437,7 @@ function WalletScreen(props: {
       <div className="mt-5 rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <p className="mb-3 text-sm font-black text-[#0F172A]">Withdrawal method</p>
         <select className="mb-3 h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A]" value={props.paymentMethod} onChange={(event) => props.setPaymentMethod(event.target.value)}>
-          {["Pix Key", "PayPal Email", "Venmo", "Cash App", "Zelle", "Bank Account"].map((method) => <option key={method}>{method}</option>)}
+          {paymentOptions.map((method) => <option key={method}>{method}</option>)}
         </select>
         <input className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A] outline-none" value={props.paymentData} onChange={(event) => props.setPaymentData(event.target.value)} placeholder="Enter payment details" />
         <button className="mt-3 min-h-12 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500" disabled={!canWithdraw} type="button">
@@ -423,7 +473,7 @@ function RefundScreen(props: {
         ) : (
           <form className="mt-5 space-y-3" onSubmit={props.onSubmit}>
             <select className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A]" value={props.method} onChange={(event) => props.setMethod(event.target.value)}>
-              {["Pix Key", "CPF", "Email", "Phone"].map((method) => <option key={method}>{method}</option>)}
+              {paymentOptions.map((method) => <option key={method}>{method}</option>)}
             </select>
             <input className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A] outline-none" value={props.data} onChange={(event) => props.setData(event.target.value)} placeholder="Enter refund receiving details" required />
             <button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#2563EB] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300" disabled={props.loading} type="submit">
@@ -510,8 +560,32 @@ function NavButton({ active, icon, label, onClick }: { active: boolean; icon: Re
   return <button className={`flex h-14 flex-col items-center justify-center gap-1 rounded-[8px] ${active ? "bg-[#F1F5F9] text-[#FE2C55]" : "text-[#475569]"}`} onClick={onClick} type="button">{icon}<span>{label}</span></button>;
 }
 
-function AuthInput({ icon, placeholder, type }: { icon: ReactNode; placeholder: string; type: string }) {
-  return <label className="flex h-13 items-center gap-3 rounded-[8px] border border-slate-200 bg-white px-4 text-[#0F172A] shadow-sm">{icon}<input required className="min-w-0 flex-1 bg-transparent text-sm font-bold outline-none placeholder:text-slate-400" placeholder={placeholder} type={type} /></label>;
+function AuthInput({
+  icon,
+  onChange,
+  placeholder,
+  type,
+  value,
+}: {
+  icon: ReactNode;
+  onChange: (value: string) => void;
+  placeholder: string;
+  type: string;
+  value: string;
+}) {
+  return (
+    <label className="flex h-13 items-center gap-3 rounded-[8px] border border-slate-200 bg-white px-4 text-[#0F172A] shadow-sm">
+      {icon}
+      <input
+        required
+        className="min-w-0 flex-1 bg-transparent text-sm font-bold outline-none placeholder:text-slate-400"
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        type={type}
+        value={value}
+      />
+    </label>
+  );
 }
 
 function MetricCard({ label, value, tone }: { label: string; value: string; tone: string }) {

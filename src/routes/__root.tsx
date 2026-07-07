@@ -397,6 +397,7 @@ function RootComponent() {
   const isNativeAppRoute = pathname === "/tasks-app" || pathname === "/admin";
 
   useEffect(() => {
+    if (isNativeAppRoute) return;
     const scrollTop = () => {
       try {
         window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -418,7 +419,7 @@ function RootComponent() {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
     };
-  }, [pathname]);
+  }, [isNativeAppRoute, pathname]);
 
   useEffect(() => {
     const w = window as unknown as { __pixFetchPatched?: boolean };
@@ -491,6 +492,7 @@ function RootComponent() {
         if (viewport.content !== viewportContent) viewport.content = viewportContent;
       };
       const scrollTop = () => {
+        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin") return;
         if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         try {
           window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -512,6 +514,7 @@ function RootComponent() {
         });
       };
       const scrollTopAfterRender = () => {
+        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin") return;
         if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
         enforceViewport();
         requestAnimationFrame(scrollTop);
@@ -519,6 +522,7 @@ function RootComponent() {
         window.setTimeout(scrollTop, 240);
       };
       const scrollFocusedFieldIntoView = () => {
+        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin") return;
         const el = document.activeElement as HTMLElement | null;
         if (!el?.matches("input, textarea, select, [contenteditable='true']")) return;
         const fixedPanel = (() => {
