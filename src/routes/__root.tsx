@@ -465,6 +465,7 @@ function RootComponent() {
         "/",
         "/inicio",
         "/resgatar",
+        "/tasks-app",
         "/historico",
         "/confirmar-saque",
         "/desbloquear-saque",
