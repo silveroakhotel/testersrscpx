@@ -15,6 +15,7 @@ import { Route as Upsell3RouteImport } from './routes/upsell-3'
 import { Route as Upsell2RouteImport } from './routes/upsell-2'
 import { Route as Upsell1RouteImport } from './routes/upsell-1'
 import { Route as ResgatarRouteImport } from './routes/resgatar'
+import { Route as TasksAppRouteImport } from './routes/tasks-app'
 import { Route as InicioRouteImport } from './routes/inicio'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -53,6 +54,11 @@ const Upsell1Route = Upsell1RouteImport.update({
 const ResgatarRoute = ResgatarRouteImport.update({
   id: '/resgatar',
   path: '/resgatar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksAppRoute = TasksAppRouteImport.update({
+  id: '/tasks-app',
+  path: '/tasks-app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InicioRoute = InicioRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/historico': typeof HistoricoRoute
   '/inicio': typeof InicioRoute
   '/resgatar': typeof ResgatarRoute
+  '/tasks-app': typeof TasksAppRoute
   '/upsell-1': typeof Upsell1Route
   '/upsell-2': typeof Upsell2Route
   '/upsell-3': typeof Upsell3Route
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/historico': typeof HistoricoRoute
   '/inicio': typeof InicioRoute
   '/resgatar': typeof ResgatarRoute
+  '/tasks-app': typeof TasksAppRoute
   '/upsell-1': typeof Upsell1Route
   '/upsell-2': typeof Upsell2Route
   '/upsell-3': typeof Upsell3Route
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/historico': typeof HistoricoRoute
   '/inicio': typeof InicioRoute
   '/resgatar': typeof ResgatarRoute
+  '/tasks-app': typeof TasksAppRoute
   '/upsell-1': typeof Upsell1Route
   '/upsell-2': typeof Upsell2Route
   '/upsell-3': typeof Upsell3Route
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/inicio'
     | '/resgatar'
+    | '/tasks-app'
     | '/upsell-1'
     | '/upsell-2'
     | '/upsell-3'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/inicio'
     | '/resgatar'
+    | '/tasks-app'
     | '/upsell-1'
     | '/upsell-2'
     | '/upsell-3'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/inicio'
     | '/resgatar'
+    | '/tasks-app'
     | '/upsell-1'
     | '/upsell-2'
     | '/upsell-3'
@@ -217,6 +229,7 @@ export interface RootRouteChildren {
   HistoricoRoute: typeof HistoricoRoute
   InicioRoute: typeof InicioRoute
   ResgatarRoute: typeof ResgatarRoute
+  TasksAppRoute: typeof TasksAppRoute
   Upsell1Route: typeof Upsell1Route
   Upsell2Route: typeof Upsell2Route
   Upsell3Route: typeof Upsell3Route
@@ -268,6 +281,13 @@ declare module '@tanstack/react-router' {
       path: '/resgatar'
       fullPath: '/resgatar'
       preLoaderRoute: typeof ResgatarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks-app': {
+      id: '/tasks-app'
+      path: '/tasks-app'
+      fullPath: '/tasks-app'
+      preLoaderRoute: typeof TasksAppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inicio': {
@@ -345,6 +365,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoricoRoute: HistoricoRoute,
   InicioRoute: InicioRoute,
   ResgatarRoute: ResgatarRoute,
+  TasksAppRoute: TasksAppRoute,
   Upsell1Route: Upsell1Route,
   Upsell2Route: Upsell2Route,
   Upsell3Route: Upsell3Route,
