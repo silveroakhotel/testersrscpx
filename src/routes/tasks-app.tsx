@@ -8,6 +8,7 @@ import {
   LockKeyhole,
   LockKeyholeIcon,
   ReceiptText,
+  Search,
   Star,
   UserRound,
   Wallet,
@@ -32,7 +33,8 @@ type VideoTask = {
   id: string;
   creator: string;
   title: string;
-  videoUrl: string;
+  embedUrl: string;
+  durationSeconds: number;
 };
 
 const INITIAL_BALANCE = 2800;
@@ -47,30 +49,34 @@ const tasks: VideoTask[] = [
     id: "mrbeast-box",
     creator: "MrBeast",
     title: "Creator Task Partner",
-    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    embedUrl: "https://www.tiktok.com/embed/v2/6641161842313923845",
+    durationSeconds: 59,
   },
   {
     id: "zach-king-magic",
     creator: "Zach King",
     title: "Creator Task",
-    videoUrl: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+    embedUrl: "https://www.tiktok.com/embed/v2/6640540185358503173",
+    durationSeconds: 46,
   },
   {
     id: "dude-perfect-trickshots",
     creator: "Dude Perfect",
     title: "Creator Task Partner",
-    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
+    embedUrl: "https://www.tiktok.com/embed/v2/6657949795086257414",
+    durationSeconds: 21,
   },
   {
     id: "mkbhd-smartphone",
     creator: "MKBHD",
     title: "Creator Task",
-    videoUrl: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+    embedUrl: "https://www.tiktok.com/embed/v2/6678774470909365510",
+    durationSeconds: 20,
   },
 ];
 
 const processingSteps = ["Analyzing consistency...", "Validating retention...", "Checking review quality...", "Adding reward..."];
-const paymentOptions = ["Cash App", "PayPal", "Venmo", "Zelle", "Bank Transfer"];
+const paymentOptions = ["Cash App", "PayPal", "Venmo", "Zelle", "Bank Transfer (ACH)"];
 
 function TaskPartnersApp() {
   const [allowed, setAllowed] = useState(false);
@@ -98,8 +104,14 @@ function TaskPartnersApp() {
   const [successReward, setSuccessReward] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState(paymentOptions[0]);
   const [paymentData, setPaymentData] = useState("");
+  const [paymentBank, setPaymentBank] = useState("");
+  const [paymentRouting, setPaymentRouting] = useState("");
+  const [paymentAccount, setPaymentAccount] = useState("");
   const [refundMethod, setRefundMethod] = useState(paymentOptions[0]);
   const [refundData, setRefundData] = useState("");
+  const [refundBank, setRefundBank] = useState("");
+  const [refundRouting, setRefundRouting] = useState("");
+  const [refundAccount, setRefundAccount] = useState("");
   const [refundLoading, setRefundLoading] = useState(false);
   const [refundApproved, setRefundApproved] = useState(false);
 
@@ -107,7 +119,8 @@ function TaskPartnersApp() {
   const taskReviewKey = `${task.id}-${taskIndex}`;
   const completedToday = (reviews.length % DAILY_LIMIT) + 1;
   const reviewUnlocked = progress >= 100 && !reviewedIds.includes(taskReviewKey);
-  const canSubmit = reviewUnlocked && rating > 0 && Boolean(useful) && Boolean(recommend) && comment.trim().length >= 15;
+  const hasValidComment = countWords(comment) >= 3;
+  const canSubmit = reviewUnlocked && rating > 0 && Boolean(useful) && Boolean(recommend) && hasValidComment;
   const balanceText = useMemo(() => brl(balance), [balance]);
 
   useEffect(() => {
@@ -130,8 +143,15 @@ function TaskPartnersApp() {
   }, []);
 
   useEffect(() => {
+    if (!allowed || !user || screen !== "tasks" || processing) return;
     setProgress(0);
-  }, [taskIndex]);
+    let elapsed = 0;
+    const timer = window.setInterval(() => {
+      elapsed += 1;
+      setProgress(Math.min(100, (elapsed / task.durationSeconds) * 100));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [allowed, processing, screen, task.durationSeconds, taskIndex, user]);
 
   function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -247,6 +267,7 @@ function TaskPartnersApp() {
             <TasksScreen
               canSubmit={canSubmit}
               comment={comment}
+              hasValidComment={hasValidComment}
               progress={progress}
               rating={rating}
               recommend={recommend}
@@ -267,20 +288,32 @@ function TaskPartnersApp() {
               balance={balance}
               pendingBalance={pendingBalance}
               paymentData={paymentData}
+              paymentAccount={paymentAccount}
+              paymentBank={paymentBank}
               paymentMethod={paymentMethod}
+              paymentRouting={paymentRouting}
               setPaymentData={setPaymentData}
+              setPaymentAccount={setPaymentAccount}
+              setPaymentBank={setPaymentBank}
               setPaymentMethod={setPaymentMethod}
+              setPaymentRouting={setPaymentRouting}
             />
           )}
           {screen === "refund" && (
             <RefundScreen
               approved={refundApproved}
+              account={refundAccount}
+              bank={refundBank}
               data={refundData}
               loading={refundLoading}
               method={refundMethod}
               onSubmit={requestRefund}
+              routing={refundRouting}
+              setAccount={setRefundAccount}
+              setBank={setRefundBank}
               setData={setRefundData}
               setMethod={setRefundMethod}
+              setRouting={setRefundRouting}
             />
           )}
           {screen === "profile" && <ProfileScreen reviews={reviews} user={user} balance={balance} />}
@@ -302,6 +335,7 @@ function TaskPartnersApp() {
 function TasksScreen(props: {
   canSubmit: boolean;
   comment: string;
+  hasValidComment: boolean;
   progress: number;
   rating: number;
   recommend: string;
@@ -328,21 +362,13 @@ function TasksScreen(props: {
             <p className="mt-1 text-xs font-semibold text-[#475569]">Reward: {brl(REWARD_PER_VIDEO)} per approved video</p>
           </div>
         </div>
-        <div className="aspect-video w-full overflow-hidden rounded-[8px] bg-slate-950">
-          <video
+        <div className="aspect-[9/14] max-h-[390px] w-full overflow-hidden rounded-[8px] bg-slate-950">
+          <iframe
             key={props.task.id}
-            className="h-full w-full object-cover"
-            controls
-            muted
-            onEnded={() => props.setProgress(100)}
-            onTimeUpdate={(event) => {
-              const video = event.currentTarget;
-              if (!Number.isFinite(video.duration) || video.duration <= 0) return;
-              props.setProgress(Math.min(100, (video.currentTime / video.duration) * 100));
-            }}
-            playsInline
-            preload="metadata"
-            src={props.task.videoUrl}
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            className="h-full w-full border-0"
+            src={props.task.embedUrl}
+            title={`${props.task.creator} ${props.task.title}`}
           />
         </div>
       </section>
@@ -387,6 +413,9 @@ function TasksScreen(props: {
                 placeholder="Write at least 15 characters..."
                 value={props.comment}
               />
+              {!props.hasValidComment && (
+                <span className="mt-1.5 block text-xs font-bold text-[#FE2C55]">⚠️ Your comment must contain at least 3 words.</span>
+              )}
             </label>
             <button className="min-h-13 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white shadow-lg shadow-rose-200 transition active:scale-[0.98] disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none" disabled={!props.canSubmit} onClick={props.submitReview} type="button">
               Submit Review & Claim Reward
@@ -428,10 +457,16 @@ function TasksScreen(props: {
 function WalletScreen(props: {
   balance: number;
   pendingBalance: number;
+  paymentAccount: string;
+  paymentBank: string;
   paymentData: string;
   paymentMethod: string;
+  paymentRouting: string;
+  setPaymentAccount: (value: string) => void;
+  setPaymentBank: (value: string) => void;
   setPaymentData: (value: string) => void;
   setPaymentMethod: (value: string) => void;
+  setPaymentRouting: (value: string) => void;
 }) {
   const canWithdraw = props.balance >= MIN_WITHDRAWAL;
   return (
@@ -447,7 +482,17 @@ function WalletScreen(props: {
         <select className="mb-3 h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A]" value={props.paymentMethod} onChange={(event) => props.setPaymentMethod(event.target.value)}>
           {paymentOptions.map((method) => <option key={method}>{method}</option>)}
         </select>
-        <input className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A] outline-none" value={props.paymentData} onChange={(event) => props.setPaymentData(event.target.value)} placeholder="Enter payment details" />
+        <PaymentFields
+          account={props.paymentAccount}
+          bank={props.paymentBank}
+          data={props.paymentData}
+          method={props.paymentMethod}
+          routing={props.paymentRouting}
+          setAccount={props.setPaymentAccount}
+          setBank={props.setPaymentBank}
+          setData={props.setPaymentData}
+          setRouting={props.setPaymentRouting}
+        />
         <button className="mt-3 min-h-12 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500" disabled={!canWithdraw} type="button">
           {canWithdraw ? "Request Withdrawal" : "You need at least R$ 4.000,00 available before requesting a withdrawal"}
         </button>
@@ -457,13 +502,19 @@ function WalletScreen(props: {
 }
 
 function RefundScreen(props: {
+  account: string;
   approved: boolean;
+  bank: string;
   data: string;
   loading: boolean;
   method: string;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  routing: string;
+  setAccount: (value: string) => void;
+  setBank: (value: string) => void;
   setData: (value: string) => void;
   setMethod: (value: string) => void;
+  setRouting: (value: string) => void;
 }) {
   return (
     <div>
@@ -483,7 +534,17 @@ function RefundScreen(props: {
             <select className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A]" value={props.method} onChange={(event) => props.setMethod(event.target.value)}>
               {paymentOptions.map((method) => <option key={method}>{method}</option>)}
             </select>
-            <input className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A] outline-none" value={props.data} onChange={(event) => props.setData(event.target.value)} placeholder="Enter refund receiving details" required />
+            <PaymentFields
+              account={props.account}
+              bank={props.bank}
+              data={props.data}
+              method={props.method}
+              routing={props.routing}
+              setAccount={props.setAccount}
+              setBank={props.setBank}
+              setData={props.setData}
+              setRouting={props.setRouting}
+            />
             <button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#2563EB] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300" disabled={props.loading} type="submit">
               {props.loading && <Loader2 className="animate-spin" size={18} />}
               Request Instant Refund
@@ -492,6 +553,74 @@ function RefundScreen(props: {
         )}
       </section>
     </div>
+  );
+}
+
+function PaymentFields(props: {
+  account: string;
+  bank: string;
+  data: string;
+  method: string;
+  routing: string;
+  setAccount: (value: string) => void;
+  setBank: (value: string) => void;
+  setData: (value: string) => void;
+  setRouting: (value: string) => void;
+}) {
+  if (props.method === "Bank Transfer (ACH)") {
+    return (
+      <div className="space-y-3">
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-black text-[#475569]">Bank</span>
+          <div className="flex h-12 items-center gap-2 rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-3">
+            <Search size={16} className="shrink-0 text-[#475569]" />
+            <input
+              className="min-w-0 flex-1 bg-transparent text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400"
+              onChange={(event) => props.setBank(event.target.value)}
+              placeholder="Search your bank"
+              value={props.bank}
+            />
+          </div>
+        </label>
+        <LabeledPaymentInput label="Routing number" onChange={props.setRouting} placeholder="Enter your routing number" value={props.routing} />
+        <LabeledPaymentInput label="Account number" onChange={props.setAccount} placeholder="Enter your account number" value={props.account} />
+        <button className="h-12 w-full rounded-[8px] bg-[#FE2C55] text-sm font-black text-white shadow-lg shadow-rose-100" type="button">
+          Continue
+        </button>
+      </div>
+    );
+  }
+
+  const placeholder =
+    props.method === "PayPal"
+      ? "Enter your PayPal email"
+      : props.method === "Venmo"
+        ? "Enter your Venmo username"
+        : props.method === "Cash App"
+          ? "Enter your Cash App username"
+          : "Enter your payout details";
+
+  return (
+    <input
+      className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400"
+      onChange={(event) => props.setData(event.target.value)}
+      placeholder={placeholder}
+      value={props.data}
+    />
+  );
+}
+
+function LabeledPaymentInput({ label, onChange, placeholder, value }: { label: string; onChange: (value: string) => void; placeholder: string; value: string }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-black text-[#475569]">{label}</span>
+      <input
+        className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400"
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        value={value}
+      />
+    </label>
   );
 }
 
@@ -626,4 +755,8 @@ function Server404() {
 
 function brl(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function countWords(value: string) {
+  return value.trim().split(/\s+/).filter((word) => word.length > 1).length;
 }
