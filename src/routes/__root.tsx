@@ -394,6 +394,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isNativeTasksApp = pathname === "/tasks-app";
 
   useEffect(() => {
     const scrollTop = () => {
@@ -662,6 +663,11 @@ function RootComponent() {
       }, 1000);
     }
 
+    if (window.location.pathname === "/tasks-app") {
+      document.getElementById("cloned-app-script")?.remove();
+      return;
+    }
+
     const existingPatch = document.getElementById("redeem-patch-script") as HTMLScriptElement | null;
     if (!existingPatch) {
       const patch = document.createElement("script");
@@ -686,7 +692,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div id="cloned-root" />
+      <div id="cloned-root" style={isNativeTasksApp ? { display: "none" } : undefined} />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
