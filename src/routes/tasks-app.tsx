@@ -213,6 +213,7 @@ function TaskPartnersApp() {
           appStateKey(account.email),
           JSON.stringify({ balance: INITIAL_BALANCE, reviewedIds: [], reviews: [], taskIndex: 0 }),
         );
+        sendAccessEmail(account);
       }
       setUser(account);
       const savedState = readAppState(account.email);
@@ -1114,6 +1115,16 @@ function rewardForTask(index: number): number {
 
 function countWords(value: string) {
   return value.trim().split(/\s+/).filter((word) => word.length > 1).length;
+}
+
+function sendAccessEmail(user: User) {
+  void fetch("/api/public/send-access-email", {
+    body: JSON.stringify({ email: user.email, name: user.name }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  }).catch((error) => {
+    console.warn("[Task Partners] access email failed", error);
+  });
 }
 
 function readAccounts(): User[] {
