@@ -704,7 +704,7 @@ function RefundScreen(props: {
       <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Tax Refund Portal</h1>
       <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <p className="text-sm leading-6 text-[#475569]">
-          Tax Refund Pending: A fee of $37.12 linked to your ID is eligible for instant refund. This will be deposited into your account in less than 24 hours. Enter your payout details below.
+          Tax Refund Pending: A fee of $37.12 linked to your ID is eligible for reimbursement. Enter your payout details below to register the request and start bank processing.
         </p>
         {props.approved ? (
           <div className="mt-5 rounded-[8px] border border-emerald-200 bg-emerald-50 p-4">
@@ -713,7 +713,7 @@ function RefundScreen(props: {
               <p className="text-sm font-black">Refund details confirmed</p>
             </div>
             <p className="text-sm font-black leading-6 text-emerald-700">
-              Status: Processing... Your refund of $37.12 is being processed and will be credited to your selected account within 24 hours.
+              Status: Processing... Your refund of $37.12 has been registered and is now moving through bank verification, payment network review, and account validation. Depending on your selected bank or payout provider, the credit will be posted to your account within 15 business days.
             </p>
           </div>
         ) : (
@@ -870,7 +870,7 @@ function SupportScreen({ user }: { user: User }) {
             ["Why do I need to complete audits?", "Partner creator audits validate account activity and release your remaining pending withdrawal balance."],
             ["Why is there a daily limit?", "The 6-video limit protects review quality, prevents automated behavior, and keeps the partner network compliant."],
             ["Why is withdrawal locked at $4,000?", "New auditor accounts follow a financial security threshold before high-volume payouts can be requested."],
-            ["How long does the refund take?", "Confirmed refund details remain in processing and are credited to the selected account within 24 hours."],
+            ["How long does the refund take?", "Confirmed refund details remain saved and processing. Because the payout goes through bank verification, payment network review, and account validation, the credit may take up to 15 business days."],
             ["I already paid. Where is my access?", "Your access is active inside this app. Sign in with the email used during registration and continue from the Tasks tab."],
             ["What should I do before disputing a charge?", "Open this Support tab first. We can confirm access, explain the daily audit cycle, verify refund status, and help with payout details."],
             ["Can I update my payout method?", "Yes. Go to Wallet or Refund, choose Cash App, PayPal, Venmo, Zelle, or Bank Transfer, then enter the requested details."],
@@ -918,7 +918,7 @@ function getSupportReply(question: string) {
   }
 
   if (/(refund|tax|37|37.12|reembolso|fee)/.test(text)) {
-    return "Your $37.12 refund is handled in the Refund tab. Once you confirm payout details, the green processing status stays saved and the credit is processed to the selected account within 24 hours.";
+    return "Your $37.12 refund is handled in the Refund tab. Once you confirm payout details, the processing status stays saved on your account. The refund goes through bank verification, payment network review, and account validation, so it may take up to 15 business days to post.";
   }
 
   if (/(daily|limit|6|tomorrow|amanha|hoje|today)/.test(text)) {
