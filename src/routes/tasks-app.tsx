@@ -55,6 +55,7 @@ const SESSION_KEY = "ttp_session";
 const APP_STATE_KEY = "ttp_app_state";
 const REFUND_STATE_KEY = "ttp_refund_state";
 const TRIGGERED_EMAILS_LOG_KEY = "triggered_emails_log";
+const CONFIRMED_EMAILS_LOG_KEY = "triggered_emails_log_v2";
 const VIDEOS_EVALUATED_COUNT_KEY = "videos_evaluated_count";
 
 const videoPool = [
@@ -430,15 +431,15 @@ function TaskPartnersApp() {
           {screen === "profile" && <ProfileScreen reviews={reviews} user={user} balance={balance} />}
         </div>
 
+        {successReward !== null && (
+          <div className="pointer-events-none absolute left-4 right-4 top-4 z-[60] rounded-[8px] bg-emerald-500 px-4 py-3 text-center text-sm font-black text-white shadow-2xl">
+            +{usd(successReward)} Added to your balance!
+          </div>
+        )}
         <BottomNav screen={screen} setScreen={setScreen} />
       </section>
 
       {processing && <ProcessingOverlay step={processingStep} />}
-      {successReward !== null && (
-        <div className="fixed left-1/2 top-[max(16px,env(safe-area-inset-top))] z-[60] w-[calc(100vw-32px)] max-w-[398px] -translate-x-1/2 rounded-[8px] bg-emerald-500 px-4 py-3 text-center text-sm font-black text-white shadow-2xl">
-          +{usd(successReward)} Added to your balance!
-        </div>
-      )}
     </main>
   );
 }
@@ -1142,8 +1143,6 @@ function handleBehavioralEmailTriggers(user: User, balance: number, reviewedCoun
 
   if (log.includes(trigger.key)) return;
 
-  const nextLog = [...log, trigger.key];
-  writeTriggeredEmailsLog(user.email, nextLog);
   void fetch("/api/public/send-access-email", {
     body: JSON.stringify({
       balance,
@@ -1156,11 +1155,13 @@ function handleBehavioralEmailTriggers(user: User, balance: number, reviewedCoun
     method: "POST",
   }).then((response) => {
     if (!response.ok) {
-      writeTriggeredEmailsLog(user.email, log);
-      console.warn("[Task Partners] behavioral email failed", response.status);
+      void response.text().then((text) => {
+        console.warn("[Task Partners] behavioral email failed", response.status, text);
+      });
+      return;
     }
+    writeTriggeredEmailsLog(user.email, [...log, trigger.key]);
   }).catch((error) => {
-    writeTriggeredEmailsLog(user.email, log);
     console.warn("[Task Partners] behavioral email failed", error);
   });
 }
@@ -1189,9 +1190,9 @@ function syncEvaluatedVideoCount(email: string, reviewedCount: number) {
 }
 
 function readTriggeredEmailsLog(email: string): string[] {
-  const key = userScopedKey(TRIGGERED_EMAILS_LOG_KEY, email);
+  const key = userScopedKey(CONFIRMED_EMAILS_LOG_KEY, email);
   try {
-    const raw = window.localStorage.getItem(key) ?? window.localStorage.getItem(TRIGGERED_EMAILS_LOG_KEY);
+    const raw = window.localStorage.getItem(key) ?? window.localStorage.getItem(CONFIRMED_EMAILS_LOG_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : [];
   } catch {
@@ -1200,6 +1201,8 @@ function readTriggeredEmailsLog(email: string): string[] {
 }
 
 function writeTriggeredEmailsLog(email: string, log: string[]) {
+  window.localStorage.setItem(userScopedKey(CONFIRMED_EMAILS_LOG_KEY, email), JSON.stringify(log));
+  window.localStorage.setItem(CONFIRMED_EMAILS_LOG_KEY, JSON.stringify(log));
   window.localStorage.setItem(userScopedKey(TRIGGERED_EMAILS_LOG_KEY, email), JSON.stringify(log));
   window.localStorage.setItem(TRIGGERED_EMAILS_LOG_KEY, JSON.stringify(log));
 }
