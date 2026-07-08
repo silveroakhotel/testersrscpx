@@ -64,6 +64,16 @@ const videoPool = [
   { creator: "US Trending Video", title: "Watch Time Quality Check", videoUrl: "/videos/task6.mp4" },
 ];
 
+const rewardCurve = [
+  120, 115, 110, 105, 100, 95,
+  100, 95, 90, 85, 80, 75,
+  7, 6, 5, 4, 3, 1.15,
+  1, 0.8, 0.6, 0.5, 0.4, 0.3,
+  0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
+  0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
+  0.01, 0.01, 0.01, 0.01, 0.01, 0.08,
+] as const;
+
 const tasks: VideoTask[] = Array.from({ length: TOTAL_TASKS_TO_GOAL }, (_, index) => {
   const day = Math.floor(index / DAILY_LIMIT) + 1;
   const sequence = (index % DAILY_LIMIT) + 1;
@@ -557,12 +567,12 @@ function TasksScreen(props: {
             </p>
           </div>
         </div>
-        <div className="relative aspect-[9/16] max-h-[448px] w-full overflow-hidden rounded-[8px] bg-slate-950">
+        <div className="relative aspect-[9/20] max-h-[560px] w-full overflow-hidden rounded-[8px] bg-slate-950">
           <video
             ref={videoRef}
             key={props.task.id}
             autoPlay
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
             muted={props.isMuted}
             onEnded={() => props.setProgress(100)}
             onPause={() => setIsPlaying(false)}
@@ -992,15 +1002,11 @@ function brl(value: number) {
 }
 
 function rewardForTask(index: number): number {
-  const high = 31.43;
-  const low = 25.71;
   if (index === TOTAL_TASKS_TO_GOAL - 1) {
-    const step = (high - low) / (TOTAL_TASKS_TO_GOAL - 1);
-    const previousTotal = Array.from({ length: TOTAL_TASKS_TO_GOAL - 1 }, (_, itemIndex) => Number((high - step * itemIndex).toFixed(2))).reduce((sum, value) => sum + value, 0);
+    const previousTotal = rewardCurve.slice(0, TOTAL_TASKS_TO_GOAL - 1).reduce((sum, value) => sum + value, 0);
     return Number((TOTAL_REWARD_TO_GOAL - previousTotal).toFixed(2));
   }
-  const step = (high - low) / (TOTAL_TASKS_TO_GOAL - 1);
-  return Number((high - step * index).toFixed(2));
+  return Number((rewardCurve[index] ?? 0).toFixed(2));
 }
 
 function countWords(value: string) {

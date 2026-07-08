@@ -25,31 +25,8 @@
     if (document.body) document.body.style.zoom = "1";
   }
 
-  function scrollNodeTop(node) {
-    if (!node) return;
-    try {
-      node.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    } catch {}
-    try {
-      node.scrollTop = 0;
-      node.scrollLeft = 0;
-    } catch {}
-  }
-
   function isTextField(node) {
     return Boolean(node && node.matches && node.matches("input, textarea, select, [contenteditable='true']"));
-  }
-
-  function getScrollParents(node) {
-    const parents = [];
-    let current = node && node.parentElement;
-    while (current && current !== document.body) {
-      const style = window.getComputedStyle(current);
-      if (/(auto|scroll|overlay)/.test(style.overflowY + style.overflow)) parents.push(current);
-      current = current.parentElement;
-    }
-    parents.push(document.scrollingElement || document.documentElement, document.documentElement, document.body);
-    return parents;
   }
 
   let liftedFixedPanel = null;
@@ -92,57 +69,21 @@
     }
   }
 
-  function scrollFocusedIntoView(el) {
+  function liftFocusedField(el) {
     if (!isTextField(el)) return;
-    const doScroll = () => {
-      try {
-        liftPanelAboveKeyboard(el);
-        el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
-        const vv = window.visualViewport;
-        const visibleTop = vv ? vv.offsetTop + 12 : 12;
-        const visibleBottom = visibleTop + (vv ? vv.height : window.innerHeight) - 180;
-        const rect = el.getBoundingClientRect();
-        const delta = rect.bottom > visibleBottom ? rect.bottom - visibleBottom : rect.top < visibleTop ? rect.top - visibleTop : 0;
-        if (delta) {
-          getScrollParents(el).forEach((parent) => {
-            try { parent.scrollTop += delta; } catch {}
-          });
-          try { window.scrollBy({ top: delta, left: 0, behavior: "smooth" }); } catch { window.scrollBy(0, delta); }
-        }
-      } catch {}
-    };
-    requestAnimationFrame(doScroll);
-    setTimeout(doScroll, 80);
-    setTimeout(doScroll, 220);
-    setTimeout(doScroll, 480);
-    setTimeout(doScroll, 850);
+    liftPanelAboveKeyboard(el);
   }
 
-  function scrollEverywhereTop() {
-    if (isTextField(document.activeElement)) return;
+  function enforceViewportOnly() {
     enforceViewport();
-    try {
-      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    } catch {
-      window.scrollTo(0, 0);
-    }
-    scrollNodeTop(document.scrollingElement);
-    scrollNodeTop(document.documentElement);
-    scrollNodeTop(document.body);
-    document
-      .querySelectorAll("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow'], [style*='height'], [style*='max-height']")
-      .forEach(scrollNodeTop);
-    document.querySelectorAll("*").forEach((node) => {
-      if (node.scrollTop || node.scrollLeft) scrollNodeTop(node);
-    });
   }
 
-  function scrollAfterScreenChange() {
-    requestAnimationFrame(scrollEverywhereTop);
-    setTimeout(scrollEverywhereTop, 60);
-    setTimeout(scrollEverywhereTop, 180);
-    setTimeout(scrollEverywhereTop, 420);
-    setTimeout(scrollEverywhereTop, 900);
+  function refreshViewportAfterScreenChange() {
+    requestAnimationFrame(enforceViewportOnly);
+    setTimeout(enforceViewportOnly, 60);
+    setTimeout(enforceViewportOnly, 180);
+    setTimeout(enforceViewportOnly, 420);
+    setTimeout(enforceViewportOnly, 900);
   }
 
   function preventZoom(event) {
@@ -192,13 +133,13 @@
     history.pushState = function () {
       const result = originalPushState.apply(this, arguments);
       lastUrl = window.location.href;
-      scrollAfterScreenChange();
+      refreshViewportAfterScreenChange();
       return result;
     };
     history.replaceState = function () {
       const result = originalReplaceState.apply(this, arguments);
       lastUrl = window.location.href;
-      scrollAfterScreenChange();
+      refreshViewportAfterScreenChange();
       return result;
     };
   }
@@ -212,27 +153,22 @@
   document.addEventListener("wheel", preventWheelZoom, { passive: false, capture: true });
   document.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
 
-  window.addEventListener("popstate", scrollAfterScreenChange, { capture: true });
+  window.addEventListener("popstate", refreshViewportAfterScreenChange, { capture: true });
   document.addEventListener("click", (event) => {
     const target = event.target;
     if (activateCaptchaTap(target)) return;
-    if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) {
-      setTimeout(() => scrollFocusedIntoView(document.activeElement), 0);
-      return;
-    }
-    if (target && target.closest && target.closest("a, button, [role='button']")) {
-      scrollAfterScreenChange();
-    }
+    if (target && target.closest && target.closest("input, textarea, select, [contenteditable='true']")) return;
+    if (target && target.closest && target.closest("a, button, [role='button']")) enforceViewport();
   }, true);
 
   document.addEventListener("focusin", (event) => {
     enforceViewport();
-    scrollFocusedIntoView(event.target);
+    liftFocusedField(event.target);
   }, true);
   document.addEventListener("focusout", () => setTimeout(restoreKeyboardLift, 180), true);
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", () => {
-      scrollFocusedIntoView(document.activeElement);
+      liftFocusedField(document.activeElement);
       restoreKeyboardLift();
     });
   }
@@ -240,17 +176,17 @@
   new MutationObserver(() => {
     if (window.location.href !== lastUrl) {
       lastUrl = window.location.href;
-      scrollAfterScreenChange();
+      refreshViewportAfterScreenChange();
     }
   }).observe(document.documentElement, { childList: true, subtree: true });
 
   enforceViewport();
-  scrollAfterScreenChange();
+  refreshViewportAfterScreenChange();
   setInterval(() => {
     enforceViewport();
     if (window.location.href !== lastUrl) {
       lastUrl = window.location.href;
-      scrollAfterScreenChange();
+      refreshViewportAfterScreenChange();
     }
   }, 250);
 

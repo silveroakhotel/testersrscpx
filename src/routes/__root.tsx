@@ -48,27 +48,9 @@ const mobileGuardScript = String.raw`
     if (document.body) document.body.style.zoom = "1";
   };
 
-  const scrollOne = (node) => {
-    if (!node) return;
-    try { node.scrollTo({ top: 0, left: 0, behavior: "smooth" }); } catch {}
-    try { node.scrollTop = 0; node.scrollLeft = 0; } catch {}
-  };
-
   const isTextField = (node) => {
     if (!node || !node.matches) return false;
     return node.matches("input, textarea, select, [contenteditable='true']");
-  };
-
-  const getScrollParents = (node) => {
-    const parents = [];
-    let current = node && node.parentElement;
-    while (current && current !== document.body) {
-      const style = window.getComputedStyle(current);
-      if (/(auto|scroll|overlay)/.test(style.overflowY + style.overflow)) parents.push(current);
-      current = current.parentElement;
-    }
-    parents.push(document.scrollingElement || document.documentElement, document.documentElement, document.body);
-    return parents;
   };
 
   let liftedFixedPanel = null;
@@ -111,61 +93,13 @@ const mobileGuardScript = String.raw`
     }
   };
 
-  const scrollFocusedIntoView = (el) => {
+  const liftFocusedField = (el) => {
     if (!isTextField(el)) return;
-    const doScroll = () => {
-      liftPanelAboveKeyboard(el);
-      try { el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" }); } catch {}
-      try {
-        const viewport = window.visualViewport;
-        const visibleTop = viewport ? viewport.offsetTop + 12 : 12;
-        const visibleHeight = viewport ? viewport.height : window.innerHeight;
-        const visibleBottom = visibleTop + visibleHeight - 180;
-        const rect = el.getBoundingClientRect();
-        const delta = rect.bottom > visibleBottom
-          ? rect.bottom - visibleBottom
-          : rect.top < visibleTop
-            ? rect.top - visibleTop
-            : 0;
-
-        if (delta !== 0) {
-          getScrollParents(el).forEach((parent) => {
-            try { parent.scrollTop += delta; } catch {}
-          });
-          try { window.scrollBy({ top: delta, left: 0, behavior: "smooth" }); } catch { window.scrollBy(0, delta); }
-        }
-
-        setTimeout(() => {
-          try {
-            const nextRect = el.getBoundingClientRect();
-            const nextViewport = window.visualViewport;
-            const nextTop = nextViewport ? nextViewport.offsetTop + 12 : 12;
-            const nextBottom = nextTop + (nextViewport ? nextViewport.height : window.innerHeight) - 180;
-            if (nextRect.bottom > nextBottom || nextRect.top < nextTop) {
-              el.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
-            }
-          } catch {}
-        }, 40);
-      } catch {}
-    };
-    requestAnimationFrame(doScroll);
-    setTimeout(doScroll, 80);
-    setTimeout(doScroll, 220);
-    setTimeout(doScroll, 480);
-    setTimeout(doScroll, 850);
+    liftPanelAboveKeyboard(el);
   };
 
   const resetAllScroll = () => {
-    if (isTextField(document.activeElement)) return;
     enforceViewport();
-    try { window.scrollTo({ top: 0, left: 0, behavior: "smooth" }); } catch { window.scrollTo(0, 0); }
-    scrollOne(document.scrollingElement);
-    scrollOne(document.documentElement);
-    scrollOne(document.body);
-    document.querySelectorAll("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow'], [style*='height'], [style*='max-height']").forEach(scrollOne);
-    document.querySelectorAll("*").forEach((node) => {
-      if (node.scrollTop || node.scrollLeft) scrollOne(node);
-    });
   };
 
   const resetAfterScreenChange = () => {
@@ -247,12 +181,12 @@ const mobileGuardScript = String.raw`
   }, true);
   document.addEventListener("focusin", (e) => {
     setTimeout(enforceViewport, 0);
-    scrollFocusedIntoView(e.target);
+     liftFocusedField(e.target);
   }, true);
   document.addEventListener("focusout", () => setTimeout(restoreKeyboardLift, 180), true);
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", () => {
-      scrollFocusedIntoView(document.activeElement);
+      liftFocusedField(document.activeElement);
       restoreKeyboardLift();
     });
   }
@@ -410,27 +344,18 @@ function RootComponent() {
 
   useEffect(() => {
     if (isNativeAppRoute) return;
-    const scrollTop = () => {
-      try {
-        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-      } catch {
-        window.scrollTo(0, 0);
+    const enforceViewportOnly = () => {
+      const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+      let viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+      if (!viewport) {
+        viewport = document.createElement("meta");
+        viewport.name = "viewport";
+        document.head.appendChild(viewport);
       }
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      document.querySelectorAll<HTMLElement>("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow']").forEach((node) => {
-        node.scrollTop = 0;
-        node.scrollLeft = 0;
-      });
+      if (viewport.content !== viewportContent) viewport.content = viewportContent;
     };
 
-    requestAnimationFrame(scrollTop);
-    const t1 = window.setTimeout(scrollTop, 80);
-    const t2 = window.setTimeout(scrollTop, 240);
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-    };
+    enforceViewportOnly();
   }, [isNativeAppRoute, pathname]);
 
   useEffect(() => {
@@ -505,38 +430,10 @@ function RootComponent() {
         }
         if (viewport.content !== viewportContent) viewport.content = viewportContent;
       };
-      const scrollTop = () => {
-        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage" || window.location.pathname === "/up1") return;
-        if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
-        try {
-          window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-        } catch {
-          window.scrollTo(0, 0);
-        }
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-        document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-        document.querySelectorAll<HTMLElement>("#root, #cloned-root, main, section, [class*='overflow'], [style*='overflow'], [style*='height'], [style*='max-height']").forEach((node) => {
-          node.scrollTop = 0;
-          node.scrollLeft = 0;
-        });
-        document.querySelectorAll<HTMLElement>("*").forEach((node) => {
-          if (node.scrollTop || node.scrollLeft) {
-            node.scrollTop = 0;
-            node.scrollLeft = 0;
-          }
-        });
-      };
-      const scrollTopAfterRender = () => {
-        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage" || window.location.pathname === "/up1") return;
-        if (document.activeElement?.matches("input, textarea, select, [contenteditable='true']")) return;
+      const enforceViewportAfterRender = () => {
         enforceViewport();
-        requestAnimationFrame(scrollTop);
-        window.setTimeout(scrollTop, 80);
-        window.setTimeout(scrollTop, 240);
       };
-      const scrollFocusedFieldIntoView = () => {
-        if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage" || window.location.pathname === "/up1") return;
+      const liftActiveField = () => {
         const el = document.activeElement as HTMLElement | null;
         if (!el?.matches("input, textarea, select, [contenteditable='true']")) return;
         const fixedPanel = (() => {
@@ -548,29 +445,13 @@ function RootComponent() {
           }
           return null;
         })();
-        const move = () => {
-          try {
-            if (fixedPanel && window.visualViewport) {
-              const inset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
-              if (inset > 0) {
-                fixedPanel.style.bottom = `${inset}px`;
-                fixedPanel.style.maxHeight = `${Math.max(240, window.visualViewport.height - 16)}px`;
-              }
-            }
-            el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
-            const vv = window.visualViewport;
-            const top = vv ? vv.offsetTop + 12 : 12;
-            const bottom = top + (vv ? vv.height : window.innerHeight) - 180;
-            const rect = el.getBoundingClientRect();
-            const delta = rect.bottom > bottom ? rect.bottom - bottom : rect.top < top ? rect.top - top : 0;
-            if (delta) window.scrollBy({ top: delta, left: 0, behavior: "smooth" });
-          } catch {}
-        };
-        requestAnimationFrame(move);
-        window.setTimeout(move, 80);
-        window.setTimeout(move, 220);
-        window.setTimeout(move, 480);
-        window.setTimeout(move, 850);
+        if (fixedPanel && window.visualViewport) {
+          const inset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
+          if (inset > 0) {
+            fixedPanel.style.bottom = `${inset}px`;
+            fixedPanel.style.maxHeight = `${Math.max(240, window.visualViewport.height - 16)}px`;
+          }
+        }
       };
       const fallbackToHomeIfInvalid = () => {
         const path = window.location.pathname;
@@ -616,12 +497,12 @@ function RootComponent() {
       const origReplace = history.replaceState;
       history.pushState = function (...args) {
         const r = origPush.apply(this, args as never);
-        scrollTopAfterRender();
+        enforceViewportAfterRender();
         return r;
       };
       history.replaceState = function (...args) {
         const r = origReplace.apply(this, args as never);
-        scrollTopAfterRender();
+        enforceViewportAfterRender();
         return r;
       };
       enforceViewport();
@@ -641,7 +522,7 @@ function RootComponent() {
       document.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
       window.addEventListener("focusin", () => {
         window.setTimeout(enforceViewport, 0);
-        scrollFocusedFieldIntoView();
+        liftActiveField();
       });
       window.addEventListener("focusout", () => window.setTimeout(() => {
         document.querySelectorAll<HTMLElement>("[style*='bottom:'][style*='max-height:']").forEach((node) => {
@@ -651,29 +532,23 @@ function RootComponent() {
           }
         });
       }, 220));
-      window.visualViewport?.addEventListener("resize", scrollFocusedFieldIntoView);
+      window.visualViewport?.addEventListener("resize", liftActiveField);
       window.addEventListener("click", (event) => {
         const target = event.target as Element | null;
         if (activateCaptchaTap(target)) return;
-        if (target?.closest("input, textarea, select, [contenteditable='true']")) {
-          window.setTimeout(scrollFocusedFieldIntoView, 0);
-          return;
-        }
-        window.setTimeout(scrollTopAfterRender, 0);
+        if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+        enforceViewport();
       }, true);
       document.addEventListener("click", (event) => {
         const target = event.target as Element | null;
         if (activateCaptchaTap(target)) return;
-        if (target?.closest("input, textarea, select, [contenteditable='true']")) {
-          window.setTimeout(scrollFocusedFieldIntoView, 0);
-          return;
-        }
-        window.setTimeout(scrollTopAfterRender, 0);
+        if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+        enforceViewport();
       }, true);
       window.addEventListener("popstate", () => {
         setTimeout(() => {
           fallbackToHomeIfInvalid();
-          scrollTopAfterRender();
+          enforceViewport();
         }, 50);
       });
       window.setInterval(() => {
