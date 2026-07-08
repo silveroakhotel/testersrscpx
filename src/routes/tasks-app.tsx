@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Home,
   Loader2,
-  LockKeyhole,
   LockKeyholeIcon,
   MessageCircle,
   Pause,
@@ -33,9 +32,8 @@ export const Route = createFileRoute("/tasks-app")({
 });
 
 type Screen = "tasks" | "wallet" | "refund" | "support" | "profile";
-type AuthMode = "login" | "register";
 type Review = { date: string; title: string; reward: number; status: string };
-type User = { name: string; email: string; password: string };
+type User = { name: string; email: string; password?: string };
 type VideoTask = {
   day: number;
   id: string;
@@ -99,14 +97,9 @@ function TaskPartnersApp() {
   const [checkedGate, setCheckedGate] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authError, setAuthError] = useState("");
-  const [accountNotFound, setAccountNotFound] = useState(false);
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [screen, setScreen] = useState<Screen>("tasks");
@@ -200,23 +193,26 @@ function TaskPartnersApp() {
     setProgress(0);
   }, [taskIndex]);
 
-  function login(event: FormEvent<HTMLFormElement>) {
+  function accessAccount(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthError("");
-    setAccountNotFound(false);
+    const email = signupEmail.trim().toLowerCase();
+    const name = signupName.trim();
+    if (!name || !email) {
+      setAuthError("Enter your full name and email to continue.");
+      return;
+    }
     setLoading(true);
     window.setTimeout(() => {
-      const account = readAccounts().find((item) => item.email.toLowerCase() === loginEmail.trim().toLowerCase());
-      if (!account) {
-        setAuthError("Account not found. Click here to register your new account.");
-        setAccountNotFound(true);
-        setLoading(false);
-        return;
-      }
-      if (account.password !== loginPassword) {
-        setAuthError("Incorrect credentials. Please try again.");
-        setLoading(false);
-        return;
+      const accounts = readAccounts();
+      const existing = accounts.find((item) => item.email.toLowerCase() === email);
+      const account = existing ? { ...existing, name: existing.name || name, email: existing.email } : { name, email };
+      if (!existing) {
+        window.localStorage.setItem(ACCOUNTS_KEY, JSON.stringify([...accounts, account]));
+        window.localStorage.setItem(
+          appStateKey(account.email),
+          JSON.stringify({ balance: INITIAL_BALANCE, reviewedIds: [], reviews: [], taskIndex: 0 }),
+        );
       }
       setUser(account);
       const savedState = readAppState(account.email);
@@ -238,34 +234,6 @@ function TaskPartnersApp() {
       setLoading(false);
       setScreen("tasks");
       if (remember) window.localStorage.setItem(SESSION_KEY, JSON.stringify(account));
-    }, 700);
-  }
-
-  function register(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAuthError("");
-    setAccountNotFound(false);
-    setLoading(true);
-    window.setTimeout(() => {
-      const email = signupEmail.trim();
-      const accounts = readAccounts();
-      if (accounts.some((item) => item.email.toLowerCase() === email.toLowerCase())) {
-        setAuthError("An account with this email already exists.");
-        setLoading(false);
-        return;
-      }
-      const nextUser = { name: signupName.trim(), email, password: signupPassword };
-      const nextAccounts = [...accounts, nextUser];
-      window.localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(nextAccounts));
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextUser));
-      window.localStorage.setItem(
-        appStateKey(nextUser.email),
-        JSON.stringify({ balance: INITIAL_BALANCE, reviewedIds: [], reviews: [], taskIndex: 0 }),
-      );
-      setUser(nextUser);
-      setRefundApproved(false);
-      setScreen("tasks");
-      setLoading(false);
     }, 700);
   }
 
@@ -340,65 +308,33 @@ function TaskPartnersApp() {
             <div className="mx-auto mb-8 grid h-24 w-24 place-items-center rounded-[28px] bg-white text-[#0F172A] shadow-[0_20px_45px_rgba(15,23,42,.12)]">
               <CheckCircle2 className="text-[#FE2C55]" size={42} />
             </div>
-            <h1 className="text-center text-[30px] font-black leading-tight">{authMode === "login" ? "Sign in to Task Partners" : "Create your Task Partners account"}</h1>
+            <h1 className="text-center text-[30px] font-black leading-tight">Access Task Partners</h1>
             <p className="mx-auto mt-3 max-w-[330px] text-center text-sm leading-6 text-[#475569]">
-              Sign in or create your reviewer account to unlock premium video audit tasks.
+              Enter your name and email to continue. If this is your first visit, your account will be created automatically.
             </p>
             {authError && (
               <div className="mt-5 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-600">
-                {accountNotFound ? (
-                  <button
-                    className="text-left underline decoration-2 underline-offset-2"
-                    onClick={() => {
-                      setSignupEmail(loginEmail);
-                      setAuthError("");
-                      setAccountNotFound(false);
-                      setAuthMode("register");
-                    }}
-                    type="button"
-                  >
-                    {authError}
-                  </button>
-                ) : authError}
+                {authError}
               </div>
             )}
-            <form onSubmit={authMode === "login" ? login : register} className="mt-8 space-y-3">
-              {authMode === "register" && <AuthInput icon={<UserRound size={18} />} onChange={setSignupName} placeholder="Full Name" type="text" value={signupName} />}
+            <form onSubmit={accessAccount} className="mt-8 space-y-3">
+              <AuthInput icon={<UserRound size={18} />} onChange={setSignupName} placeholder="Full Name" type="text" value={signupName} />
               <AuthInput
                 icon={<AtSign size={18} />}
-                onChange={authMode === "login" ? setLoginEmail : setSignupEmail}
+                onChange={setSignupEmail}
                 placeholder="Email"
                 type="email"
-                value={authMode === "login" ? loginEmail : signupEmail}
+                value={signupEmail}
               />
-              <AuthInput
-                icon={<LockKeyhole size={18} />}
-                onChange={authMode === "login" ? setLoginPassword : setSignupPassword}
-                placeholder="Password"
-                type="password"
-                value={authMode === "login" ? loginPassword : signupPassword}
-              />
-              {authMode === "login" && (
-                <label className="flex items-center justify-between rounded-[8px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold shadow-sm">
-                  Keep me signed in
-                  <input checked={remember} onChange={(event) => setRemember(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#FE2C55]" />
-                </label>
-              )}
+              <label className="flex items-center justify-between rounded-[8px] border border-slate-200 bg-white px-4 py-3 text-sm font-bold shadow-sm">
+                Keep me signed in
+                <input checked={remember} onChange={(event) => setRemember(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#FE2C55]" />
+              </label>
               <button className="flex h-13 w-full items-center justify-center gap-2 rounded-[8px] bg-[#FE2C55] font-black text-white shadow-lg shadow-rose-200 transition active:scale-[0.98]" type="submit">
                 {loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                {authMode === "login" ? "Sign In" : "Create Account"}
+                Continue to Dashboard
               </button>
             </form>
-            <button
-              className="mt-5 w-full text-center text-sm font-black text-[#2563EB]"
-              onClick={() => {
-                setAuthError("");
-                setAuthMode((value) => (value === "login" ? "register" : "login"));
-              }}
-              type="button"
-            >
-              {authMode === "login" ? "Don't have an account? Register" : "Already have an account? Sign In"}
-            </button>
           </div>
         </section>
       </main>
@@ -998,7 +934,7 @@ function getSupportReply(question: string) {
   }
 
   if (/(login|password|email|account|register|cadastro|senha)/.test(text)) {
-    return "Use the same email and password created during registration. If the account is not found, tap the registration link shown on the login screen.";
+    return "Use your full name and email to access the dashboard. If the email is new, the account is created automatically. If it already exists, we load the saved account data.";
   }
 
   if (/(safe|secure|security|fraud|trust|seguro|confianca)/.test(text)) {
