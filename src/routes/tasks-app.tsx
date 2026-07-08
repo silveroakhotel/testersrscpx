@@ -883,17 +883,18 @@ function LabeledPaymentInput({ label, onChange, placeholder, value }: { label: s
 function SupportScreen({ user }: { user: User }) {
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([
-    { from: "support", text: `Hi ${user.name.split(" ")[0] || "there"}, our compliance support team is online. How can we help?` },
+    { from: "support", text: `Hi ${user.name.split(" ")[0] || "there"}, support is online. Ask me about withdrawals, refunds, daily audits, account security, or payout details.` },
   ]);
 
   function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = message.trim();
     if (!trimmed) return;
+    const reply = getSupportReply(trimmed);
     setChatMessages((value) => [
       ...value,
       { from: "user", text: trimmed },
-      { from: "support", text: "Thanks. Your question was received. An account specialist will review it and reply shortly." },
+      { from: "support", text: reply },
     ]);
     setMessage("");
   }
@@ -956,6 +957,40 @@ function SupportScreen({ user }: { user: User }) {
       </section>
     </div>
   );
+}
+
+function getSupportReply(question: string) {
+  const text = question.toLowerCase();
+
+  if (/(withdraw|withdrawal|cash out|payout|saque|4000|4,000)/.test(text)) {
+    return "Withdrawals unlock when your available balance reaches R$ 4,000. This threshold is required for new auditor accounts under financial security and anti-fraud compliance.";
+  }
+
+  if (/(refund|tax|37|37.12|reembolso|fee)/.test(text)) {
+    return "Your R$ 37.12 tax refund is processed after you confirm payout details in the Refund tab. Once confirmed, the status stays saved and the credit is processed within 24 hours.";
+  }
+
+  if (/(daily|limit|6|tomorrow|amanha|hoje|today)/.test(text)) {
+    return "Each account can audit 6 videos per day. The daily cap protects review quality and keeps the creator partner network secure. More audits unlock on the next cycle.";
+  }
+
+  if (/(task|audit|video|review|avaliar|creator|criador)/.test(text)) {
+    return "To complete a creator audit, watch the full video, rate the content, answer the review questions, and submit a comment with at least 3 real words.";
+  }
+
+  if (/(bank|routing|account|cash app|paypal|venmo|zelle|payment)/.test(text)) {
+    return "You can register Cash App, PayPal, Venmo, Zelle, or Bank Transfer. Bank Transfer requires bank name, routing number, and account number.";
+  }
+
+  if (/(login|password|email|account|register|cadastro|senha)/.test(text)) {
+    return "Use the same email and password created during registration. If the account is not found, tap the registration link shown on the login screen.";
+  }
+
+  if (/(safe|secure|security|fraud|trust|seguro|confianca)/.test(text)) {
+    return "Task Partners uses account verification, daily limits, and payout thresholds to reduce automated activity and protect approved auditor balances.";
+  }
+
+  return "I can help with withdrawals, refunds, daily audit limits, payout methods, login, account security, and creator review requirements. Could you tell me which one you need help with?";
 }
 
 function ProfileScreen({ user, reviews, balance }: { user: User; reviews: Review[]; balance: number }) {
