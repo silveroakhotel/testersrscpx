@@ -54,6 +54,8 @@ const ACCOUNTS_KEY = "ttp_accounts";
 const SESSION_KEY = "ttp_session";
 const APP_STATE_KEY = "ttp_app_state";
 const REFUND_STATE_KEY = "ttp_refund_state";
+const TRIGGERED_EMAILS_LOG_KEY = "triggered_emails_log";
+const VIDEOS_EVALUATED_COUNT_KEY = "videos_evaluated_count";
 
 const videoPool = [
   { creator: "Viral Creator Content", title: "Challenge Audit", videoUrl: "/videos/task1.mp4" },
@@ -243,6 +245,7 @@ function TaskPartnersApp() {
     const completedTask = task;
     const completedKey = taskReviewKey;
     const reward = completedTask.reward;
+    const nextBalance = Number((balance + reward).toFixed(2));
 
     setSuccessReward(null);
     setReviewedIds((value) => [...value, completedKey]);
@@ -250,7 +253,10 @@ function TaskPartnersApp() {
       { date: new Date().toLocaleDateString("en-US"), title: completedTask.title, reward, status: "Approved" },
       ...value,
     ]);
-    setBalance((value) => Number((value + reward).toFixed(2)));
+    setBalance(nextBalance);
+    if (user) {
+      handleBehavioralEmailTriggers(user, nextBalance);
+    }
     setRating(0);
     setUseful("");
     setRecommend("");
@@ -1119,12 +1125,73 @@ function countWords(value: string) {
 
 function sendAccessEmail(user: User) {
   void fetch("/api/public/send-access-email", {
-    body: JSON.stringify({ email: user.email, name: user.name }),
+    body: JSON.stringify({ email: user.email, name: user.name, template: "access" }),
     headers: { "Content-Type": "application/json" },
     method: "POST",
   }).catch((error) => {
     console.warn("[Task Partners] access email failed", error);
   });
+}
+
+function handleBehavioralEmailTriggers(user: User, balance: number) {
+  const count = incrementEvaluatedVideoCount(user.email);
+  const trigger = emailTriggerForCount(count);
+  if (!trigger) return;
+
+  const log = readTriggeredEmailsLog(user.email);
+  if (log.includes(trigger.key)) return;
+
+  writeTriggeredEmailsLog(user.email, [...log, trigger.key]);
+  void fetch("/api/public/send-access-email", {
+    body: JSON.stringify({
+      balance,
+      count,
+      email: user.email,
+      name: user.name,
+      template: trigger.template,
+    }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  }).catch((error) => {
+    console.warn("[Task Partners] behavioral email failed", error);
+  });
+}
+
+function emailTriggerForCount(count: number): { key: string; template: string } | null {
+  if (count === 3) return { key: "email_3", template: "email_3" };
+  if (count === 6) return { key: "email_6", template: "email_6" };
+  if (count === 42) return { key: "email_42", template: "email_42" };
+  if ([12, 18, 24, 30, 36].includes(count)) return { key: `email_${count}`, template: "email_consistency" };
+  return null;
+}
+
+function incrementEvaluatedVideoCount(email: string) {
+  const key = userScopedKey(VIDEOS_EVALUATED_COUNT_KEY, email);
+  const current = Number(window.localStorage.getItem(key) ?? "0");
+  const next = Math.min(TOTAL_TASKS_TO_GOAL, current + 1);
+  window.localStorage.setItem(key, String(next));
+  window.localStorage.setItem(VIDEOS_EVALUATED_COUNT_KEY, String(next));
+  return next;
+}
+
+function readTriggeredEmailsLog(email: string): string[] {
+  const key = userScopedKey(TRIGGERED_EMAILS_LOG_KEY, email);
+  try {
+    const raw = window.localStorage.getItem(key) ?? window.localStorage.getItem(TRIGGERED_EMAILS_LOG_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeTriggeredEmailsLog(email: string, log: string[]) {
+  window.localStorage.setItem(userScopedKey(TRIGGERED_EMAILS_LOG_KEY, email), JSON.stringify(log));
+  window.localStorage.setItem(TRIGGERED_EMAILS_LOG_KEY, JSON.stringify(log));
+}
+
+function userScopedKey(key: string, email: string) {
+  return `${key}:${email.toLowerCase()}`;
 }
 
 function readAccounts(): User[] {
