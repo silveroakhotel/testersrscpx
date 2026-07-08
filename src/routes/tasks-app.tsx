@@ -130,15 +130,8 @@ function TaskPartnersApp() {
   const balanceText = useMemo(() => brl(balance), [balance]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const isAllowed = params.get("utm_source") === "tiktok";
-    setAllowed(isAllowed);
+    setAllowed(true);
     setCheckedGate(true);
-    if (!isAllowed) {
-      Array.from(document.body.children).forEach((child) => {
-        if (child.id !== "root") child.remove();
-      });
-    }
   }, []);
 
   useEffect(() => {
