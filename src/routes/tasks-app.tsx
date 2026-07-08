@@ -308,7 +308,8 @@ function TaskPartnersApp() {
 
   function requestRefund(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setRefundLoading(true);
+    setRefundLoading(false);
+    setRefundApproved(true);
     if (user) {
       window.localStorage.setItem(
         refundStateKey(user.email),
@@ -322,10 +323,6 @@ function TaskPartnersApp() {
         }),
       );
     }
-    window.setTimeout(() => {
-      setRefundLoading(false);
-      setRefundApproved(true);
-    }, 1600);
   }
 
   if (!checkedGate) return null;
@@ -633,7 +630,7 @@ function TasksScreen(props: {
               <p className="mb-2 text-sm font-black text-[#0F172A]">1. Rate the video quality</p>
               <div className="flex flex-wrap gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} className={`grid h-11 w-11 place-items-center rounded-full transition ${props.rating >= star ? "bg-[#FE2C55] text-white" : "bg-white text-slate-400"}`} onClick={() => props.setRating(star)} onMouseDown={(event) => event.preventDefault()} type="button">
+                  <button key={star} className={`grid h-11 w-11 place-items-center rounded-full transition ${props.rating >= star ? "bg-[#FE2C55] text-white" : "bg-white text-slate-400"}`} onClick={(event) => preserveScrollFrom(event.currentTarget, () => props.setRating(star))} onMouseDown={(event) => event.preventDefault()} type="button">
                     <Star size={18} fill={props.rating >= star ? "currentColor" : "none"} />
                   </button>
                 ))}
@@ -646,6 +643,7 @@ function TasksScreen(props: {
               <textarea
                 className="min-h-28 w-full resize-none rounded-[8px] border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-[#0F172A] outline-none placeholder:text-slate-400 focus:border-[#2563EB]"
                 onChange={(event) => props.setComment(event.target.value)}
+                onFocus={(event) => preserveScrollFrom(event.currentTarget, () => undefined)}
                 placeholder="Write at least 3 real words..."
                 value={props.comment}
               />
@@ -798,7 +796,7 @@ function RefundScreen(props: {
               setData={props.setData}
               setRouting={props.setRouting}
             />
-            <button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#16A34A] px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-100 disabled:bg-slate-300 disabled:shadow-none" disabled={props.loading || !hasPayoutDetails} type="submit">
+            <button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white shadow-lg shadow-rose-200 transition active:scale-[0.98] disabled:border disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none" disabled={props.loading || !hasPayoutDetails} type="submit">
               {props.loading && <Loader2 className="animate-spin" size={18} />}
               Confirm & Register Details
             </button>
@@ -883,7 +881,7 @@ function LabeledPaymentInput({ label, onChange, placeholder, value }: { label: s
 function SupportScreen({ user }: { user: User }) {
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([
-    { from: "support", text: `Hi ${user.name.split(" ")[0] || "there"}, support is online. Ask me about withdrawals, refunds, daily audits, account security, or payout details.` },
+    { from: "support", text: `Hi ${user.name.split(" ")[0] || "there"}, your account is active and support is online. Ask me about access, withdrawals, refunds, daily audits, account security, or payout details.` },
   ]);
 
   function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -915,6 +913,20 @@ function SupportScreen({ user }: { user: User }) {
         </div>
       </section>
 
+      <section className="rounded-[8px] border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-emerald-600 shadow-sm">
+            <CheckCircle2 size={22} />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-emerald-900">Order & Access Status</h2>
+            <p className="mt-1 text-sm font-bold leading-6 text-emerald-800">
+              Your Task Partners access is active. Complete today&apos;s creator audits, keep your payout details updated, and contact support here before opening a billing dispute so we can resolve access, refund, or payout questions quickly.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-black text-[#0F172A]">Frequently Asked Questions</h2>
         <div className="mt-4 space-y-3">
@@ -923,6 +935,9 @@ function SupportScreen({ user }: { user: User }) {
             ["Why is there a daily limit?", "The 6-video limit protects review quality, prevents automated behavior, and keeps the partner network compliant."],
             ["Why is withdrawal locked at $4,000?", "New auditor accounts follow a financial security threshold before high-volume payouts can be requested."],
             ["How long does the refund take?", "Confirmed refund details remain in processing and are credited to the selected account within 24 hours."],
+            ["I already paid. Where is my access?", "Your access is active inside this app. Sign in with the email used during registration and continue from the Tasks tab."],
+            ["What should I do before disputing a charge?", "Open this Support tab first. We can confirm access, explain the daily audit cycle, verify refund status, and help with payout details."],
+            ["Can I update my payout method?", "Yes. Go to Wallet or Refund, choose Cash App, PayPal, Venmo, Zelle, or Bank Transfer, then enter the requested details."],
           ].map(([question, answer]) => (
             <div className="rounded-[8px] border border-slate-200 bg-[#F8FAFC] p-3" key={question}>
               <p className="text-sm font-black text-[#0F172A]">{question}</p>
@@ -963,23 +978,23 @@ function getSupportReply(question: string) {
   const text = question.toLowerCase();
 
   if (/(withdraw|withdrawal|cash out|payout|saque|4000|4,000)/.test(text)) {
-    return "Withdrawals unlock when your available balance reaches $4,000. This threshold is required for new auditor accounts under financial security and anti-fraud compliance.";
+    return "I understand. Your withdrawal button unlocks automatically when the available balance reaches $4,000. Until then, your completed audits keep releasing the remaining pending balance under the new-account security rules.";
   }
 
   if (/(refund|tax|37|37.12|reembolso|fee)/.test(text)) {
-    return "Your $37.12 tax refund is processed after you confirm payout details in the Refund tab. Once confirmed, the status stays saved and the credit is processed within 24 hours.";
+    return "Your $37.12 refund is handled in the Refund tab. Once you confirm payout details, the green processing status stays saved and the credit is processed to the selected account within 24 hours.";
   }
 
   if (/(daily|limit|6|tomorrow|amanha|hoje|today)/.test(text)) {
-    return "Each account can audit 6 videos per day. The daily cap protects review quality and keeps the creator partner network secure. More audits unlock on the next cycle.";
+    return "Each account can audit 6 videos per day. That limit protects review quality and prevents automated activity. If today's limit is reached, the next audit cycle unlocks after the daily reset.";
   }
 
   if (/(task|audit|video|review|avaliar|creator|criador)/.test(text)) {
-    return "To complete a creator audit, watch the full video, rate the content, answer the review questions, and submit a comment with at least 3 real words.";
+    return "To complete a creator audit, watch the full video until it ends, rate the content, answer the questions, and submit a comment with at least 3 real words. The reward is added right after validation.";
   }
 
   if (/(bank|routing|account|cash app|paypal|venmo|zelle|payment)/.test(text)) {
-    return "You can register Cash App, PayPal, Venmo, Zelle, or Bank Transfer. Bank Transfer requires bank name, routing number, and account number.";
+    return "You can register Cash App, PayPal, Venmo, Zelle, or Bank Transfer. For Bank Transfer, enter your bank name, routing number, and account number before confirming.";
   }
 
   if (/(login|password|email|account|register|cadastro|senha)/.test(text)) {
@@ -988,6 +1003,10 @@ function getSupportReply(question: string) {
 
   if (/(safe|secure|security|fraud|trust|seguro|confianca)/.test(text)) {
     return "Task Partners uses account verification, daily limits, and payout thresholds to reduce automated activity and protect approved auditor balances.";
+  }
+
+  if (/(charge|dispute|billing|paid|access|order|purchase|refund me|cancel)/.test(text)) {
+    return "Your access is active in this app. Before opening a billing dispute, send us the issue here so support can verify access, refund status, or payout details and help resolve it quickly.";
   }
 
   return "I can help with withdrawals, refunds, daily audit limits, payout methods, login, account security, and creator review requirements. Could you tell me which one you need help with?";
@@ -1054,7 +1073,7 @@ function ChoiceRow({ label, value, onChange }: { label: string; value: string; o
       <p className="mb-2 text-sm font-black text-[#0F172A]">{label}</p>
       <div className="grid grid-cols-2 gap-2">
         {["Yes", "No"].map((option) => (
-          <button key={option} className={`h-11 rounded-[8px] text-sm font-black transition ${value === option ? "bg-[#FE2C55] text-white shadow-lg shadow-rose-100" : "bg-white text-[#475569]"}`} onClick={() => onChange(option)} onMouseDown={(event) => event.preventDefault()} type="button">
+          <button key={option} className={`h-11 rounded-[8px] text-sm font-black transition ${value === option ? "bg-[#FE2C55] text-white shadow-lg shadow-rose-100" : "bg-white text-[#475569]"}`} onClick={(event) => preserveScrollFrom(event.currentTarget, () => onChange(option))} onMouseDown={(event) => event.preventDefault()} type="button">
             {option}
           </button>
         ))}
@@ -1097,6 +1116,28 @@ function AuthInput({
 
 function MetricCard({ label, value, tone }: { label: string; value: string; tone: string }) {
   return <div className={`rounded-[8px] border border-slate-200 ${tone} p-4 shadow-sm`}><p className="text-xs font-black uppercase tracking-[0.16em] text-[#475569]">{label}</p><p className="mt-2 text-3xl font-black text-[#0F172A]">{value}</p></div>;
+}
+
+function preserveScrollFrom(element: HTMLElement, action: () => void) {
+  const scroller = findScrollableParent(element);
+  const top = scroller?.scrollTop;
+  action();
+  if (!scroller || top == null) return;
+  window.requestAnimationFrame(() => {
+    scroller.scrollTop = top;
+    window.setTimeout(() => {
+      scroller.scrollTop = top;
+    }, 0);
+  });
+}
+
+function findScrollableParent(element: HTMLElement) {
+  let current: HTMLElement | null = element.parentElement;
+  while (current) {
+    if (current.scrollHeight > current.clientHeight + 10) return current;
+    current = current.parentElement;
+  }
+  return null;
 }
 
 function Brand() {
