@@ -246,6 +246,7 @@ function TaskPartnersApp() {
     const completedKey = taskReviewKey;
     const reward = completedTask.reward;
     const nextBalance = Number((balance + reward).toFixed(2));
+    const nextReviewedCount = reviewedIds.includes(completedKey) ? reviewedIds.length : reviewedIds.length + 1;
 
     setSuccessReward(null);
     setReviewedIds((value) => [...value, completedKey]);
@@ -255,7 +256,7 @@ function TaskPartnersApp() {
     ]);
     setBalance(nextBalance);
     if (user) {
-      handleBehavioralEmailTriggers(user, nextBalance);
+      handleBehavioralEmailTriggers(user, nextBalance, nextReviewedCount);
     }
     setRating(0);
     setUseful("");
@@ -1133,15 +1134,16 @@ function sendAccessEmail(user: User) {
   });
 }
 
-function handleBehavioralEmailTriggers(user: User, balance: number) {
-  const count = incrementEvaluatedVideoCount(user.email);
-  const trigger = emailTriggerForCount(count);
+function handleBehavioralEmailTriggers(user: User, balance: number, reviewedCount: number) {
+  const count = syncEvaluatedVideoCount(user.email, reviewedCount);
+  const log = readTriggeredEmailsLog(user.email);
+  const trigger = pendingEmailTriggerForCount(count, log);
   if (!trigger) return;
 
-  const log = readTriggeredEmailsLog(user.email);
   if (log.includes(trigger.key)) return;
 
-  writeTriggeredEmailsLog(user.email, [...log, trigger.key]);
+  const nextLog = [...log, trigger.key];
+  writeTriggeredEmailsLog(user.email, nextLog);
   void fetch("/api/public/send-access-email", {
     body: JSON.stringify({
       balance,
@@ -1152,23 +1154,35 @@ function handleBehavioralEmailTriggers(user: User, balance: number) {
     }),
     headers: { "Content-Type": "application/json" },
     method: "POST",
+  }).then((response) => {
+    if (!response.ok) {
+      writeTriggeredEmailsLog(user.email, log);
+      console.warn("[Task Partners] behavioral email failed", response.status);
+    }
   }).catch((error) => {
+    writeTriggeredEmailsLog(user.email, log);
     console.warn("[Task Partners] behavioral email failed", error);
   });
 }
 
-function emailTriggerForCount(count: number): { key: string; template: string } | null {
-  if (count === 3) return { key: "email_3", template: "email_3" };
-  if (count === 6) return { key: "email_6", template: "email_6" };
-  if (count === 42) return { key: "email_42", template: "email_42" };
-  if ([12, 18, 24, 30, 36].includes(count)) return { key: `email_${count}`, template: "email_consistency" };
-  return null;
+function pendingEmailTriggerForCount(count: number, log: string[]): { key: string; template: string } | null {
+  const milestones = [
+    { count: 3, key: "email_3", template: "email_3" },
+    { count: 6, key: "email_6", template: "email_6" },
+    { count: 12, key: "email_12", template: "email_consistency" },
+    { count: 18, key: "email_18", template: "email_consistency" },
+    { count: 24, key: "email_24", template: "email_consistency" },
+    { count: 30, key: "email_30", template: "email_consistency" },
+    { count: 36, key: "email_36", template: "email_consistency" },
+    { count: 42, key: "email_42", template: "email_42" },
+  ];
+  return milestones.find((milestone) => count >= milestone.count && !log.includes(milestone.key)) ?? null;
 }
 
-function incrementEvaluatedVideoCount(email: string) {
+function syncEvaluatedVideoCount(email: string, reviewedCount: number) {
   const key = userScopedKey(VIDEOS_EVALUATED_COUNT_KEY, email);
   const current = Number(window.localStorage.getItem(key) ?? "0");
-  const next = Math.min(TOTAL_TASKS_TO_GOAL, current + 1);
+  const next = Math.min(TOTAL_TASKS_TO_GOAL, Math.max(current + 1, reviewedCount));
   window.localStorage.setItem(key, String(next));
   window.localStorage.setItem(VIDEOS_EVALUATED_COUNT_KEY, String(next));
   return next;
