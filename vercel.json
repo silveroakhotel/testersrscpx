@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/tasks-app", "destination": "/" },
+    { "source": "/tasks-app/:path*", "destination": "/" },
+    { "source": "/admin", "destination": "/" },
+    { "source": "/admin/:path*", "destination": "/" },
+    { "source": "/landingpage", "destination": "/" },
+    { "source": "/landingpage/:path*", "destination": "/" }
+  ]
+}

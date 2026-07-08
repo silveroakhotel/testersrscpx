@@ -1,0 +1,7 @@
+/tasks-app /index.html 200
+/tasks-app/* /index.html 200
+/admin /index.html 200
+/admin/* /index.html 200
+/landingpage /index.html 200
+/landingpage/* /index.html 200
+

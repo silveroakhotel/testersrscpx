@@ -15,6 +15,13 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 const mobileGuardScript = String.raw`
 (() => {
+  const earlyParams = new URLSearchParams(window.location.search);
+  if ((window.location.pathname === "/" || window.location.pathname === "") && earlyParams.get("__route") === "tasks-app") {
+    earlyParams.delete("__route");
+    const nextSearch = earlyParams.toString();
+    window.history.replaceState(null, "", "/tasks-app" + (nextSearch ? "?" + nextSearch : "") + window.location.hash);
+  }
+
   if ((window.location.pathname === "/" || window.location.pathname === "") && window.location.search.length === 0) {
     window.location.href = "/landingpage";
     return;
