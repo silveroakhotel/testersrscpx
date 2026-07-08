@@ -29,51 +29,6 @@
     return Boolean(node && node.matches && node.matches("input, textarea, select, [contenteditable='true']"));
   }
 
-  let liftedFixedPanel = null;
-  let liftedFixedPanelStyles = null;
-
-  function restoreKeyboardLift() {
-    if (!liftedFixedPanel || isTextField(document.activeElement)) return;
-    try {
-      liftedFixedPanel.style.bottom = liftedFixedPanelStyles.bottom;
-      liftedFixedPanel.style.maxHeight = liftedFixedPanelStyles.maxHeight;
-    } catch {}
-    liftedFixedPanel = null;
-    liftedFixedPanelStyles = null;
-  }
-
-  function findFixedBottomPanel(node) {
-    let current = node && node.parentElement;
-    while (current && current !== document.body) {
-      const style = window.getComputedStyle(current);
-      const rect = current.getBoundingClientRect();
-      if (style.position === "fixed" && rect.bottom >= window.innerHeight - 2) return current;
-      current = current.parentElement;
-    }
-    return null;
-  }
-
-  function liftPanelAboveKeyboard(el) {
-    if (!isTextField(el) || !window.visualViewport) return;
-    const panel = findFixedBottomPanel(el);
-    if (!panel) return;
-    const vv = window.visualViewport;
-    const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    if (!liftedFixedPanel) {
-      liftedFixedPanel = panel;
-      liftedFixedPanelStyles = { bottom: panel.style.bottom || "", maxHeight: panel.style.maxHeight || "" };
-    }
-    if (inset > 0) {
-      panel.style.bottom = inset + "px";
-      panel.style.maxHeight = Math.max(240, vv.height - 16) + "px";
-    }
-  }
-
-  function liftFocusedField(el) {
-    if (!isTextField(el)) return;
-    liftPanelAboveKeyboard(el);
-  }
-
   function enforceViewportOnly() {
     enforceViewport();
   }
@@ -163,13 +118,11 @@
 
   document.addEventListener("focusin", (event) => {
     enforceViewport();
-    liftFocusedField(event.target);
   }, true);
-  document.addEventListener("focusout", () => setTimeout(restoreKeyboardLift, 180), true);
+  document.addEventListener("focusout", () => setTimeout(enforceViewport, 180), true);
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", () => {
-      liftFocusedField(document.activeElement);
-      restoreKeyboardLift();
+      enforceViewport();
     });
   }
 

@@ -53,51 +53,6 @@ const mobileGuardScript = String.raw`
     return node.matches("input, textarea, select, [contenteditable='true']");
   };
 
-  let liftedFixedPanel = null;
-  let liftedFixedPanelStyles = null;
-
-  const restoreKeyboardLift = () => {
-    if (!liftedFixedPanel || isTextField(document.activeElement)) return;
-    try {
-      liftedFixedPanel.style.bottom = liftedFixedPanelStyles.bottom;
-      liftedFixedPanel.style.maxHeight = liftedFixedPanelStyles.maxHeight;
-    } catch {}
-    liftedFixedPanel = null;
-    liftedFixedPanelStyles = null;
-  };
-
-  const findFixedBottomPanel = (node) => {
-    let current = node && node.parentElement;
-    while (current && current !== document.body) {
-      const style = window.getComputedStyle(current);
-      const rect = current.getBoundingClientRect();
-      if (style.position === "fixed" && rect.bottom >= window.innerHeight - 2) return current;
-      current = current.parentElement;
-    }
-    return null;
-  };
-
-  const liftPanelAboveKeyboard = (el) => {
-    if (!isTextField(el) || !window.visualViewport) return;
-    const panel = findFixedBottomPanel(el);
-    if (!panel) return;
-    const viewport = window.visualViewport;
-    const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
-    if (!liftedFixedPanel) {
-      liftedFixedPanel = panel;
-      liftedFixedPanelStyles = { bottom: panel.style.bottom || "", maxHeight: panel.style.maxHeight || "" };
-    }
-    if (inset > 0) {
-      panel.style.bottom = inset + "px";
-      panel.style.maxHeight = Math.max(240, viewport.height - 16) + "px";
-    }
-  };
-
-  const liftFocusedField = (el) => {
-    if (!isTextField(el)) return;
-    liftPanelAboveKeyboard(el);
-  };
-
   const resetAllScroll = () => {
     enforceViewport();
   };
@@ -180,14 +135,12 @@ const mobileGuardScript = String.raw`
     }
   }, true);
   document.addEventListener("focusin", (e) => {
-    setTimeout(enforceViewport, 0);
-     liftFocusedField(e.target);
+     setTimeout(enforceViewport, 0);
   }, true);
-  document.addEventListener("focusout", () => setTimeout(restoreKeyboardLift, 180), true);
+  document.addEventListener("focusout", () => setTimeout(enforceViewport, 180), true);
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", () => {
-      liftFocusedField(document.activeElement);
-      restoreKeyboardLift();
+      enforceViewport();
     });
   }
 
@@ -433,26 +386,6 @@ function RootComponent() {
       const enforceViewportAfterRender = () => {
         enforceViewport();
       };
-      const liftActiveField = () => {
-        const el = document.activeElement as HTMLElement | null;
-        if (!el?.matches("input, textarea, select, [contenteditable='true']")) return;
-        const fixedPanel = (() => {
-          let current = el.parentElement;
-          while (current && current !== document.body) {
-            const rect = current.getBoundingClientRect();
-            if (window.getComputedStyle(current).position === "fixed" && rect.bottom >= window.innerHeight - 2) return current;
-            current = current.parentElement;
-          }
-          return null;
-        })();
-        if (fixedPanel && window.visualViewport) {
-          const inset = Math.max(0, window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop);
-          if (inset > 0) {
-            fixedPanel.style.bottom = `${inset}px`;
-            fixedPanel.style.maxHeight = `${Math.max(240, window.visualViewport.height - 16)}px`;
-          }
-        }
-      };
       const fallbackToHomeIfInvalid = () => {
         const path = window.location.pathname;
         if (!validPaths.has(path)) window.location.replace("/");
@@ -522,17 +455,9 @@ function RootComponent() {
       document.addEventListener("keydown", preventKeyboardZoom, { passive: false, capture: true });
       window.addEventListener("focusin", () => {
         window.setTimeout(enforceViewport, 0);
-        liftActiveField();
       });
-      window.addEventListener("focusout", () => window.setTimeout(() => {
-        document.querySelectorAll<HTMLElement>("[style*='bottom:'][style*='max-height:']").forEach((node) => {
-          if (window.getComputedStyle(node).position === "fixed") {
-            node.style.bottom = "";
-            node.style.maxHeight = "";
-          }
-        });
-      }, 220));
-      window.visualViewport?.addEventListener("resize", liftActiveField);
+      window.addEventListener("focusout", () => window.setTimeout(enforceViewport, 220));
+      window.visualViewport?.addEventListener("resize", enforceViewport);
       window.addEventListener("click", (event) => {
         const target = event.target as Element | null;
         if (activateCaptchaTap(target)) return;

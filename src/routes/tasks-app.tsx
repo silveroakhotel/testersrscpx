@@ -7,8 +7,10 @@ import {
   Loader2,
   LockKeyhole,
   LockKeyholeIcon,
+  MessageCircle,
   Pause,
   Play,
+  ShieldCheck,
   ReceiptText,
   Search,
   Star,
@@ -30,7 +32,7 @@ export const Route = createFileRoute("/tasks-app")({
   component: TaskPartnersApp,
 });
 
-type Screen = "tasks" | "wallet" | "refund" | "profile";
+type Screen = "tasks" | "wallet" | "refund" | "support" | "profile";
 type AuthMode = "login" | "register";
 type Review = { date: string; title: string; reward: number; status: string };
 type User = { name: string; email: string; password: string };
@@ -483,6 +485,7 @@ function TaskPartnersApp() {
               setRouting={setRefundRouting}
             />
           )}
+          {screen === "support" && <SupportScreen user={user} />}
           {screen === "profile" && <ProfileScreen reviews={reviews} user={user} balance={balance} />}
         </div>
 
@@ -758,6 +761,10 @@ function RefundScreen(props: {
   setMethod: (value: string) => void;
   setRouting: (value: string) => void;
 }) {
+  const hasPayoutDetails = props.method === "Bank Transfer (ACH)"
+    ? Boolean(props.bank.trim() && props.routing.trim() && props.account.trim())
+    : Boolean(props.data.trim());
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Tax Refund Portal</h1>
@@ -767,12 +774,16 @@ function RefundScreen(props: {
         </p>
         {props.approved ? (
           <div className="mt-5 rounded-[8px] border border-emerald-200 bg-emerald-50 p-4">
-            <p className="text-sm font-black text-emerald-700">
+            <div className="mb-3 flex items-center gap-2 text-emerald-700">
+              <ShieldCheck size={20} />
+              <p className="text-sm font-black">Refund details confirmed</p>
+            </div>
+            <p className="text-sm font-black leading-6 text-emerald-700">
               Status: Processing... Your refund of R$ 37,12 is being processed and will be credited to your selected account within 24 hours.
             </p>
           </div>
         ) : (
-          <form className="mt-5 space-y-3" onSubmit={props.onSubmit}>
+          <form className="mt-5 space-y-4" onSubmit={props.onSubmit}>
             <select className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A]" value={props.method} onChange={(event) => props.setMethod(event.target.value)}>
               {paymentOptions.map((method) => <option key={method}>{method}</option>)}
             </select>
@@ -787,10 +798,11 @@ function RefundScreen(props: {
               setData={props.setData}
               setRouting={props.setRouting}
             />
-            <button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#2563EB] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300" disabled={props.loading} type="submit">
+            <button className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#16A34A] px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-100 disabled:bg-slate-300 disabled:shadow-none" disabled={props.loading || !hasPayoutDetails} type="submit">
               {props.loading && <Loader2 className="animate-spin" size={18} />}
               Confirm & Register Details
             </button>
+            {!hasPayoutDetails && <p className="text-center text-xs font-bold text-[#64748B]">Enter your payout details to confirm the refund request.</p>}
           </form>
         )}
       </section>
@@ -868,6 +880,84 @@ function LabeledPaymentInput({ label, onChange, placeholder, value }: { label: s
   );
 }
 
+function SupportScreen({ user }: { user: User }) {
+  const [message, setMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    { from: "support", text: `Hi ${user.name.split(" ")[0] || "there"}, our compliance support team is online. How can we help?` },
+  ]);
+
+  function sendMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = message.trim();
+    if (!trimmed) return;
+    setChatMessages((value) => [
+      ...value,
+      { from: "user", text: trimmed },
+      { from: "support", text: "Thanks. Your question was received. An account specialist will review it and reply shortly." },
+    ]);
+    setMessage("");
+  }
+
+  return (
+    <div className="space-y-4">
+      <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#E0F2FE] text-[#2563EB]">
+            <ShieldCheck size={22} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-[#0F172A]">Support Center</h1>
+            <p className="mt-2 text-sm font-bold leading-6 text-[#475569]">
+              Get answers about audits, refund processing, withdrawal rules, and account verification.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-lg font-black text-[#0F172A]">Frequently Asked Questions</h2>
+        <div className="mt-4 space-y-3">
+          {[
+            ["Why do I need to complete audits?", "Partner creator audits validate account activity and release your remaining pending withdrawal balance."],
+            ["Why is there a daily limit?", "The 6-video limit protects review quality, prevents automated behavior, and keeps the partner network compliant."],
+            ["Why is withdrawal locked at $4,000?", "New auditor accounts follow a financial security threshold before high-volume payouts can be requested."],
+            ["How long does the refund take?", "Confirmed refund details remain in processing and are credited to the selected account within 24 hours."],
+          ].map(([question, answer]) => (
+            <div className="rounded-[8px] border border-slate-200 bg-[#F8FAFC] p-3" key={question}>
+              <p className="text-sm font-black text-[#0F172A]">{question}</p>
+              <p className="mt-1 text-xs font-bold leading-5 text-[#475569]">{answer}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-lg font-black text-[#0F172A]">Live Chat</h2>
+        <div className="mt-4 max-h-72 space-y-2 overflow-y-auto rounded-[8px] bg-[#F8FAFC] p-3">
+          {chatMessages.map((item, index) => (
+            <div className={`flex ${item.from === "user" ? "justify-end" : "justify-start"}`} key={`${item.from}-${index}`}>
+              <p className={`max-w-[82%] rounded-[8px] px-3 py-2 text-xs font-bold leading-5 ${item.from === "user" ? "bg-[#FE2C55] text-white" : "bg-white text-[#475569] shadow-sm"}`}>
+                {item.text}
+              </p>
+            </div>
+          ))}
+        </div>
+        <form className="mt-3 flex gap-2" onSubmit={sendMessage}>
+          <input
+            className="min-w-0 flex-1 rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-3 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400"
+            onChange={(event) => setMessage(event.target.value)}
+            placeholder="Type your question..."
+            value={message}
+          />
+          <button className="h-12 rounded-[8px] bg-[#2563EB] px-4 text-sm font-black text-white" type="submit">
+            Send
+          </button>
+        </form>
+      </section>
+    </div>
+  );
+}
+
 function ProfileScreen({ user, reviews, balance }: { user: User; reviews: Review[]; balance: number }) {
   return (
     <div>
@@ -898,10 +988,11 @@ function ProfileScreen({ user, reviews, balance }: { user: User; reviews: Review
 function BottomNav({ screen, setScreen }: { screen: Screen; setScreen: (screen: Screen) => void }) {
   return (
     <nav className="shrink-0 border-t border-slate-200 bg-white px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 text-[11px] font-black shadow-[0_-8px_24px_rgba(15,23,42,.08)]">
-      <div className="grid grid-cols-4">
+      <div className="grid grid-cols-5">
         <NavButton active={screen === "tasks"} icon={<Home size={21} />} label="Tasks" onClick={() => setScreen("tasks")} />
         <NavButton active={screen === "wallet"} icon={<Wallet size={21} />} label="Wallet" onClick={() => setScreen("wallet")} />
         <NavButton active={screen === "refund"} icon={<ReceiptText size={21} />} label="Refund" onClick={() => setScreen("refund")} />
+        <NavButton active={screen === "support"} icon={<MessageCircle size={21} />} label="Support" onClick={() => setScreen("support")} />
         <NavButton active={screen === "profile"} icon={<UserRound size={21} />} label="Profile" onClick={() => setScreen("profile")} />
       </div>
     </nav>
