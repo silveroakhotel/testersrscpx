@@ -144,7 +144,7 @@ function TaskPartnersApp() {
   const reviewUnlocked = progress >= 100 && !reviewedIds.includes(taskReviewKey);
   const hasValidComment = countWords(comment) >= 3;
   const canSubmit = reviewUnlocked && rating > 0 && Boolean(useful) && Boolean(recommend) && hasValidComment;
-  const balanceText = useMemo(() => brl(balance), [balance]);
+  const balanceText = useMemo(() => usd(balance), [balance]);
 
   useEffect(() => {
     setAllowed(true);
@@ -495,7 +495,7 @@ function TaskPartnersApp() {
       {processing && <ProcessingOverlay step={processingStep} />}
       {successReward !== null && (
         <div className="fixed left-1/2 top-[max(16px,env(safe-area-inset-top))] z-[60] w-[calc(100vw-32px)] max-w-[398px] -translate-x-1/2 rounded-[8px] bg-emerald-500 px-4 py-3 text-center text-sm font-black text-white shadow-2xl">
-          +{brl(successReward)} Added to your balance!
+          +{usd(successReward)} Added to your balance!
         </div>
       )}
     </main>
@@ -564,7 +564,7 @@ function TasksScreen(props: {
           <div className="min-w-0">
             <p className="text-xs font-black text-[#FE2C55]">{props.task.creator}</p>
             <h1 className="text-xl font-black leading-tight text-[#0F172A]">{props.task.title}</h1>
-            <p className="mt-1 text-xs font-semibold text-[#475569]">Task {props.task.sequence}/6 - Reward: {brl(props.task.reward)}</p>
+            <p className="mt-1 text-xs font-semibold text-[#475569]">Task {props.task.sequence}/6 - Reward: {usd(props.task.reward)}</p>
             <p className="mt-2 text-xs font-bold leading-5 text-[#475569]">
               Evaluate partner creator content to release your remaining pending withdrawal balance.
             </p>
@@ -672,7 +672,7 @@ function TasksScreen(props: {
               <div className="min-w-0">
                 <p className="truncate text-xs font-black text-[#FE2C55]">{lockedTask.creator}</p>
                 <p className="truncate text-sm font-black text-[#0F172A]">{lockedTask.title}</p>
-                <p className="text-xs font-semibold text-[#475569]">{brl(lockedTask.reward)} release value</p>
+                <p className="text-xs font-semibold text-[#475569]">{usd(lockedTask.reward)} release value</p>
               </div>
             </div>
             <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-sm">
@@ -709,9 +709,9 @@ function WalletScreen(props: {
     <div>
       <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Wallet</h1>
       <div className="grid gap-3">
-        <MetricCard label="Current Balance" value={brl(props.balance)} tone="bg-white" />
-        <MetricCard label="Pending Balance" value={brl(props.pendingBalance)} tone="bg-white" />
-        <MetricCard label="Minimum Withdrawal" value={brl(MIN_WITHDRAWAL)} tone="bg-white" />
+        <MetricCard label="Current Balance" value={usd(props.balance)} tone="bg-white" />
+        <MetricCard label="Pending Balance" value={usd(props.pendingBalance)} tone="bg-white" />
+        <MetricCard label="Minimum Withdrawal" value={usd(MIN_WITHDRAWAL)} tone="bg-white" />
       </div>
       <div className="mt-5 rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <p className="mb-3 text-sm font-black text-[#0F172A]">Withdrawal method</p>
@@ -770,7 +770,7 @@ function RefundScreen(props: {
       <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Tax Refund Portal</h1>
       <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <p className="text-sm leading-6 text-[#475569]">
-          Tax Refund Pending: A fee of R$ 37.12 linked to your ID is eligible for instant refund. This will be deposited into your account in less than 24 hours. Enter your payout details below.
+          Tax Refund Pending: A fee of $37.12 linked to your ID is eligible for instant refund. This will be deposited into your account in less than 24 hours. Enter your payout details below.
         </p>
         {props.approved ? (
           <div className="mt-5 rounded-[8px] border border-emerald-200 bg-emerald-50 p-4">
@@ -779,7 +779,7 @@ function RefundScreen(props: {
               <p className="text-sm font-black">Refund details confirmed</p>
             </div>
             <p className="text-sm font-black leading-6 text-emerald-700">
-              Status: Processing... Your refund of R$ 37,12 is being processed and will be credited to your selected account within 24 hours.
+              Status: Processing... Your refund of $37.12 is being processed and will be credited to your selected account within 24 hours.
             </p>
           </div>
         ) : (
@@ -963,11 +963,11 @@ function getSupportReply(question: string) {
   const text = question.toLowerCase();
 
   if (/(withdraw|withdrawal|cash out|payout|saque|4000|4,000)/.test(text)) {
-    return "Withdrawals unlock when your available balance reaches R$ 4,000. This threshold is required for new auditor accounts under financial security and anti-fraud compliance.";
+    return "Withdrawals unlock when your available balance reaches $4,000. This threshold is required for new auditor accounts under financial security and anti-fraud compliance.";
   }
 
   if (/(refund|tax|37|37.12|reembolso|fee)/.test(text)) {
-    return "Your R$ 37.12 tax refund is processed after you confirm payout details in the Refund tab. Once confirmed, the status stays saved and the credit is processed within 24 hours.";
+    return "Your $37.12 tax refund is processed after you confirm payout details in the Refund tab. Once confirmed, the status stays saved and the credit is processed within 24 hours.";
   }
 
   if (/(daily|limit|6|tomorrow|amanha|hoje|today)/.test(text)) {
@@ -1003,7 +1003,7 @@ function ProfileScreen({ user, reviews, balance }: { user: User; reviews: Review
           <div className="min-w-0">
             <p className="text-lg font-black">{user.name}</p>
             <p className="truncate text-sm font-bold text-[#475569]">{user.email}</p>
-            <p className="mt-1 text-xs font-black text-[#2563EB]">Total balance: {brl(balance)}</p>
+            <p className="mt-1 text-xs font-black text-[#2563EB]">Total balance: {usd(balance)}</p>
           </div>
         </div>
       </div>
@@ -1011,7 +1011,7 @@ function ProfileScreen({ user, reviews, balance }: { user: User; reviews: Review
       <div className="space-y-2">
         {(reviews.length ? reviews : [{ date: "Today", title: "No reviews yet", reward: 0, status: "Waiting" }]).map((review, index) => (
           <div key={`${review.title}-${index}`} className="rounded-[8px] border border-slate-200 bg-white p-3 text-sm shadow-sm">
-            <div className="flex items-center justify-between gap-3 font-black"><span>{review.title}</span><span>{brl(review.reward)}</span></div>
+            <div className="flex items-center justify-between gap-3 font-black"><span>{review.title}</span><span>{usd(review.reward)}</span></div>
             <div className="mt-1 flex items-center justify-between text-xs font-bold text-[#475569]"><span>{review.date}</span><span>{review.status}</span></div>
           </div>
         ))}
@@ -1123,8 +1123,8 @@ function Server404() {
   return <main className="grid min-h-dvh place-items-center bg-white text-center text-black"><div><h1 className="text-5xl font-black">404</h1><p className="mt-3 text-lg text-zinc-600">Not Found</p></div></main>;
 }
 
-function brl(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+function usd(value: number) {
+  return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
 function rewardForTask(index: number): number {
