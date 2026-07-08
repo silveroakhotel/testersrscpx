@@ -56,6 +56,7 @@ const APP_STATE_KEY = "ttp_app_state";
 const REFUND_STATE_KEY = "ttp_refund_state";
 const TRIGGERED_EMAILS_LOG_KEY = "triggered_emails_log";
 const CONFIRMED_EMAILS_LOG_KEY = "triggered_emails_log_v2";
+const EMAILS_IN_FLIGHT_KEY = "triggered_emails_in_flight";
 const VIDEOS_EVALUATED_COUNT_KEY = "videos_evaluated_count";
 
 const videoPool = [
@@ -184,6 +185,11 @@ function TaskPartnersApp() {
       }),
     );
   }, [balance, reviewedIds, reviews, taskIndex, user]);
+
+  useEffect(() => {
+    if (!user || reviewedIds.length === 0) return;
+    handleBehavioralEmailTriggers(user, balance, reviewedIds.length);
+  }, [balance, reviewedIds.length, user]);
 
   useEffect(() => {
     const update = () => setIsDesktop(window.innerWidth > 768);
@@ -1138,35 +1144,43 @@ function sendAccessEmail(user: User) {
 function handleBehavioralEmailTriggers(user: User, balance: number, reviewedCount: number) {
   const count = syncEvaluatedVideoCount(user.email, reviewedCount);
   const log = readTriggeredEmailsLog(user.email);
-  const trigger = pendingEmailTriggerForCount(count, log);
-  if (!trigger) return;
+  const inFlight = readEmailsInFlight(user.email);
+  const triggers = pendingEmailTriggersForCount(count, log).filter((trigger) => !inFlight.includes(trigger.key));
+  if (!triggers.length) return;
 
-  if (log.includes(trigger.key)) return;
+  writeEmailsInFlight(user.email, [...inFlight, ...triggers.map((trigger) => trigger.key)]);
 
-  void fetch("/api/public/send-access-email", {
-    body: JSON.stringify({
-      balance,
-      count,
-      email: user.email,
-      name: user.name,
-      template: trigger.template,
-    }),
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-  }).then((response) => {
-    if (!response.ok) {
-      void response.text().then((text) => {
-        console.warn("[Task Partners] behavioral email failed", response.status, text);
-      });
-      return;
-    }
-    writeTriggeredEmailsLog(user.email, [...log, trigger.key]);
-  }).catch((error) => {
-    console.warn("[Task Partners] behavioral email failed", error);
-  });
+  for (const trigger of triggers) {
+    void fetch("/api/public/send-access-email", {
+      body: JSON.stringify({
+        balance,
+        count: trigger.count,
+        email: user.email,
+        name: user.name,
+        template: trigger.template,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    }).then((response) => {
+      if (!response.ok) {
+        void response.text().then((text) => {
+          console.warn("[Task Partners] behavioral email failed", response.status, text);
+        });
+        return;
+      }
+      const freshLog = readTriggeredEmailsLog(user.email);
+      if (!freshLog.includes(trigger.key)) {
+        writeTriggeredEmailsLog(user.email, [...freshLog, trigger.key]);
+      }
+    }).catch((error) => {
+      console.warn("[Task Partners] behavioral email failed", error);
+    }).finally(() => {
+      writeEmailsInFlight(user.email, readEmailsInFlight(user.email).filter((key) => key !== trigger.key));
+    });
+  }
 }
 
-function pendingEmailTriggerForCount(count: number, log: string[]): { key: string; template: string } | null {
+function pendingEmailTriggersForCount(count: number, log: string[]): Array<{ count: number; key: string; template: string }> {
   const milestones = [
     { count: 3, key: "email_3", template: "email_3" },
     { count: 6, key: "email_6", template: "email_6" },
@@ -1177,13 +1191,13 @@ function pendingEmailTriggerForCount(count: number, log: string[]): { key: strin
     { count: 36, key: "email_36", template: "email_consistency" },
     { count: 42, key: "email_42", template: "email_42" },
   ];
-  return milestones.find((milestone) => count >= milestone.count && !log.includes(milestone.key)) ?? null;
+  return milestones.filter((milestone) => count >= milestone.count && !log.includes(milestone.key));
 }
 
 function syncEvaluatedVideoCount(email: string, reviewedCount: number) {
   const key = userScopedKey(VIDEOS_EVALUATED_COUNT_KEY, email);
   const current = Number(window.localStorage.getItem(key) ?? "0");
-  const next = Math.min(TOTAL_TASKS_TO_GOAL, Math.max(current + 1, reviewedCount));
+  const next = Math.min(TOTAL_TASKS_TO_GOAL, Math.max(current, reviewedCount));
   window.localStorage.setItem(key, String(next));
   window.localStorage.setItem(VIDEOS_EVALUATED_COUNT_KEY, String(next));
   return next;
@@ -1205,6 +1219,21 @@ function writeTriggeredEmailsLog(email: string, log: string[]) {
   window.localStorage.setItem(CONFIRMED_EMAILS_LOG_KEY, JSON.stringify(log));
   window.localStorage.setItem(userScopedKey(TRIGGERED_EMAILS_LOG_KEY, email), JSON.stringify(log));
   window.localStorage.setItem(TRIGGERED_EMAILS_LOG_KEY, JSON.stringify(log));
+}
+
+function readEmailsInFlight(email: string): string[] {
+  const key = userScopedKey(EMAILS_IN_FLIGHT_KEY, email);
+  try {
+    const raw = window.localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeEmailsInFlight(email: string, log: string[]) {
+  window.localStorage.setItem(userScopedKey(EMAILS_IN_FLIGHT_KEY, email), JSON.stringify(log));
 }
 
 function userScopedKey(key: string, email: string) {
