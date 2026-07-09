@@ -297,6 +297,7 @@ function RootComponent() {
     pathname === "/tasks-app" ||
     pathname === "/admin" ||
     pathname === "/landingpage" ||
+    pathname === "/lp" ||
     pathname === "/up1" ||
     pathname === "/thanks" ||
     pathname === "/privacy" ||
@@ -365,6 +366,7 @@ function RootComponent() {
       const validPaths = new Set([
         "/",
         "/landingpage",
+        "/lp",
         "/thanks",
         "/privacy",
         "/terms",
@@ -500,6 +502,7 @@ function RootComponent() {
       window.location.pathname === "/tasks-app" ||
       window.location.pathname === "/admin" ||
       window.location.pathname === "/landingpage" ||
+      window.location.pathname === "/lp" ||
       window.location.pathname === "/up1" ||
       window.location.pathname === "/thanks" ||
       window.location.pathname === "/privacy" ||

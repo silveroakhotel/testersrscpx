@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LandingpageRouteImport } from './routes/landingpage'
+import { Route as LpRouteImport } from './routes/lp'
 import { Route as ThanksRouteImport } from './routes/thanks'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -43,6 +44,11 @@ const AdminRoute = AdminRouteImport.update({
 const LandingpageRoute = LandingpageRouteImport.update({
   id: '/landingpage',
   path: '/landingpage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LpRoute = LpRouteImport.update({
+  id: '/lp',
+  path: '/lp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ThanksRoute = ThanksRouteImport.update({
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/landingpage': typeof LandingpageRoute
+  '/lp': typeof LpRoute
   '/thanks': typeof ThanksRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/landingpage': typeof LandingpageRoute
+  '/lp': typeof LpRoute
   '/thanks': typeof ThanksRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/landingpage': typeof LandingpageRoute
+  '/lp': typeof LpRoute
   '/thanks': typeof ThanksRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/landingpage'
+    | '/lp'
     | '/thanks'
     | '/privacy'
     | '/terms'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/landingpage'
+    | '/lp'
     | '/thanks'
     | '/privacy'
     | '/terms'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/landingpage'
+    | '/lp'
     | '/thanks'
     | '/privacy'
     | '/terms'
@@ -333,6 +345,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   LandingpageRoute: typeof LandingpageRoute
+  LpRoute: typeof LpRoute
   ThanksRoute: typeof ThanksRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
@@ -364,6 +377,13 @@ declare module '@tanstack/react-router' {
       path: '/landingpage'
       fullPath: '/landingpage'
       preLoaderRoute: typeof LandingpageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lp': {
+      id: '/lp'
+      path: '/lp'
+      fullPath: '/lp'
+      preLoaderRoute: typeof LpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/thanks': {
@@ -541,6 +561,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   LandingpageRoute: LandingpageRoute,
+  LpRoute: LpRoute,
   ThanksRoute: ThanksRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
