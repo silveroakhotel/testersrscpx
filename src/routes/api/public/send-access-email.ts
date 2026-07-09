@@ -71,7 +71,6 @@ export const Route = createFileRoute("/api/public/send-access-email")({
 
 function buildEmailTemplate(props: { balance: number; count: number; firstName: string; template: EmailTemplate }) {
   const firstName = escapeHtml(props.firstName);
-  const count = props.count || 0;
   const balance = usd(props.balance || 0);
 
   if (props.template === "email_3") {
@@ -81,7 +80,7 @@ function buildEmailTemplate(props: { balance: number; count: number; firstName: 
         body: `
           <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
           <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Our system detected your first activity sync after 3 completed creator audits. This confirms that your reviewer profile is active and progressing through the verification cycle.</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Current audit progress: <strong>${count}/42 videos</strong>. Available balance status: <strong>${balance}</strong> toward the $4,000.00 withdrawal threshold.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Your account activity has been synchronized successfully. Available balance status: <strong>${balance}</strong> toward the $4,000.00 withdrawal threshold.</p>
         `,
         title: "Activity Sync Detected",
       }),
@@ -95,7 +94,7 @@ function buildEmailTemplate(props: { balance: number; count: number; firstName: 
         body: `
           <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
           <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Your first daily audit quota has been completed successfully. This helps maintain account quality, review accuracy, and secure payout eligibility.</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Completed today: <strong>6/6 videos</strong>. Total cycle progress: <strong>${count}/42 videos</strong>.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Today&apos;s account activity has been recorded. Please return on the next cycle to continue releasing your pending balance.</p>
         `,
         title: "Daily Quota Completed",
       }),
@@ -109,7 +108,7 @@ function buildEmailTemplate(props: { balance: number; count: number; firstName: 
         body: `
           <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
           <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Excellent consistency. Your account has reached another verified audit milestone, and your activity pattern remains aligned with creator partner review requirements.</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Total verified audits: <strong>${count}/42 videos</strong>. Continue your daily audit cycle to keep releasing pending balance toward the $4,000.00 threshold.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Your reviewer profile remains in good standing. Continue the available daily audit cycle to keep releasing pending balance toward the $4,000.00 threshold.</p>
         `,
         title: "Excellent Consistency",
       }),
@@ -122,8 +121,8 @@ function buildEmailTemplate(props: { balance: number; count: number; firstName: 
       html: emailShell({
         body: `
           <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Your 42-video verification cycle has been completed. This milestone indicates that the full creator audit sequence has been recorded on your reviewer profile.</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Final cycle progress: <strong>42/42 videos</strong>. Please open your dashboard to review the current withdrawal status and payout details.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Your verification milestone has been completed. This indicates that the required creator audit activity has been recorded on your reviewer profile.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Please open your dashboard to review the current withdrawal status and confirm your payout details.</p>
         `,
         title: "Verification Milestone Achieved",
       }),
