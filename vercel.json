@@ -1,5 +1,15 @@
 {
   "rewrites": [
+    { "source": "/thanks", "destination": "/thanks/index.html" },
+    { "source": "/thanks/", "destination": "/thanks/index.html" },
+    { "source": "/privacy", "destination": "/privacy/index.html" },
+    { "source": "/privacy/", "destination": "/privacy/index.html" },
+    { "source": "/terms", "destination": "/terms/index.html" },
+    { "source": "/terms/", "destination": "/terms/index.html" },
+    { "source": "/refund", "destination": "/refund/index.html" },
+    { "source": "/refund/", "destination": "/refund/index.html" },
+    { "source": "/contact", "destination": "/contact/index.html" },
+    { "source": "/contact/", "destination": "/contact/index.html" },
     { "source": "/tasks-app", "destination": "/" },
     { "source": "/tasks-app/:path*", "destination": "/" },
     { "source": "/admin", "destination": "/" },
