@@ -293,7 +293,8 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const isNativeAppRoute = pathname === "/tasks-app" || pathname === "/admin" || pathname === "/landingpage" || pathname === "/up1";
+  const isNativeAppRoute =
+    pathname === "/tasks-app" || pathname === "/admin" || pathname === "/landingpage" || pathname === "/up1" || pathname === "/thanks";
 
   useEffect(() => {
     if (isNativeAppRoute) return;
@@ -356,6 +357,7 @@ function RootComponent() {
       const validPaths = new Set([
         "/",
         "/landingpage",
+        "/thanks",
         "/up1",
         "/inicio",
         "/resgatar",
@@ -482,7 +484,13 @@ function RootComponent() {
       }, 1000);
     }
 
-    if (window.location.pathname === "/tasks-app" || window.location.pathname === "/admin" || window.location.pathname === "/landingpage" || window.location.pathname === "/up1") {
+    if (
+      window.location.pathname === "/tasks-app" ||
+      window.location.pathname === "/admin" ||
+      window.location.pathname === "/landingpage" ||
+      window.location.pathname === "/up1" ||
+      window.location.pathname === "/thanks"
+    ) {
       document.getElementById("cloned-app-script")?.remove();
       return;
     }
