@@ -12,6 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LandingpageRouteImport } from './routes/landingpage'
 import { Route as ThanksRouteImport } from './routes/thanks'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as RefundRouteImport } from './routes/refund'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as Up1RouteImport } from './routes/up1'
 import { Route as Upsell5RouteImport } from './routes/upsell-5'
 import { Route as Upsell4RouteImport } from './routes/upsell-4'
@@ -44,6 +48,26 @@ const LandingpageRoute = LandingpageRouteImport.update({
 const ThanksRoute = ThanksRouteImport.update({
   id: '/thanks',
   path: '/thanks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundRoute = RefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Up1Route = Up1RouteImport.update({
@@ -144,6 +168,10 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/landingpage': typeof LandingpageRoute
   '/thanks': typeof ThanksRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
+  '/refund': typeof RefundRoute
+  '/contact': typeof ContactRoute
   '/up1': typeof Up1Route
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
@@ -167,6 +195,10 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/landingpage': typeof LandingpageRoute
   '/thanks': typeof ThanksRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
+  '/refund': typeof RefundRoute
+  '/contact': typeof ContactRoute
   '/up1': typeof Up1Route
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
@@ -191,6 +223,10 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/landingpage': typeof LandingpageRoute
   '/thanks': typeof ThanksRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
+  '/refund': typeof RefundRoute
+  '/contact': typeof ContactRoute
   '/up1': typeof Up1Route
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
@@ -216,6 +252,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/landingpage'
     | '/thanks'
+    | '/privacy'
+    | '/terms'
+    | '/refund'
+    | '/contact'
     | '/up1'
     | '/back-redirect'
     | '/confirmar-saque'
@@ -239,6 +279,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/landingpage'
     | '/thanks'
+    | '/privacy'
+    | '/terms'
+    | '/refund'
+    | '/contact'
     | '/up1'
     | '/back-redirect'
     | '/confirmar-saque'
@@ -262,6 +306,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/landingpage'
     | '/thanks'
+    | '/privacy'
+    | '/terms'
+    | '/refund'
+    | '/contact'
     | '/up1'
     | '/back-redirect'
     | '/confirmar-saque'
@@ -286,6 +334,10 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   LandingpageRoute: typeof LandingpageRoute
   ThanksRoute: typeof ThanksRoute
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
+  RefundRoute: typeof RefundRoute
+  ContactRoute: typeof ContactRoute
   Up1Route: typeof Up1Route
   BackRedirectRoute: typeof BackRedirectRoute
   ConfirmarSaqueRoute: typeof ConfirmarSaqueRoute
@@ -319,6 +371,34 @@ declare module '@tanstack/react-router' {
       path: '/thanks'
       fullPath: '/thanks'
       preLoaderRoute: typeof ThanksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund': {
+      id: '/refund'
+      path: '/refund'
+      fullPath: '/refund'
+      preLoaderRoute: typeof RefundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/up1': {
@@ -462,6 +542,10 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   LandingpageRoute: LandingpageRoute,
   ThanksRoute: ThanksRoute,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
+  RefundRoute: RefundRoute,
+  ContactRoute: ContactRoute,
   Up1Route: Up1Route,
   BackRedirectRoute: BackRedirectRoute,
   ConfirmarSaqueRoute: ConfirmarSaqueRoute,

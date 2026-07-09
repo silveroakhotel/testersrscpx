@@ -294,7 +294,15 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isNativeAppRoute =
-    pathname === "/tasks-app" || pathname === "/admin" || pathname === "/landingpage" || pathname === "/up1" || pathname === "/thanks";
+    pathname === "/tasks-app" ||
+    pathname === "/admin" ||
+    pathname === "/landingpage" ||
+    pathname === "/up1" ||
+    pathname === "/thanks" ||
+    pathname === "/privacy" ||
+    pathname === "/terms" ||
+    pathname === "/refund" ||
+    pathname === "/contact";
 
   useEffect(() => {
     if (isNativeAppRoute) return;
@@ -358,6 +366,10 @@ function RootComponent() {
         "/",
         "/landingpage",
         "/thanks",
+        "/privacy",
+        "/terms",
+        "/refund",
+        "/contact",
         "/up1",
         "/inicio",
         "/resgatar",
@@ -489,7 +501,11 @@ function RootComponent() {
       window.location.pathname === "/admin" ||
       window.location.pathname === "/landingpage" ||
       window.location.pathname === "/up1" ||
-      window.location.pathname === "/thanks"
+      window.location.pathname === "/thanks" ||
+      window.location.pathname === "/privacy" ||
+      window.location.pathname === "/terms" ||
+      window.location.pathname === "/refund" ||
+      window.location.pathname === "/contact"
     ) {
       document.getElementById("cloned-app-script")?.remove();
       return;
