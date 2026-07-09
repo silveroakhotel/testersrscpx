@@ -15,6 +15,10 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 const mobileGuardScript = String.raw`
 (() => {
+  if (window.location.pathname === "/lp/") {
+    window.history.replaceState(null, "", "/lp" + window.location.search + window.location.hash);
+  }
+
   const earlyParams = new URLSearchParams(window.location.search);
   if ((window.location.pathname === "/" || window.location.pathname === "") && earlyParams.get("__route") === "tasks-app") {
     earlyParams.delete("__route");
@@ -298,6 +302,7 @@ function RootComponent() {
     pathname === "/admin" ||
     pathname === "/landingpage" ||
     pathname === "/lp" ||
+    pathname === "/lp/" ||
     pathname === "/up1" ||
     pathname === "/thanks" ||
     pathname === "/privacy" ||
@@ -367,6 +372,7 @@ function RootComponent() {
         "/",
         "/landingpage",
         "/lp",
+        "/lp/",
         "/thanks",
         "/privacy",
         "/terms",
@@ -503,6 +509,7 @@ function RootComponent() {
       window.location.pathname === "/admin" ||
       window.location.pathname === "/landingpage" ||
       window.location.pathname === "/lp" ||
+      window.location.pathname === "/lp/" ||
       window.location.pathname === "/up1" ||
       window.location.pathname === "/thanks" ||
       window.location.pathname === "/privacy" ||

@@ -17,7 +17,7 @@ export const Route = createFileRoute("/lp")({
 function LpRoute() {
   return (
     <iframe
-      src="/lp/index.html"
+      src="/lp-page/index.html"
       title="Task Partners"
       style={{ width: "100%", minHeight: "100dvh", border: 0, display: "block", background: "#F8FAFC" }}
     />
