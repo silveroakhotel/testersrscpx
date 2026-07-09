@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LandingpageRouteImport } from './routes/landingpage'
+import { Route as ThanksRouteImport } from './routes/thanks'
 import { Route as Up1RouteImport } from './routes/up1'
 import { Route as Upsell5RouteImport } from './routes/upsell-5'
 import { Route as Upsell4RouteImport } from './routes/upsell-4'
@@ -38,6 +39,11 @@ const AdminRoute = AdminRouteImport.update({
 const LandingpageRoute = LandingpageRouteImport.update({
   id: '/landingpage',
   path: '/landingpage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThanksRoute = ThanksRouteImport.update({
+  id: '/thanks',
+  path: '/thanks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Up1Route = Up1RouteImport.update({
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/landingpage': typeof LandingpageRoute
+  '/thanks': typeof ThanksRoute
   '/up1': typeof Up1Route
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/landingpage': typeof LandingpageRoute
+  '/thanks': typeof ThanksRoute
   '/up1': typeof Up1Route
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/landingpage': typeof LandingpageRoute
+  '/thanks': typeof ThanksRoute
   '/up1': typeof Up1Route
   '/back-redirect': typeof BackRedirectRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/landingpage'
+    | '/thanks'
     | '/up1'
     | '/back-redirect'
     | '/confirmar-saque'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/landingpage'
+    | '/thanks'
     | '/up1'
     | '/back-redirect'
     | '/confirmar-saque'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/landingpage'
+    | '/thanks'
     | '/up1'
     | '/back-redirect'
     | '/confirmar-saque'
@@ -273,6 +285,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   LandingpageRoute: typeof LandingpageRoute
+  ThanksRoute: typeof ThanksRoute
   Up1Route: typeof Up1Route
   BackRedirectRoute: typeof BackRedirectRoute
   ConfirmarSaqueRoute: typeof ConfirmarSaqueRoute
@@ -299,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/landingpage'
       fullPath: '/landingpage'
       preLoaderRoute: typeof LandingpageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/thanks': {
+      id: '/thanks'
+      path: '/thanks'
+      fullPath: '/thanks'
+      preLoaderRoute: typeof ThanksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/up1': {
@@ -441,6 +461,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   LandingpageRoute: LandingpageRoute,
+  ThanksRoute: ThanksRoute,
   Up1Route: Up1Route,
   BackRedirectRoute: BackRedirectRoute,
   ConfirmarSaqueRoute: ConfirmarSaqueRoute,
