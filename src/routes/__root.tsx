@@ -269,8 +269,11 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
         <script
-          src="https://cdn.jsdelivr.net/gh/xTracky/static@latest/utm-handler.js"
-          data-token="d6f97363-95f9-43c6-9767-aaca66ca0e50"
+          src="https://cdn.utmify.com.br/scripts/utms/latest.js"
+          data-utmify-prevent-xcod-sck=""
+          data-utmify-prevent-subids=""
+          async
+          defer
         />
         <script src="/param-forwarder.js" />
         <script
