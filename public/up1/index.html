@@ -414,93 +414,7 @@
       line-height: 1.4;
     }
 
-    .agreement-control {
-      display: grid;
-      grid-template-columns: 20px minmax(0, 1fr);
-      gap: 11px;
-      align-items: start;
-      margin: 0 0 24px;
-    }
-
-    .agreement-checkbox {
-      width: 18px;
-      height: 18px;
-      margin: 2px 0 0;
-      accent-color: var(--pink);
-      cursor: pointer;
-    }
-
-    .agreement-label {
-      color: #27272a;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .agreement-label label {
-      cursor: pointer;
-    }
-
-    .terms-link {
-      display: inline;
-      padding: 0;
-      border: 0;
-      border-radius: 2px;
-      background: transparent;
-      color: #27272a;
-      font: inherit;
-      font-weight: 600;
-      text-decoration: underline;
-      text-decoration-thickness: 1px;
-      text-underline-offset: 2px;
-      cursor: pointer;
-    }
-
-    .terms-actions {
-      display: grid;
-      gap: 4px;
-    }
-
-    .confirm-button,
-    .cancel-button {
-      width: 100%;
-      border-radius: 8px;
-      font: inherit;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .confirm-button {
-      min-height: 50px;
-      border: 1px solid var(--pink);
-      background: var(--pink);
-      color: #ffffff;
-      transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
-    }
-
-    .confirm-button:disabled {
-      border-color: #e4e4e7;
-      background: #e4e4e7;
-      color: #a1a1aa;
-      cursor: not-allowed;
-    }
-
-    .cancel-button {
-      min-height: 42px;
-      border: 0;
-      background: transparent;
-      color: #52525b;
-    }
-
-    .agreement-checkbox:focus-visible,
-    .terms-link:focus-visible,
-    .confirm-button:focus-visible,
-    .cancel-button:focus-visible {
-      outline: 3px solid rgba(254, 44, 85, 0.25);
-      outline-offset: 3px;
-    }
-
-    #vendepay-upsell-container:not([hidden]) {
+    #vendepay-upsell-container {
       width: 100%;
       min-width: 0;
       margin: 16px auto 0;
@@ -556,25 +470,7 @@
       <p class="terms-copy" id="termsCopy">Before your earnings can be transferred, you must review and accept the Creator Service Agreement and Distribution Terms.</p>
       <p class="terms-helper" id="termsHelper">Required to receive payouts</p>
 
-      <div class="agreement-control">
-        <input class="agreement-checkbox" id="termsAgreement" type="checkbox" aria-labelledby="agreementText">
-        <div class="agreement-label" id="agreementText">
-          <label for="termsAgreement">I have read and agree to the</label>
-          <button class="terms-link" id="creatorServiceAgreementLink" type="button">Creator Service Agreement</button>
-          and
-          <button class="terms-link" id="distributionTermsLink" type="button">Distribution Terms</button>.
-        </div>
-      </div>
-
-      <div class="terms-actions">
-        <!-- Connect the existing confirmation action to this button. -->
-        <button class="confirm-button" id="confirmTermsButton" type="button" disabled aria-disabled="true">Confirm &amp; Continue</button>
-        <!-- Connect the existing cancellation action to this button. -->
-        <button class="cancel-button" id="cancelTermsButton" type="button">Cancel</button>
-      </div>
-
-      <!-- Keep the Vendepay integration mounted; reveal it from the confirmation action when connected. -->
-      <div id="vendepay-upsell-container" hidden></div>
+      <div id="vendepay-upsell-container"></div>
       <script src="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c" onload="window.trackUp1Event && window.trackUp1Event('up1_widget_script_loaded'); window.VendepayUpsellWidget && window.VendepayUpsellWidget.showIframe('vendepay-upsell-container')"></script>
     </section>
   </main>
@@ -583,14 +479,6 @@
     (function () {
       var loadingScreen = document.getElementById("loadingScreen");
       var appScreen = document.getElementById("appScreen");
-      var termsAgreement = document.getElementById("termsAgreement");
-      var confirmTermsButton = document.getElementById("confirmTermsButton");
-
-      termsAgreement.addEventListener("change", function () {
-        var isAccepted = termsAgreement.checked;
-        confirmTermsButton.disabled = !isAccepted;
-        confirmTermsButton.setAttribute("aria-disabled", String(!isAccepted));
-      });
 
       window.setTimeout(function () {
         loadingScreen.classList.add("is-hidden");
