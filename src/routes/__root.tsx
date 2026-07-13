@@ -275,6 +275,7 @@ function RootShell({ children }: { children: ReactNode }) {
           async
           defer
         />
+        <script src="/clarity.js" />
         <script
           dangerouslySetInnerHTML={{
             __html: `window.tikTokPixelId = "6a4694a694b12f6d26e11477";
