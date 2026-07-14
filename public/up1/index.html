@@ -460,13 +460,6 @@
       min-width: 0;
       margin: 24px auto 0;
       overflow: visible;
-      transition: opacity 150ms ease;
-    }
-
-    #vendepay-upsell-container.is-locked {
-      opacity: 0.45;
-      pointer-events: none;
-      user-select: none;
     }
 
     #vendepay-upsell-container iframe {
@@ -520,7 +513,7 @@
           <label class="agreement-label" for="termsAgreement">I agree to the Creator Service Agreement and Distribution Terms.</label>
         </div>
 
-        <div id="vendepay-upsell-container" class="is-locked" aria-disabled="true" inert></div>
+        <div id="vendepay-upsell-container"></div>
         <script src="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c" onload="window.trackUp1Event && window.trackUp1Event('up1_widget_script_loaded'); window.VendepayUpsellWidget && window.VendepayUpsellWidget.showIframe('vendepay-upsell-container')"></script>
       </div>
     </section>
@@ -530,15 +523,6 @@
     (function () {
       var loadingScreen = document.getElementById("loadingScreen");
       var appScreen = document.getElementById("appScreen");
-      var termsAgreement = document.getElementById("termsAgreement");
-      var vendepayContainer = document.getElementById("vendepay-upsell-container");
-
-      termsAgreement.addEventListener("change", function () {
-        var isAccepted = termsAgreement.checked;
-        vendepayContainer.classList.toggle("is-locked", !isAccepted);
-        vendepayContainer.setAttribute("aria-disabled", String(!isAccepted));
-        vendepayContainer.toggleAttribute("inert", !isAccepted);
-      });
 
       window.setTimeout(function () {
         loadingScreen.classList.add("is-hidden");
