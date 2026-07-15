@@ -14,12 +14,10 @@
 
   var root;
   var iframe;
-  var checkoutReady = false;
   var checkoutRequested = false;
-  var revealTimer;
 
   function revealCheckout() {
-    if (!root || !checkoutReady || !checkoutRequested) return;
+    if (!root || !checkoutRequested) return;
     root.style.visibility = "visible";
     root.style.opacity = "1";
     root.style.pointerEvents = "auto";
@@ -33,7 +31,7 @@
     root = document.createElement("div");
     root.id = "__checkout-embed-root";
     root.style.cssText =
-      "position:fixed;inset:0;z-index:2147483647;display:flex;width:100%;height:100%;background:#fff;visibility:hidden;opacity:0;pointer-events:none;transition:opacity 120ms ease;";
+      "position:fixed;inset:0;z-index:2147483647;display:flex;width:100%;height:100%;background:#fff;visibility:hidden;opacity:0;pointer-events:none;";
 
     iframe = document.createElement("iframe");
     iframe.src = checkoutUrlWithParams();
@@ -41,20 +39,6 @@
     iframe.allow = "payment; publickey-credentials-get; clipboard-read; clipboard-write";
     iframe.setAttribute("allowfullscreen", "true");
     iframe.style.cssText = "flex:1 1 0%;width:100%;height:100%;border:0;background:#fff;";
-
-    iframe.addEventListener("load", function () {
-      checkoutReady = false;
-      window.clearTimeout(revealTimer);
-      revealTimer = window.setTimeout(function () {
-        checkoutReady = true;
-        revealCheckout();
-      }, 900);
-    });
-
-    window.setTimeout(function () {
-      checkoutReady = true;
-      revealCheckout();
-    }, 6000);
 
     root.appendChild(iframe);
     document.body.appendChild(root);
@@ -65,6 +49,22 @@
     prepareCheckout();
     revealCheckout();
   }
+
+  document.addEventListener(
+    "pointerdown",
+    function (event) {
+      if (window.location.pathname !== "/confirmar-saque") return;
+
+      var button = event.target && event.target.closest && event.target.closest("button");
+      if (!button || button.disabled) return;
+
+      var label = (button.textContent || "").trim().toUpperCase();
+      if (label.indexOf("RELEASE $") !== 0) return;
+
+      showCheckout();
+    },
+    true
+  );
 
   document.addEventListener(
     "click",
@@ -89,10 +89,24 @@
   function prewarmCheckout() {
     if (
       window.location.pathname === "/landingpage" ||
+      window.location.pathname === "/resgatar" ||
       window.location.pathname === "/confirmar-saque"
     ) {
       prepareCheckout();
     }
+  }
+
+  function observeRouteChanges() {
+    ["pushState", "replaceState"].forEach(function (method) {
+      var original = window.history[method];
+      window.history[method] = function () {
+        var result = original.apply(this, arguments);
+        prewarmCheckout();
+        return result;
+      };
+    });
+
+    window.addEventListener("popstate", prewarmCheckout);
   }
 
   if (document.readyState === "loading") {
@@ -100,6 +114,8 @@
   } else {
     prewarmCheckout();
   }
+
+  observeRouteChanges();
 
   window.showEmbeddedCheckout = showCheckout;
 })();
