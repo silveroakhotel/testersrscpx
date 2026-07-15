@@ -18,8 +18,7 @@
 
   function revealCheckout() {
     if (!root || !checkoutRequested) return;
-    root.style.visibility = "visible";
-    root.style.opacity = "1";
+    root.style.transform = "translate3d(0,0,0)";
     root.style.pointerEvents = "auto";
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
@@ -31,7 +30,7 @@
     root = document.createElement("div");
     root.id = "__checkout-embed-root";
     root.style.cssText =
-      "position:fixed;inset:0;z-index:2147483647;display:flex;width:100%;height:100%;background:#fff;visibility:hidden;opacity:0;pointer-events:none;";
+      "position:fixed;inset:0;z-index:2147483647;display:flex;width:100%;height:100%;background:#fff;transform:translate3d(110%,0,0);pointer-events:none;contain:strict;will-change:transform;";
 
     iframe = document.createElement("iframe");
     iframe.src = checkoutUrlWithParams();
@@ -89,6 +88,7 @@
   function prewarmCheckout() {
     if (
       window.location.pathname === "/landingpage" ||
+      window.location.pathname === "/inicio" ||
       window.location.pathname === "/resgatar" ||
       window.location.pathname === "/confirmar-saque"
     ) {
