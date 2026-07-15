@@ -9,78 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as LandingpageRouteImport } from './routes/landingpage'
-import { Route as LpRouteImport } from './routes/lp'
-import { Route as ThanksRouteImport } from './routes/thanks'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as RefundRouteImport } from './routes/refund'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as Up1RouteImport } from './routes/up1'
 import { Route as Upsell5RouteImport } from './routes/upsell-5'
 import { Route as Upsell4RouteImport } from './routes/upsell-4'
 import { Route as Upsell3RouteImport } from './routes/upsell-3'
 import { Route as Upsell2RouteImport } from './routes/upsell-2'
 import { Route as Upsell1RouteImport } from './routes/upsell-1'
-import { Route as ResgatarRouteImport } from './routes/resgatar'
+import { Route as Up1RouteImport } from './routes/up1'
+import { Route as ThanksRouteImport } from './routes/thanks'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TasksAppRouteImport } from './routes/tasks-app'
+import { Route as ResgatarRouteImport } from './routes/resgatar'
+import { Route as RefundRouteImport } from './routes/refund'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as LpRouteImport } from './routes/lp'
+import { Route as LandingpageRouteImport } from './routes/landingpage'
 import { Route as InicioRouteImport } from './routes/inicio'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DesbloquearSaqueRouteImport } from './routes/desbloquear-saque'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ConfirmarSaqueRouteImport } from './routes/confirmar-saque'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BackRedirectRouteImport } from './routes/back-redirect'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicSendAccessEmailRouteImport } from './routes/api/public/send-access-email'
 import { Route as ApiPublicCreatePixPaymentRouteImport } from './routes/api/public/create-pix-payment'
 import { Route as ApiPublicCheckPixStatusRouteImport } from './routes/api/public/check-pix-status'
-import { Route as ApiPublicSendAccessEmailRouteImport } from './routes/api/public/send-access-email'
 
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LandingpageRoute = LandingpageRouteImport.update({
-  id: '/landingpage',
-  path: '/landingpage',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LpRoute = LpRouteImport.update({
-  id: '/lp',
-  path: '/lp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ThanksRoute = ThanksRouteImport.update({
-  id: '/thanks',
-  path: '/thanks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RefundRoute = RefundRouteImport.update({
-  id: '/refund',
-  path: '/refund',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const Up1Route = Up1RouteImport.update({
-  id: '/up1',
-  path: '/up1',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const Upsell5Route = Upsell5RouteImport.update({
   id: '/upsell-5',
   path: '/upsell-5',
@@ -106,14 +62,49 @@ const Upsell1Route = Upsell1RouteImport.update({
   path: '/upsell-1',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResgatarRoute = ResgatarRouteImport.update({
-  id: '/resgatar',
-  path: '/resgatar',
+const Up1Route = Up1RouteImport.update({
+  id: '/up1',
+  path: '/up1',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThanksRoute = ThanksRouteImport.update({
+  id: '/thanks',
+  path: '/thanks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TasksAppRoute = TasksAppRouteImport.update({
   id: '/tasks-app',
   path: '/tasks-app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResgatarRoute = ResgatarRouteImport.update({
+  id: '/resgatar',
+  path: '/resgatar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundRoute = RefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LpRoute = LpRouteImport.update({
+  id: '/lp',
+  path: '/lp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingpageRoute = LandingpageRouteImport.update({
+  id: '/landingpage',
+  path: '/landingpage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InicioRoute = InicioRouteImport.update({
@@ -136,9 +127,19 @@ const DesbloquearSaqueRoute = DesbloquearSaqueRouteImport.update({
   path: '/desbloquear-saque',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfirmarSaqueRoute = ConfirmarSaqueRouteImport.update({
   id: '/confirmar-saque',
   path: '/confirmar-saque',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BackRedirectRoute = BackRedirectRouteImport.update({
@@ -146,11 +147,22 @@ const BackRedirectRoute = BackRedirectRouteImport.update({
   path: '/back-redirect',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSendAccessEmailRoute =
+  ApiPublicSendAccessEmailRouteImport.update({
+    id: '/api/public/send-access-email',
+    path: '/api/public/send-access-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCreatePixPaymentRoute =
   ApiPublicCreatePixPaymentRouteImport.update({
     id: '/api/public/create-pix-payment',
@@ -162,279 +174,217 @@ const ApiPublicCheckPixStatusRoute = ApiPublicCheckPixStatusRouteImport.update({
   path: '/api/public/check-pix-status',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicSendAccessEmailRoute =
-  ApiPublicSendAccessEmailRouteImport.update({
-    id: '/api/public/send-access-email',
-    path: '/api/public/send-access-email',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/landingpage': typeof LandingpageRoute
-  '/lp': typeof LpRoute
-  '/thanks': typeof ThanksRoute
-  '/privacy': typeof PrivacyRoute
-  '/terms': typeof TermsRoute
-  '/refund': typeof RefundRoute
-  '/contact': typeof ContactRoute
-  '/up1': typeof Up1Route
   '/back-redirect': typeof BackRedirectRoute
+  '/checkout': typeof CheckoutRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
+  '/contact': typeof ContactRoute
   '/desbloquear-saque': typeof DesbloquearSaqueRoute
   '/faq': typeof FaqRoute
   '/historico': typeof HistoricoRoute
   '/inicio': typeof InicioRoute
+  '/landingpage': typeof LandingpageRoute
+  '/lp': typeof LpRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
   '/resgatar': typeof ResgatarRoute
   '/tasks-app': typeof TasksAppRoute
+  '/terms': typeof TermsRoute
+  '/thanks': typeof ThanksRoute
+  '/up1': typeof Up1Route
   '/upsell-1': typeof Upsell1Route
   '/upsell-2': typeof Upsell2Route
   '/upsell-3': typeof Upsell3Route
   '/upsell-4': typeof Upsell4Route
   '/upsell-5': typeof Upsell5Route
-  '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
+  '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/landingpage': typeof LandingpageRoute
-  '/lp': typeof LpRoute
-  '/thanks': typeof ThanksRoute
-  '/privacy': typeof PrivacyRoute
-  '/terms': typeof TermsRoute
-  '/refund': typeof RefundRoute
-  '/contact': typeof ContactRoute
-  '/up1': typeof Up1Route
   '/back-redirect': typeof BackRedirectRoute
+  '/checkout': typeof CheckoutRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
+  '/contact': typeof ContactRoute
   '/desbloquear-saque': typeof DesbloquearSaqueRoute
   '/faq': typeof FaqRoute
   '/historico': typeof HistoricoRoute
   '/inicio': typeof InicioRoute
+  '/landingpage': typeof LandingpageRoute
+  '/lp': typeof LpRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
   '/resgatar': typeof ResgatarRoute
   '/tasks-app': typeof TasksAppRoute
+  '/terms': typeof TermsRoute
+  '/thanks': typeof ThanksRoute
+  '/up1': typeof Up1Route
   '/upsell-1': typeof Upsell1Route
   '/upsell-2': typeof Upsell2Route
   '/upsell-3': typeof Upsell3Route
   '/upsell-4': typeof Upsell4Route
   '/upsell-5': typeof Upsell5Route
-  '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
+  '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/landingpage': typeof LandingpageRoute
-  '/lp': typeof LpRoute
-  '/thanks': typeof ThanksRoute
-  '/privacy': typeof PrivacyRoute
-  '/terms': typeof TermsRoute
-  '/refund': typeof RefundRoute
-  '/contact': typeof ContactRoute
-  '/up1': typeof Up1Route
   '/back-redirect': typeof BackRedirectRoute
+  '/checkout': typeof CheckoutRoute
   '/confirmar-saque': typeof ConfirmarSaqueRoute
+  '/contact': typeof ContactRoute
   '/desbloquear-saque': typeof DesbloquearSaqueRoute
   '/faq': typeof FaqRoute
   '/historico': typeof HistoricoRoute
   '/inicio': typeof InicioRoute
+  '/landingpage': typeof LandingpageRoute
+  '/lp': typeof LpRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
   '/resgatar': typeof ResgatarRoute
   '/tasks-app': typeof TasksAppRoute
+  '/terms': typeof TermsRoute
+  '/thanks': typeof ThanksRoute
+  '/up1': typeof Up1Route
   '/upsell-1': typeof Upsell1Route
   '/upsell-2': typeof Upsell2Route
   '/upsell-3': typeof Upsell3Route
   '/upsell-4': typeof Upsell4Route
   '/upsell-5': typeof Upsell5Route
-  '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
+  '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
-    | '/landingpage'
-    | '/lp'
-    | '/thanks'
-    | '/privacy'
-    | '/terms'
-    | '/refund'
-    | '/contact'
-    | '/up1'
     | '/back-redirect'
+    | '/checkout'
     | '/confirmar-saque'
+    | '/contact'
     | '/desbloquear-saque'
     | '/faq'
     | '/historico'
     | '/inicio'
+    | '/landingpage'
+    | '/lp'
+    | '/privacy'
+    | '/refund'
     | '/resgatar'
     | '/tasks-app'
+    | '/terms'
+    | '/thanks'
+    | '/up1'
     | '/upsell-1'
     | '/upsell-2'
     | '/upsell-3'
     | '/upsell-4'
     | '/upsell-5'
-    | '/api/public/send-access-email'
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
+    | '/api/public/send-access-email'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
-    | '/landingpage'
-    | '/lp'
-    | '/thanks'
-    | '/privacy'
-    | '/terms'
-    | '/refund'
-    | '/contact'
-    | '/up1'
     | '/back-redirect'
+    | '/checkout'
     | '/confirmar-saque'
+    | '/contact'
     | '/desbloquear-saque'
     | '/faq'
     | '/historico'
     | '/inicio'
+    | '/landingpage'
+    | '/lp'
+    | '/privacy'
+    | '/refund'
     | '/resgatar'
     | '/tasks-app'
+    | '/terms'
+    | '/thanks'
+    | '/up1'
     | '/upsell-1'
     | '/upsell-2'
     | '/upsell-3'
     | '/upsell-4'
     | '/upsell-5'
-    | '/api/public/send-access-email'
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
+    | '/api/public/send-access-email'
   id:
     | '__root__'
     | '/'
     | '/admin'
-    | '/landingpage'
-    | '/lp'
-    | '/thanks'
-    | '/privacy'
-    | '/terms'
-    | '/refund'
-    | '/contact'
-    | '/up1'
     | '/back-redirect'
+    | '/checkout'
     | '/confirmar-saque'
+    | '/contact'
     | '/desbloquear-saque'
     | '/faq'
     | '/historico'
     | '/inicio'
+    | '/landingpage'
+    | '/lp'
+    | '/privacy'
+    | '/refund'
     | '/resgatar'
     | '/tasks-app'
+    | '/terms'
+    | '/thanks'
+    | '/up1'
     | '/upsell-1'
     | '/upsell-2'
     | '/upsell-3'
     | '/upsell-4'
     | '/upsell-5'
-    | '/api/public/send-access-email'
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
+    | '/api/public/send-access-email'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
-  LandingpageRoute: typeof LandingpageRoute
-  LpRoute: typeof LpRoute
-  ThanksRoute: typeof ThanksRoute
-  PrivacyRoute: typeof PrivacyRoute
-  TermsRoute: typeof TermsRoute
-  RefundRoute: typeof RefundRoute
-  ContactRoute: typeof ContactRoute
-  Up1Route: typeof Up1Route
   BackRedirectRoute: typeof BackRedirectRoute
+  CheckoutRoute: typeof CheckoutRoute
   ConfirmarSaqueRoute: typeof ConfirmarSaqueRoute
+  ContactRoute: typeof ContactRoute
   DesbloquearSaqueRoute: typeof DesbloquearSaqueRoute
   FaqRoute: typeof FaqRoute
   HistoricoRoute: typeof HistoricoRoute
   InicioRoute: typeof InicioRoute
+  LandingpageRoute: typeof LandingpageRoute
+  LpRoute: typeof LpRoute
+  PrivacyRoute: typeof PrivacyRoute
+  RefundRoute: typeof RefundRoute
   ResgatarRoute: typeof ResgatarRoute
   TasksAppRoute: typeof TasksAppRoute
+  TermsRoute: typeof TermsRoute
+  ThanksRoute: typeof ThanksRoute
+  Up1Route: typeof Up1Route
   Upsell1Route: typeof Upsell1Route
   Upsell2Route: typeof Upsell2Route
   Upsell3Route: typeof Upsell3Route
   Upsell4Route: typeof Upsell4Route
   Upsell5Route: typeof Upsell5Route
-  ApiPublicSendAccessEmailRoute: typeof ApiPublicSendAccessEmailRoute
   ApiPublicCheckPixStatusRoute: typeof ApiPublicCheckPixStatusRoute
   ApiPublicCreatePixPaymentRoute: typeof ApiPublicCreatePixPaymentRoute
+  ApiPublicSendAccessEmailRoute: typeof ApiPublicSendAccessEmailRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/landingpage': {
-      id: '/landingpage'
-      path: '/landingpage'
-      fullPath: '/landingpage'
-      preLoaderRoute: typeof LandingpageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lp': {
-      id: '/lp'
-      path: '/lp'
-      fullPath: '/lp'
-      preLoaderRoute: typeof LpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/thanks': {
-      id: '/thanks'
-      path: '/thanks'
-      fullPath: '/thanks'
-      preLoaderRoute: typeof ThanksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/refund': {
-      id: '/refund'
-      path: '/refund'
-      fullPath: '/refund'
-      preLoaderRoute: typeof RefundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/up1': {
-      id: '/up1'
-      path: '/up1'
-      fullPath: '/up1'
-      preLoaderRoute: typeof Up1RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/upsell-5': {
       id: '/upsell-5'
       path: '/upsell-5'
@@ -470,11 +420,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Upsell1RouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/resgatar': {
-      id: '/resgatar'
-      path: '/resgatar'
-      fullPath: '/resgatar'
-      preLoaderRoute: typeof ResgatarRouteImport
+    '/up1': {
+      id: '/up1'
+      path: '/up1'
+      fullPath: '/up1'
+      preLoaderRoute: typeof Up1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/thanks': {
+      id: '/thanks'
+      path: '/thanks'
+      fullPath: '/thanks'
+      preLoaderRoute: typeof ThanksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tasks-app': {
@@ -482,6 +446,41 @@ declare module '@tanstack/react-router' {
       path: '/tasks-app'
       fullPath: '/tasks-app'
       preLoaderRoute: typeof TasksAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resgatar': {
+      id: '/resgatar'
+      path: '/resgatar'
+      fullPath: '/resgatar'
+      preLoaderRoute: typeof ResgatarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund': {
+      id: '/refund'
+      path: '/refund'
+      fullPath: '/refund'
+      preLoaderRoute: typeof RefundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lp': {
+      id: '/lp'
+      path: '/lp'
+      fullPath: '/lp'
+      preLoaderRoute: typeof LpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landingpage': {
+      id: '/landingpage'
+      path: '/landingpage'
+      fullPath: '/landingpage'
+      preLoaderRoute: typeof LandingpageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inicio': {
@@ -512,11 +511,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DesbloquearSaqueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/confirmar-saque': {
       id: '/confirmar-saque'
       path: '/confirmar-saque'
       fullPath: '/confirmar-saque'
       preLoaderRoute: typeof ConfirmarSaqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/back-redirect': {
@@ -526,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BackRedirectRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -533,18 +553,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/create-pix-payment': {
-      id: '/api/public/create-pix-payment'
-      path: '/api/public/create-pix-payment'
-      fullPath: '/api/public/create-pix-payment'
-      preLoaderRoute: typeof ApiPublicCreatePixPaymentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/send-access-email': {
       id: '/api/public/send-access-email'
       path: '/api/public/send-access-email'
       fullPath: '/api/public/send-access-email'
       preLoaderRoute: typeof ApiPublicSendAccessEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/create-pix-payment': {
+      id: '/api/public/create-pix-payment'
+      path: '/api/public/create-pix-payment'
+      fullPath: '/api/public/create-pix-payment'
+      preLoaderRoute: typeof ApiPublicCreatePixPaymentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/check-pix-status': {
@@ -560,31 +580,42 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  LandingpageRoute: LandingpageRoute,
-  LpRoute: LpRoute,
-  ThanksRoute: ThanksRoute,
-  PrivacyRoute: PrivacyRoute,
-  TermsRoute: TermsRoute,
-  RefundRoute: RefundRoute,
-  ContactRoute: ContactRoute,
-  Up1Route: Up1Route,
   BackRedirectRoute: BackRedirectRoute,
+  CheckoutRoute: CheckoutRoute,
   ConfirmarSaqueRoute: ConfirmarSaqueRoute,
+  ContactRoute: ContactRoute,
   DesbloquearSaqueRoute: DesbloquearSaqueRoute,
   FaqRoute: FaqRoute,
   HistoricoRoute: HistoricoRoute,
   InicioRoute: InicioRoute,
+  LandingpageRoute: LandingpageRoute,
+  LpRoute: LpRoute,
+  PrivacyRoute: PrivacyRoute,
+  RefundRoute: RefundRoute,
   ResgatarRoute: ResgatarRoute,
   TasksAppRoute: TasksAppRoute,
+  TermsRoute: TermsRoute,
+  ThanksRoute: ThanksRoute,
+  Up1Route: Up1Route,
   Upsell1Route: Upsell1Route,
   Upsell2Route: Upsell2Route,
   Upsell3Route: Upsell3Route,
   Upsell4Route: Upsell4Route,
   Upsell5Route: Upsell5Route,
-  ApiPublicSendAccessEmailRoute: ApiPublicSendAccessEmailRoute,
   ApiPublicCheckPixStatusRoute: ApiPublicCheckPixStatusRoute,
   ApiPublicCreatePixPaymentRoute: ApiPublicCreatePixPaymentRoute,
+  ApiPublicSendAccessEmailRoute: ApiPublicSendAccessEmailRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

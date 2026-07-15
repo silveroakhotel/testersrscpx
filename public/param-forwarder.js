@@ -23,12 +23,24 @@
     }
   }
 
+  function localCheckoutUrl(rawUrl) {
+    var checkoutUrl = appendCurrentParams(rawUrl);
+
+    try {
+      var url = new URL(checkoutUrl, window.location.href);
+      if (!CHECKOUT_HOSTS.has(url.hostname)) return checkoutUrl;
+      return "/checkout" + (url.search || "");
+    } catch (error) {
+      return checkoutUrl;
+    }
+  }
+
   function decorateCheckoutLinks() {
     document.querySelectorAll("a[href]").forEach(function (link) {
       try {
         var url = new URL(link.href, window.location.href);
-        if (CHECKOUT_HOSTS.has(url.hostname)) {
-          link.href = appendCurrentParams(link.href);
+        if (CHECKOUT_HOSTS.has(url.hostname) && !link.hasAttribute("data-direct-checkout")) {
+          link.href = localCheckoutUrl(link.href);
         }
       } catch (error) {}
     });
@@ -66,11 +78,12 @@
     function (event) {
       var link = event.target && event.target.closest && event.target.closest("a[href]");
       if (!link) return;
+      if (link.hasAttribute("data-direct-checkout")) return;
 
       try {
         var url = new URL(link.href, window.location.href);
         if (!CHECKOUT_HOSTS.has(url.hostname)) return;
-        link.href = appendCurrentParams(link.href);
+        link.href = localCheckoutUrl(link.href);
       } catch (error) {}
     },
     true
@@ -82,5 +95,18 @@
     subtree: true,
   });
 
-  window.forwardParamsToCheckout = appendCurrentParams;
+  window.forwardParamsToCheckout = function (rawUrl) {
+    if (
+      window.location.pathname === "/confirmar-saque" &&
+      typeof window.showEmbeddedCheckout === "function"
+    ) {
+      window.showEmbeddedCheckout();
+      // The cloned button assigns this return value to window.location.href.
+      // Keep that assignment inert so its popstate guard cannot redirect away
+      // after the preloaded checkout has been revealed.
+      return "javascript:void(0)";
+    }
+
+    return localCheckoutUrl(rawUrl);
+  };
 })();

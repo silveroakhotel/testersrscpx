@@ -252,6 +252,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "dns-prefetch", href: "https://checkout.vendepay.com" },
+      { rel: "preconnect", href: "https://checkout.vendepay.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "/assets/css2.css" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "stylesheet", href: "/assets/index-B8NbOjFt.css" },
@@ -287,6 +289,7 @@ document.head.appendChild(utmifyTikTokPixel);`,
           }}
         />
         <script src="/param-forwarder.js" />
+        <script src="/checkout-embed.js" />
         <script
           dangerouslySetInnerHTML={{
             __html: `!function (w, d, t) {
@@ -313,6 +316,7 @@ function RootComponent() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const isNativeAppRoute =
     pathname === "/tasks-app" ||
+    pathname === "/checkout" ||
     pathname === "/admin" ||
     pathname === "/landingpage" ||
     pathname === "/lp" ||
@@ -396,6 +400,7 @@ function RootComponent() {
         "/inicio",
         "/resgatar",
         "/tasks-app",
+        "/checkout",
         "/admin",
         "/historico",
         "/confirmar-saque",
@@ -520,6 +525,7 @@ function RootComponent() {
 
     if (
       window.location.pathname === "/tasks-app" ||
+      window.location.pathname === "/checkout" ||
       window.location.pathname === "/admin" ||
       window.location.pathname === "/landingpage" ||
       window.location.pathname === "/lp" ||
