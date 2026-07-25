@@ -33,13 +33,20 @@ function CheckoutPage() {
   const checkoutUrl = target.toString();
 
   return (
-    <iframe
-      allow="payment"
-      className="fixed inset-0 block h-dvh w-screen border-0 bg-white"
-      loading="eager"
-      referrerPolicy="strict-origin-when-cross-origin"
-      src={checkoutUrl}
-      title="Secure checkout"
-    />
+    <main className="fixed inset-0 overflow-hidden bg-white">
+      <iframe
+        allow="payment"
+        className="absolute inset-0 block h-full w-full border-0 bg-white"
+        loading="eager"
+        referrerPolicy="strict-origin-when-cross-origin"
+        src={checkoutUrl}
+        title="Secure checkout"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-auto absolute inset-x-0 top-0 z-10 h-[170px] bg-[#05080c] bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/checkout-balance-banner.webp')" }}
+      />
+    </main>
   );
 }

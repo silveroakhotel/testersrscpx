@@ -280,6 +280,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://checkout.vendepay.com" },
       { rel: "preconnect", href: "https://checkout.vendepay.com", crossOrigin: "anonymous" },
+      { rel: "dns-prefetch", href: "https://widget.vendepay.com" },
+      { rel: "preconnect", href: "https://widget.vendepay.com", crossOrigin: "anonymous" },
+      { rel: "prefetch", as: "script", href: "https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c" },
+      { rel: "prefetch", as: "image", href: "/checkout-balance-banner.webp" },
       { rel: "stylesheet", href: "/assets/css2.css" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "stylesheet", href: "/assets/index-B8NbOjFt.css" },
@@ -300,6 +304,7 @@ function RootShell({ children }: { children: ReactNode }) {
           src="https://cdn.utmify.com.br/scripts/utms/latest.js"
           data-utmify-prevent-xcod-sck=""
           data-utmify-prevent-subids=""
+          data-utmify-ignore-iframe=""
           async
           defer
         />

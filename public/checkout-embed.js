@@ -44,7 +44,7 @@
     var topCover = document.createElement("div");
     topCover.id = "__checkout-embed-top-cover";
     topCover.style.cssText =
-      "position:absolute;top:0;left:0;right:0;height:170px;background:#fff;z-index:1;pointer-events:auto;";
+      "position:absolute;top:0;left:0;right:0;height:170px;background:#05080c url('/checkout-balance-banner.webp') center/cover no-repeat;z-index:1;pointer-events:auto;";
     root.appendChild(topCover);
 
     document.body.appendChild(root);

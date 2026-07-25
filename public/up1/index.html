@@ -7,10 +7,38 @@
   <meta name="description" content="Account verification and profile synchronization interface.">
   <title>Balance | Task Partners</title>
 
+  <link rel="dns-prefetch" href="https://widget.vendepay.com">
+  <link rel="dns-prefetch" href="https://checkout.vendepay.com">
+  <link rel="preconnect" href="https://widget.vendepay.com" crossorigin>
+  <link rel="preconnect" href="https://checkout.vendepay.com" crossorigin>
+  <link rel="preload" as="script" href="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c">
+  <script>
+    window.startVendepayUpsell = function () {
+      var container = document.getElementById("vendepay-upsell-container");
+      if (!container || !window.VendepayUpsellWidget || window.__vendepayUpsellStarted === true) return;
+
+      window.__vendepayUpsellStarted = true;
+      container.dataset.widgetStarted = "true";
+      window.trackUp1Event && window.trackUp1Event("up1_widget_script_loaded");
+      window.VendepayUpsellWidget.showIframe("vendepay-upsell-container");
+    };
+
+    window.onVendepayUpsellReady = function () {
+      window.startVendepayUpsell();
+      document.addEventListener("DOMContentLoaded", window.startVendepayUpsell, { once: true });
+    };
+  </script>
+  <script
+    async
+    src="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c"
+    onload="window.onVendepayUpsellReady()"
+  ></script>
+
   <script
     src="https://cdn.utmify.com.br/scripts/utms/latest.js"
     data-utmify-prevent-xcod-sck
     data-utmify-prevent-subids
+    data-utmify-ignore-iframe
     async
     defer
   ></script>
@@ -531,7 +559,6 @@
         </div>
 
         <div id="vendepay-upsell-container"></div>
-        <script src="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c" onload="window.trackUp1Event && window.trackUp1Event('up1_widget_script_loaded'); window.VendepayUpsellWidget && window.VendepayUpsellWidget.showIframe('vendepay-upsell-container')"></script>
       </div>
     </section>
   </main>
@@ -540,6 +567,8 @@
     (function () {
       var loadingScreen = document.getElementById("loadingScreen");
       var appScreen = document.getElementById("appScreen");
+
+      window.startVendepayUpsell();
 
       window.setTimeout(function () {
         loadingScreen.classList.add("is-hidden");
