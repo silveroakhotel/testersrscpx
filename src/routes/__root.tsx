@@ -26,8 +26,13 @@ const mobileGuardScript = String.raw`
     window.history.replaceState(null, "", "/tasks-app" + (nextSearch ? "?" + nextSearch : "") + window.location.hash);
   }
 
-  if ((window.location.pathname === "/" || window.location.pathname === "") && window.location.search.length === 0) {
-    window.location.href = "/landingpage";
+  if (window.location.pathname === "/" || window.location.pathname === "") {
+    if (window.location.search.length === 0) {
+      window.location.replace("/landingpage");
+      return;
+    }
+
+    window.location.replace("/inicio" + window.location.search + window.location.hash);
     return;
   }
 
@@ -107,14 +112,35 @@ const mobileGuardScript = String.raw`
 
   const originalPushState = history.pushState;
   const originalReplaceState = history.replaceState;
+  const removeBackRedirect = (args) => {
+    const nextArgs = Array.from(args);
+    if (typeof nextArgs[2] === "string") {
+      try {
+        const target = new URL(nextArgs[2], window.location.href);
+        if (target.pathname === "/back-redirect") {
+          nextArgs[2] = window.location.pathname + window.location.search + window.location.hash;
+        }
+      } catch {}
+    }
+    return nextArgs;
+  };
   history.pushState = function () {
-    const result = originalPushState.apply(this, arguments);
+    const nextArgs = removeBackRedirect(arguments);
+    if (
+      window.location.pathname === "/confirmar-saque" &&
+      nextArgs[0] === null &&
+      typeof nextArgs[2] === "string" &&
+      new URL(nextArgs[2], window.location.href).href === window.location.href
+    ) {
+      return;
+    }
+    const result = originalPushState.apply(this, nextArgs);
     lastUrl = window.location.href;
     resetAfterScreenChange();
     return result;
   };
   history.replaceState = function () {
-    const result = originalReplaceState.apply(this, arguments);
+    const result = originalReplaceState.apply(this, removeBackRedirect(arguments));
     lastUrl = window.location.href;
     resetAfterScreenChange();
     return result;
@@ -411,7 +437,6 @@ function RootComponent() {
         "/upsell-3",
         "/upsell-4",
         "/upsell-5",
-        "/back-redirect",
       ]);
       const viewportContent =
         "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
@@ -469,13 +494,37 @@ function RootComponent() {
       };
       const origPush = history.pushState;
       const origReplace = history.replaceState;
+      const removeBackRedirect = (
+        args: Parameters<History["pushState"]>,
+      ): Parameters<History["pushState"]> => {
+        const nextArgs = [...args] as Parameters<History["pushState"]>;
+        if (typeof nextArgs[2] === "string") {
+          try {
+            const target = new URL(nextArgs[2], window.location.href);
+            if (target.pathname === "/back-redirect") {
+              nextArgs[2] =
+                window.location.pathname + window.location.search + window.location.hash;
+            }
+          } catch {}
+        }
+        return nextArgs;
+      };
       history.pushState = function (...args) {
-        const r = origPush.apply(this, args as never);
+        const nextArgs = removeBackRedirect(args);
+        if (
+          window.location.pathname === "/confirmar-saque" &&
+          nextArgs[0] === null &&
+          typeof nextArgs[2] === "string" &&
+          new URL(nextArgs[2], window.location.href).href === window.location.href
+        ) {
+          return;
+        }
+        const r = origPush.apply(this, nextArgs);
         enforceViewportAfterRender();
         return r;
       };
       history.replaceState = function (...args) {
-        const r = origReplace.apply(this, args as never);
+        const r = origReplace.apply(this, removeBackRedirect(args));
         enforceViewportAfterRender();
         return r;
       };

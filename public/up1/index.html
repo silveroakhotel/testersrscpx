@@ -148,6 +148,14 @@
       trackUp1Event("up1_missing_venda_id");
     }
 
+    function setWidgetHalfHeight(height) {
+      var container = document.getElementById("vendepay-upsell-container");
+      var numericHeight = Number(height);
+      if (container && Number.isFinite(numericHeight) && numericHeight > 0) {
+        container.style.height = Math.ceil(numericHeight / 2) + "px";
+      }
+    }
+
     function bindWidgetIframe(iframe) {
       if (!iframe || iframe.dataset.up1TrackingBound === "true") return;
       iframe.dataset.up1TrackingBound = "true";
@@ -155,10 +163,7 @@
 
       var container = iframe.parentElement;
       var resizeObserver = new ResizeObserver(function () {
-        var iframeHeight = iframe.getBoundingClientRect().height;
-        if (container && iframeHeight > 0) {
-          container.style.height = Math.ceil(iframeHeight / 2) + "px";
-        }
+        setWidgetHalfHeight(iframe.getBoundingClientRect().height);
       });
       resizeObserver.observe(iframe);
 
@@ -188,6 +193,7 @@
       var type = event.data.type;
 
       if (type === "HEIGHT") {
+        setWidgetHalfHeight(event.data.height);
         widgetContentReady = true;
         trackUp1Event("up1_widget_content_ready");
         return;
@@ -468,7 +474,7 @@
     #vendepay-upsell-container {
       width: 100%;
       min-width: 0;
-      height: 54px;
+      height: 57px;
       margin: 24px auto 0;
       overflow: hidden;
     }
