@@ -26,6 +26,8 @@ type WithdrawalStage = {
   badge: string;
   headline: string;
   text: string;
+  processing: string;
+  pending: string;
 };
 
 export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
@@ -37,6 +39,10 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     badge: "Action required",
     headline: "Additional verification in progress",
     text: "Your payout requires additional account verification. Complete the pending items below so our review team can validate your account. Verification is completed within 5 business days of the request.",
+    processing:
+      "Your withdrawal is being processed. Our verification team is validating the account and ownership details linked to this payout, and we allow up to 5 business days to complete this stage. You do not need to submit the request again.",
+    pending:
+      "Additional verification has not started yet. Once you open this stage, our team is notified and we allow up to 5 business days to validate your account details.",
   },
   {
     id: "compliance",
@@ -46,6 +52,10 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     badge: "Enhanced review",
     headline: "Your account is under enhanced review due to the withdrawal amount",
     text: "High-value creator payouts go through Enhanced Due Diligence before approval. Confirm the source of your funds below. Enhanced review is completed within 7 business days.",
+    processing:
+      "Your withdrawal is under compliance review. Because of the payout amount, an analyst is completing an Enhanced Due Diligence check on this account, and we allow up to 7 business days for this review. Your balance stays reserved for this payout during the review.",
+    pending:
+      "Compliance review has not started yet. When you open this stage, your case enters the analyst queue and we allow up to 7 business days to close the review.",
   },
   {
     id: "batch",
@@ -55,6 +65,10 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     badge: "Approved",
     headline: "Your withdrawal has been approved and is now in the next payout batch",
     text: "Payouts are transmitted in scheduled batches. Your funds are locked in for the next batch window, transmitted within 7 business days. No further action is required from you.",
+    processing:
+      "Your withdrawal has been approved and is queued in the next payout batch. Payouts are transmitted in scheduled batch windows, and we allow up to 7 business days for your batch to be sent to your provider. No further action is required from you.",
+    pending:
+      "Your payout batch has not been scheduled yet. When you open this stage, your withdrawal is placed in the next batch window, and we allow up to 7 business days for transmission.",
   },
   {
     id: "released",
@@ -64,6 +78,9 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     badge: "Released",
     headline: "Payout released to your account",
     text: "Your payout batch has been transmitted. Depending on your provider, the credit posts within 1-3 business days.",
+    processing:
+      "Your payout has been released. The batch containing this withdrawal was transmitted to your provider and, depending on your bank or wallet, the credit posts within 1-3 business days.",
+    pending: "",
   },
 ];
 
@@ -172,7 +189,7 @@ export function WithdrawalTracker(props: {
   const activated = state.stageActivated !== false;
   const endsAt = stageEndsAt(state);
   const remaining = Math.max(0, endsAt - now);
-  const businessLeft = activated ? businessDaysBetween(now, endsAt) : stage.days;
+  
   const startedAt = new Date(state.stageStartedAt).getTime();
   const progressPct = isFinal ? 100 : !activated ? 0 : Math.min(100, Math.max(4, ((now - startedAt) / Math.max(1, endsAt - startedAt)) * 100));
 
@@ -226,16 +243,10 @@ export function WithdrawalTracker(props: {
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/50">Current stage</p>
           <p className="mt-1 text-lg font-black">{stage.label}</p>
           {isFinal ? (
-            <p className="mt-2 text-sm font-bold leading-6 text-white/70">Funds transmitted to {state.method}. Posting within 1-3 business days.</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-white/70">{stage.processing}</p>
           ) : !activated ? (
             <>
-              <div className="mt-3 flex items-end gap-2">
-                <p className="text-[30px] font-black leading-none text-[#25F4EE]">{stage.days}</p>
-                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">business days once started</p>
-              </div>
-              <p className="mt-3 text-[11px] font-bold leading-5 text-white/60">
-                This stage has not started yet. Review the requirements below and tap Begin review to start the {stage.days}-business-day window.
-              </p>
+              <p className="mt-2 text-sm font-bold leading-6 text-white/75">{stage.pending}</p>
               <button
                 type="button"
                 onClick={startStage}
@@ -246,15 +257,12 @@ export function WithdrawalTracker(props: {
             </>
           ) : (
             <>
-              <div className="mt-3 flex items-end gap-2">
-                <p className="text-[30px] font-black leading-none text-[#25F4EE]">{businessLeft}</p>
-                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">business days remaining</p>
-              </div>
+              <p className="mt-2 text-sm font-bold leading-6 text-white/75">{stage.processing}</p>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-gradient-to-r from-[#25F4EE] to-[#FE2C55]" style={{ width: `${progressPct}%` }} />
               </div>
-              <p className="mt-2 flex items-center gap-1 text-[11px] font-bold text-white/50">
-                <Timer size={13} /> Expected by {longDate(new Date(endsAt))} · business days only (Mon-Fri)
+              <p className="mt-2 flex items-center gap-1 text-[11px] font-bold text-white/60">
+                <Timer size={13} /> Estimated completion by {longDate(new Date(endsAt))} (business days only, Mon-Fri)
               </p>
             </>
           )}
