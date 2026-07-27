@@ -561,7 +561,7 @@ function TasksScreen(props: {
           <CheckCircle2 size={31} />
         </div>
         <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-600">Human check passed</p>
-        <h1 className="mt-2 text-2xl font-black">Verification test completed</h1>
+        <h1 className="mt-2 text-2xl font-black">Human verification completed</h1>
         <p className="mt-3 text-sm font-semibold leading-6 text-[#475569]">
           All six reviews were recorded. Your available balance remains {usd(INITIAL_BALANCE)} and is now eligible for a withdrawal verification request.
         </p>
