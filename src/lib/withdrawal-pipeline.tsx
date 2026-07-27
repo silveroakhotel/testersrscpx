@@ -326,7 +326,7 @@ export function WithdrawalTracker(props: {
               onAction={() => toggleTask("income")}
             />
             <p className="rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-800">
-              Compliance reviews are completed automatically at the end of the review window. There is no need to contact support.
+              A compliance analyst reviews each case in the order it was received. You will be notified by email as soon as the review is closed.
             </p>
           </div>
         )}
