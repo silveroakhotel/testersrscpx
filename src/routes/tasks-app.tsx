@@ -200,6 +200,9 @@ function TaskPartnersApp() {
   const [refundLoading, setRefundLoading] = useState(false);
   const [refundApproved, setRefundApproved] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [withdrawal, setWithdrawal] = useState<WithdrawalState | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
 
   const task = tasks[Math.min(taskIndex, tasks.length - 1)];
   const taskReviewKey = `${task.id}-${taskIndex}`;
