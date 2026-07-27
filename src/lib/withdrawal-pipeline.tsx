@@ -150,17 +150,10 @@ export function sendWithdrawalEmail(user: PipelineUser, template: string, state:
   });
 }
 
-function pad2(value: number) {
-  return String(value).padStart(2, "0");
+function shortDate(date: Date) {
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function formatCountdown(ms: number) {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  return {
-    days: Math.floor(total / 86400),
-    clock: `${pad2(Math.floor((total % 86400) / 3600))}:${pad2(Math.floor((total % 3600) / 60))}:${pad2(total % 60)}`,
-  };
-}
 
 function money(value: number) {
   return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
