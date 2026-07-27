@@ -14,6 +14,7 @@ export type WithdrawalState = {
   requestedAt: string;
   stage: number;
   stageStartedAt: string;
+  stageActivated?: boolean;
   tasks: Record<string, boolean>;
 };
 
