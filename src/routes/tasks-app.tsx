@@ -529,7 +529,12 @@ function TaskPartnersApp() {
               setPaymentBank={setPaymentBank}
               setPaymentMethod={setPaymentMethod}
               setPaymentRouting={setPaymentRouting}
+              now={now}
+              withdrawal={withdrawal}
+              onRequestWithdrawal={requestWithdrawal}
+              onUpdateWithdrawal={updateWithdrawal}
             />
+
           )}
           {screen === "refund" && (
             <RefundScreen
