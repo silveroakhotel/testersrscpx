@@ -747,15 +747,25 @@ function WalletScreen(props: {
 
   function submitVerification() {
     if (!consent || !hasPayoutDetails || !hasIdentity || !hasDocuments || !hasFaceCheck) return;
-    const submittedAtValue = new Date().toISOString();
-    window.localStorage.setItem(storageKey, JSON.stringify({
-      status: "pending",
-      submittedAt: submittedAtValue,
-      payoutMethod: props.paymentMethod,
-    }));
-    setSubmittedAt(submittedAtValue);
-    setSubmitted(true);
+    const nowIso = new Date().toISOString();
+    const state: WithdrawalState = {
+      amount: props.balance,
+      emailsSent: [],
+      method: props.paymentMethod,
+      micro1: "",
+      micro2: "",
+      reference: buildWithdrawalReference(props.user.email),
+      requestedAt: nowIso,
+      stage: 0,
+      stageStartedAt: nowIso,
+      tasks: {},
+    };
+    window.localStorage.setItem(storageKey, JSON.stringify({ status: "pending", submittedAt: nowIso, payoutMethod: props.paymentMethod }));
+    writeWithdrawalState(props.user.email, state);
+    setWithdrawal(state);
+    sendWithdrawalEmail(props.user, "withdrawal_requested", state);
   }
+
 
   if (!props.verificationComplete) {
     return (
