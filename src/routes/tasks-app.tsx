@@ -761,6 +761,9 @@ function TasksScreen(props: {
 
 function WalletScreen(props: {
   balance: number;
+  now: number;
+  onRequestWithdrawal: () => void;
+  onUpdateWithdrawal: (next: WithdrawalState) => void;
   pendingBalance: number;
   paymentAccount: string;
   paymentBank: string;
@@ -772,8 +775,20 @@ function WalletScreen(props: {
   setPaymentData: (value: string) => void;
   setPaymentMethod: (value: string) => void;
   setPaymentRouting: (value: string) => void;
+  withdrawal: WithdrawalState | null;
 }) {
   const canWithdraw = props.balance >= MIN_WITHDRAWAL;
+
+  if (props.withdrawal) {
+    return (
+      <WithdrawalTracker
+        now={props.now}
+        onUpdate={props.onUpdateWithdrawal}
+        state={props.withdrawal}
+      />
+    );
+  }
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Wallet</h1>
@@ -807,12 +822,13 @@ function WalletScreen(props: {
             </p>
           </div>
         )}
-        <button className="mt-3 min-h-12 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500" disabled={!canWithdraw} type="button">
+        <button className="mt-3 min-h-12 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500" disabled={!canWithdraw} onClick={props.onRequestWithdrawal} type="button">
           {canWithdraw ? "Request Withdrawal" : "Withdrawal Locked"}
         </button>
       </div>
     </div>
   );
+
 }
 
 function RefundScreen(props: {
