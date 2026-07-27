@@ -377,12 +377,13 @@ function TaskPartnersApp() {
             <div className="shrink-0 rounded-[8px] bg-[#F1F5F9] px-3 py-2 text-right">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Human Check</p>
               <p className="text-lg font-black text-[#FE2C55]">{completedToday}/{DAILY_LIMIT}</p>
-              <p className="text-[10px] font-black text-[#475569]">{verificationComplete ? "Completed" : "One-time test"}</p>
+              <p className="text-[10px] font-black text-[#475569]">{verificationComplete ? "Completed" : "Required"}</p>
             </div>
           </div>
           <p className="mt-3 text-[11px] font-bold leading-4 text-[#475569]">
-            Complete one verification test to confirm that your account is operated by a real person.
+            Complete the human verification below to confirm that your account is operated by a real person.
           </p>
+
         </header>
 
         <div id="tasks-app-scroll" className="min-h-0 flex-1 overflow-y-auto scroll-smooth px-4 pb-28 pt-4">
@@ -543,7 +544,7 @@ function TasksScreen(props: {
             </div>
           ))}
           <div className="rounded-[8px] border border-blue-100 bg-blue-50 p-3 text-xs font-semibold leading-5 text-blue-900">
-            We do not ask for payment during this test. Do not share card numbers, passwords, or government documents in review comments.
+            Task Partners will never ask you for a payment. Never share card numbers, passwords, or full government ID numbers in review comments.
           </div>
           <button className="flex min-h-13 w-full items-center justify-center gap-2 rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white shadow-[4px_4px_0_#25F4EE] transition active:translate-x-0.5 active:translate-y-0.5 active:shadow-none" onClick={() => props.setIntroAccepted(true)} type="button">
             Continue to Verification <ChevronRight size={18} />
@@ -560,7 +561,7 @@ function TasksScreen(props: {
           <CheckCircle2 size={31} />
         </div>
         <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-600">Human check passed</p>
-        <h1 className="mt-2 text-2xl font-black">Verification test completed</h1>
+        <h1 className="mt-2 text-2xl font-black">Human verification completed</h1>
         <p className="mt-3 text-sm font-semibold leading-6 text-[#475569]">
           All six reviews were recorded. Your available balance remains {usd(INITIAL_BALANCE)} and is now eligible for a withdrawal verification request.
         </p>

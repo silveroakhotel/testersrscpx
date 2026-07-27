@@ -35,7 +35,7 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     label: "Additional Verification",
     badge: "Action required",
     headline: "Additional verification in progress",
-    text: "Your payout requires additional account verification. Complete the pending items below while our review team validates your account. This stage normally takes 3-5 business days.",
+    text: "Your payout requires additional account verification. Complete the pending items below so our review team can validate your account. Verification is completed within 5 business days of the request.",
   },
   {
     id: "compliance",
@@ -44,7 +44,7 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     label: "Compliance Review",
     badge: "Enhanced review",
     headline: "Your account is under enhanced review due to the withdrawal amount",
-    text: "High-value creator payouts go through Enhanced Due Diligence. Confirm the source of your funds below. This stage normally takes 5-7 business days.",
+    text: "High-value creator payouts go through Enhanced Due Diligence before approval. Confirm the source of your funds below. Enhanced review is completed within 7 business days.",
   },
   {
     id: "batch",
@@ -53,7 +53,7 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     label: "Payout Batch",
     badge: "Approved",
     headline: "Your withdrawal has been approved and is now in the next payout batch",
-    text: "Payouts are transmitted in scheduled batches every 10 days. Your funds are locked in for the next batch window and no further action is required from you.",
+    text: "Payouts are transmitted in scheduled batches. Your funds are locked in for the next batch window, transmitted within 7 business days. No further action is required from you.",
   },
   {
     id: "released",
@@ -65,6 +65,7 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     text: "Your payout batch has been transmitted. Depending on your provider, the credit posts within 1-3 business days.",
   },
 ];
+
 
 const WITHDRAWAL_STATE_PREFIX = "ttp_withdrawal_state:";
 
@@ -98,10 +99,39 @@ export function buildWithdrawalReference(email: string) {
   return `TP-${String(seed).padStart(5, "0")}-${stamp}`;
 }
 
+function isWeekend(date: Date) {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
+export function addBusinessDays(from: Date, businessDays: number) {
+  const cursor = new Date(from.getTime());
+  let left = businessDays;
+  while (left > 0) {
+    cursor.setDate(cursor.getDate() + 1);
+    if (!isWeekend(cursor)) left -= 1;
+  }
+  return cursor;
+}
+
+export function businessDaysBetween(from: number, to: number) {
+  if (to <= from) return 0;
+  const cursor = new Date(from);
+  let count = 0;
+  while (cursor.getTime() < to) {
+    cursor.setDate(cursor.getDate() + 1);
+    if (!isWeekend(cursor) && cursor.getTime() <= to) count += 1;
+  }
+  return count;
+}
+
 export function stageEndsAt(state: WithdrawalState) {
   const stage = WITHDRAWAL_STAGES[Math.min(state.stage, WITHDRAWAL_STAGES.length - 1)];
-  return new Date(state.stageStartedAt).getTime() + stage.days * 24 * 60 * 60 * 1000;
+  const start = new Date(state.stageStartedAt);
+  if (stage.days <= 0) return start.getTime();
+  return addBusinessDays(start, stage.days).getTime();
 }
+
 
 export function sendWithdrawalEmail(user: PipelineUser, template: string, state: WithdrawalState) {
   void fetch("/api/public/send-access-email", {
@@ -118,18 +148,6 @@ export function sendWithdrawalEmail(user: PipelineUser, template: string, state:
   }).catch((error) => {
     console.warn("[Task Partners] withdrawal email failed", error);
   });
-}
-
-function pad2(value: number) {
-  return String(value).padStart(2, "0");
-}
-
-function formatCountdown(ms: number) {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  return {
-    days: Math.floor(total / 86400),
-    clock: `${pad2(Math.floor((total % 86400) / 3600))}:${pad2(Math.floor((total % 3600) / 60))}:${pad2(total % 60)}`,
-  };
 }
 
 function money(value: number) {
@@ -152,14 +170,15 @@ export function WithdrawalTracker(props: {
   const isFinal = stage.id === "released";
   const endsAt = stageEndsAt(state);
   const remaining = Math.max(0, endsAt - now);
-  const countdown = formatCountdown(remaining);
+  const businessLeft = businessDaysBetween(now, endsAt);
   const startedAt = new Date(state.stageStartedAt).getTime();
   const progressPct = isFinal ? 100 : Math.min(100, Math.max(4, ((now - startedAt) / Math.max(1, endsAt - startedAt)) * 100));
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    const timer = window.setInterval(() => setNow(Date.now()), 60000);
     return () => window.clearInterval(timer);
   }, []);
+
 
   useEffect(() => {
     const key = `stage_${stage.id}`;
@@ -199,15 +218,14 @@ export function WithdrawalTracker(props: {
           ) : (
             <>
               <div className="mt-3 flex items-end gap-2">
-                <p className="text-[30px] font-black leading-none text-[#25F4EE]">{countdown.days}</p>
-                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">days left</p>
-                <p className="ml-auto pb-1 font-mono text-sm font-black text-white/80">{countdown.clock}</p>
+                <p className="text-[30px] font-black leading-none text-[#25F4EE]">{businessLeft}</p>
+                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">business days remaining</p>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-gradient-to-r from-[#25F4EE] to-[#FE2C55]" style={{ width: `${progressPct}%` }} />
               </div>
               <p className="mt-2 flex items-center gap-1 text-[11px] font-bold text-white/50">
-                <Timer size={13} /> Estimated completion: {longDate(new Date(endsAt))}
+                <Timer size={13} /> Expected by {longDate(new Date(endsAt))} · business days only (Mon-Fri)
               </p>
             </>
           )}
@@ -308,7 +326,7 @@ export function WithdrawalTracker(props: {
               onAction={() => toggleTask("income")}
             />
             <p className="rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-800">
-              Compliance reviews are completed automatically at the end of the review window. There is no need to contact support.
+              A compliance analyst reviews each case in the order it was received. You will be notified by email as soon as the review is closed.
             </p>
           </div>
         )}
@@ -319,7 +337,7 @@ export function WithdrawalTracker(props: {
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">Batch window</p>
               <p className="mt-1 text-sm font-black text-emerald-800">Next transmission: {longDate(new Date(endsAt))}</p>
               <p className="mt-2 text-xs font-semibold leading-5 text-emerald-800">
-                Payout batches are transmitted every 10 days. Your withdrawal is locked in and cannot be cancelled.
+                Batches are transmitted in the next scheduled window. Your withdrawal is locked in and cannot be cancelled.
               </p>
             </div>
             <div className="space-y-3 rounded-[8px] bg-[#F8FAFC] p-4 text-sm">

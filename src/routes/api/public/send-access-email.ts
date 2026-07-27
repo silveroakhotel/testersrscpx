@@ -134,7 +134,7 @@ function buildEmailTemplate(props: { amount?: number; balance: number; count: nu
         body: `
           <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
           <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Verification is complete. Because of the withdrawal amount of <strong>${amount}</strong>, your account is now under <strong>Enhanced Due Diligence (compliance review)</strong>. This stage normally takes 5-7 business days.</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">To keep the review on schedule, confirm your source of funds and income declaration inside your dashboard. No further action is required after that; our compliance team completes the review automatically.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">To keep the review on schedule, confirm your source of funds and income declaration inside your dashboard. A compliance analyst will close the review and you will be notified by email.</p>
           ${refLine}
         `,
         title: "Compliance review in progress",
