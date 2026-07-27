@@ -151,9 +151,6 @@ export function sendWithdrawalEmail(user: PipelineUser, template: string, state:
 }
 
 function money(value: number) {
-
-
-function money(value: number) {
   return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
