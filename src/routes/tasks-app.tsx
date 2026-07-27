@@ -1407,3 +1407,83 @@ function readRefundState(email: string): RefundState | null {
 function refundStateKey(email: string) {
   return `${REFUND_STATE_KEY}:${email.toLowerCase()}`;
 }
+
+function stageById(id: WithdrawalStageId) {
+  return WITHDRAWAL_STAGES.find((stage) => stage.id === id);
+}
+
+function stageIndex(id: WithdrawalStageId) {
+  return WITHDRAWAL_STAGES.findIndex((stage) => stage.id === id);
+}
+
+function stageEndsAt(state: WithdrawalState) {
+  const stage = stageById(state.stage);
+  if (!stage) return state.stageStartedAt;
+  return state.stageStartedAt + stage.days * 24 * 60 * 60 * 1000;
+}
+
+function buildWithdrawalReference() {
+  const stamp = Date.now().toString(36).toUpperCase().slice(-6);
+  const random = Math.floor(Math.random() * 46656).toString(36).toUpperCase().padStart(3, "0");
+  return `TP-${stamp}${random}`;
+}
+
+function formatCountdown(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return { days, clock: `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` };
+}
+
+function formatDateTime(ms: number) {
+  return new Date(ms).toLocaleString("en-US", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function sendWithdrawalEmail(user: User, state: WithdrawalState, template: string, balance: number) {
+  const key = `${template}:${state.reference}`;
+  const log = readTriggeredEmailsLog(user.email);
+  if (log.includes(key)) return;
+  writeTriggeredEmailsLog(user.email, [...log, key]);
+  void fetch("/api/public/send-access-email", {
+    body: JSON.stringify({
+      amount: state.amount,
+      balance,
+      email: user.email,
+      name: user.name,
+      reference: state.reference,
+      template,
+    }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  }).catch((error) => {
+    console.warn("[Task Partners] withdrawal email failed", error);
+  });
+}
+
+function readWithdrawalState(email: string): WithdrawalState | null {
+  try {
+    const raw = window.localStorage.getItem(withdrawalStateKey(email));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as WithdrawalState;
+    return parsed && parsed.stage ? { ...parsed, checks: parsed.checks ?? {} } : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeWithdrawalState(email: string, state: WithdrawalState) {
+  window.localStorage.setItem(withdrawalStateKey(email), JSON.stringify(state));
+}
+
+function withdrawalStateKey(email: string) {
+  return `${WITHDRAWAL_STATE_KEY}:${email.toLowerCase()}`;
+}
