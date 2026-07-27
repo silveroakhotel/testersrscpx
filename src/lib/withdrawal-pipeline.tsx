@@ -150,9 +150,7 @@ export function sendWithdrawalEmail(user: PipelineUser, template: string, state:
   });
 }
 
-function shortDate(date: Date) {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
+function money(value: number) {
 
 
 function money(value: number) {
