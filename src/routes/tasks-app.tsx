@@ -27,6 +27,14 @@ import {
   Wallet,
 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
+import {
+  buildWithdrawalReference,
+  readWithdrawalState,
+  sendWithdrawalEmail,
+  writeWithdrawalState,
+  WithdrawalTracker,
+} from "@/lib/withdrawal-pipeline";
+import type { WithdrawalState } from "@/lib/withdrawal-pipeline";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export const Route = createFileRoute("/tasks-app")({
@@ -734,20 +742,9 @@ function WalletScreen(props: {
   const [idBack, setIdBack] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
   const [consent, setConsent] = useState(false);
-  const [submitted, setSubmitted] = useState(() => {
-    try {
-      return JSON.parse(window.localStorage.getItem(storageKey) || "null")?.status === "pending";
-    } catch {
-      return false;
-    }
-  });
-  const [submittedAt, setSubmittedAt] = useState<string | null>(() => {
-    try {
-      return JSON.parse(window.localStorage.getItem(storageKey) || "null")?.submittedAt ?? null;
-    } catch {
-      return null;
-    }
-  });
+  const [withdrawal, setWithdrawal] = useState<WithdrawalState | null>(() => readWithdrawalState(props.user.email));
+  const submitted = Boolean(withdrawal);
+
   const hasPayoutDetails = props.paymentMethod === "Bank Transfer (ACH)"
     ? Boolean(props.paymentBank.trim() && props.paymentRouting.trim() && props.paymentAccount.trim())
     : Boolean(props.paymentData.trim());
@@ -758,15 +755,25 @@ function WalletScreen(props: {
 
   function submitVerification() {
     if (!consent || !hasPayoutDetails || !hasIdentity || !hasDocuments || !hasFaceCheck) return;
-    const submittedAtValue = new Date().toISOString();
-    window.localStorage.setItem(storageKey, JSON.stringify({
-      status: "pending",
-      submittedAt: submittedAtValue,
-      payoutMethod: props.paymentMethod,
-    }));
-    setSubmittedAt(submittedAtValue);
-    setSubmitted(true);
+    const nowIso = new Date().toISOString();
+    const state: WithdrawalState = {
+      amount: props.balance,
+      emailsSent: [],
+      method: props.paymentMethod,
+      micro1: "",
+      micro2: "",
+      reference: buildWithdrawalReference(props.user.email),
+      requestedAt: nowIso,
+      stage: 0,
+      stageStartedAt: nowIso,
+      tasks: {},
+    };
+    window.localStorage.setItem(storageKey, JSON.stringify({ status: "pending", submittedAt: nowIso, payoutMethod: props.paymentMethod }));
+    writeWithdrawalState(props.user.email, state);
+    setWithdrawal(state);
+    sendWithdrawalEmail(props.user, "withdrawal_requested", state);
   }
+
 
   if (!props.verificationComplete) {
     return (
@@ -787,33 +794,19 @@ function WalletScreen(props: {
     );
   }
 
-  if (submitted) {
+  if (submitted && withdrawal) {
     return (
-      <div>
-        <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Withdrawal Verification</h1>
-        <section className="rounded-[8px] border border-emerald-200 bg-white p-5 shadow-sm">
-          <div className="grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white"><FileCheck2 size={27} /></div>
-          <p className="mt-5 text-xs font-black uppercase tracking-[0.16em] text-emerald-600">Status: Under review</p>
-          <h2 className="mt-2 text-2xl font-black">Verification request registered</h2>
-          <p className="mt-3 text-sm font-semibold leading-6 text-[#475569]">
-            Identity and payout reviews may be completed sooner, but can take up to 7 U.S. business days after all required documents are received.
-          </p>
-          <p className="mt-3 rounded-[8px] bg-[#F8FAFC] p-3 text-xs font-bold leading-5 text-[#475569]">
-            Estimated review deadline: {formatUSDate(addUSBusinessDays(new Date(submittedAt ?? Date.now()), 7))}. Weekends and observed U.S. federal holidays are excluded.
-          </p>
-          <div className="mt-5 space-y-3 border-t border-slate-200 pt-5 text-sm">
-            <StatusLine label="Human verification" value="Completed" />
-            <StatusLine label="Available balance" value={usd(props.balance)} />
-            <StatusLine label="Payout method" value={props.paymentMethod} />
-            <StatusLine label="Document review" value="Pending" />
-          </div>
-          <p className="mt-5 rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-800">
-            Local preview: document files were validated in the browser but were not transmitted. A secure KYC backend must be connected before production use.
-          </p>
-        </section>
-      </div>
+      <WithdrawalTracker
+        state={withdrawal}
+        user={props.user}
+        onChange={(next) => {
+          writeWithdrawalState(props.user.email, next);
+          setWithdrawal(next);
+        }}
+      />
     );
   }
+
 
   return (
     <div>
@@ -1689,7 +1682,7 @@ function readSession(): User | null {
   }
 }
 
-function readAppState(email: string): { balance: number; reviewedIds: string[]; reviews: Review[]; taskIndex: number } | null {
+function readAppState(email: string): { balance: number; introAccepted?: boolean; reviewedIds: string[]; reviews: Review[]; taskIndex: number } | null {
   try {
     const raw = window.localStorage.getItem(appStateKey(email));
     return raw ? (JSON.parse(raw) as { balance: number; reviewedIds: string[]; reviews: Review[]; taskIndex: number }) : null;
