@@ -243,16 +243,10 @@ export function WithdrawalTracker(props: {
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/50">Current stage</p>
           <p className="mt-1 text-lg font-black">{stage.label}</p>
           {isFinal ? (
-            <p className="mt-2 text-sm font-bold leading-6 text-white/70">Funds transmitted to {state.method}. Posting within 1-3 business days.</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-white/70">{stage.processing}</p>
           ) : !activated ? (
             <>
-              <div className="mt-3 flex items-end gap-2">
-                <p className="text-[30px] font-black leading-none text-[#25F4EE]">{stage.days}</p>
-                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">business days once started</p>
-              </div>
-              <p className="mt-3 text-[11px] font-bold leading-5 text-white/60">
-                This stage has not started yet. Review the requirements below and tap Begin review to start the {stage.days}-business-day window.
-              </p>
+              <p className="mt-2 text-sm font-bold leading-6 text-white/75">{stage.pending}</p>
               <button
                 type="button"
                 onClick={startStage}
@@ -263,15 +257,12 @@ export function WithdrawalTracker(props: {
             </>
           ) : (
             <>
-              <div className="mt-3 flex items-end gap-2">
-                <p className="text-[30px] font-black leading-none text-[#25F4EE]">{businessLeft}</p>
-                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">business days remaining</p>
-              </div>
+              <p className="mt-2 text-sm font-bold leading-6 text-white/75">{stage.processing}</p>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-gradient-to-r from-[#25F4EE] to-[#FE2C55]" style={{ width: `${progressPct}%` }} />
               </div>
-              <p className="mt-2 flex items-center gap-1 text-[11px] font-bold text-white/50">
-                <Timer size={13} /> Expected by {longDate(new Date(endsAt))} · business days only (Mon-Fri)
+              <p className="mt-2 flex items-center gap-1 text-[11px] font-bold text-white/60">
+                <Timer size={13} /> Estimated completion by {longDate(new Date(endsAt))} (business days only, Mon-Fri)
               </p>
             </>
           )}
