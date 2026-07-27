@@ -544,7 +544,7 @@ function TasksScreen(props: {
             </div>
           ))}
           <div className="rounded-[8px] border border-blue-100 bg-blue-50 p-3 text-xs font-semibold leading-5 text-blue-900">
-            We do not ask for payment during this test. Do not share card numbers, passwords, or government documents in review comments.
+            Task Partners will never ask you for a payment. Never share card numbers, passwords, or full government ID numbers in review comments. Do not share card numbers, passwords, or government documents in review comments.
           </div>
           <button className="flex min-h-13 w-full items-center justify-center gap-2 rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white shadow-[4px_4px_0_#25F4EE] transition active:translate-x-0.5 active:translate-y-0.5 active:shadow-none" onClick={() => props.setIntroAccepted(true)} type="button">
             Continue to Verification <ChevronRight size={18} />
