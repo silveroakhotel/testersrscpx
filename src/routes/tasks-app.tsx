@@ -734,20 +734,9 @@ function WalletScreen(props: {
   const [idBack, setIdBack] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
   const [consent, setConsent] = useState(false);
-  const [submitted, setSubmitted] = useState(() => {
-    try {
-      return JSON.parse(window.localStorage.getItem(storageKey) || "null")?.status === "pending";
-    } catch {
-      return false;
-    }
-  });
-  const [submittedAt, setSubmittedAt] = useState<string | null>(() => {
-    try {
-      return JSON.parse(window.localStorage.getItem(storageKey) || "null")?.submittedAt ?? null;
-    } catch {
-      return null;
-    }
-  });
+  const [withdrawal, setWithdrawal] = useState<WithdrawalState | null>(() => readWithdrawalState(props.user.email));
+  const submitted = Boolean(withdrawal);
+
   const hasPayoutDetails = props.paymentMethod === "Bank Transfer (ACH)"
     ? Boolean(props.paymentBank.trim() && props.paymentRouting.trim() && props.paymentAccount.trim())
     : Boolean(props.paymentData.trim());
