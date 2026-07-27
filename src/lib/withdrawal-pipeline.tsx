@@ -305,4 +305,80 @@ export function WithdrawalTracker(props: {
               title="Proof of income"
               text="Upload any document showing recurring income (pay stub, statement, or tax form)."
               actionLabel={state.tasks.income ? "Document received" : "Upload document"}
-              onA
+              onAction={() => toggleTask("income")}
+            />
+            <p className="rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-800">
+              Compliance reviews are completed automatically at the end of the review window. There is no need to contact support.
+            </p>
+          </div>
+        )}
+
+        {stage.id === "batch" && (
+          <div className="mt-4 space-y-3">
+            <div className="rounded-[8px] border border-emerald-200 bg-emerald-50 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">Batch window</p>
+              <p className="mt-1 text-sm font-black text-emerald-800">Next transmission: {longDate(new Date(endsAt))}</p>
+              <p className="mt-2 text-xs font-semibold leading-5 text-emerald-800">
+                Payout batches are transmitted every 10 days. Your withdrawal is locked in and cannot be cancelled.
+              </p>
+            </div>
+            <div className="space-y-3 rounded-[8px] bg-[#F8FAFC] p-4 text-sm">
+              <TrackerLine label="Amount approved" value={money(state.amount)} />
+              <TrackerLine label="Destination" value={state.method} />
+              <TrackerLine label="Batch status" value="Queued" />
+            </div>
+          </div>
+        )}
+
+        {stage.id === "released" && (
+          <div className="mt-4 space-y-3 rounded-[8px] bg-[#F8FAFC] p-4 text-sm">
+            <TrackerLine label="Amount released" value={money(state.amount)} />
+            <TrackerLine label="Destination" value={state.method} />
+            <TrackerLine label="Released on" value={longDate(new Date(state.stageStartedAt))} />
+          </div>
+        )}
+
+        <p className="mt-5 text-[11px] font-bold leading-5 text-[#94A3B8]">
+          Requested on {longDate(new Date(state.requestedAt))} · Reference {state.reference}. Status updates are also sent to your email at every stage.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function TrackerTask(props: {
+  actionLabel: string;
+  done: boolean;
+  icon: ReactNode;
+  onAction: () => void;
+  text: string;
+  title: string;
+}) {
+  return (
+    <div className={`rounded-[8px] border p-4 ${props.done ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-[#F8FAFC]"}`}>
+      <div className="flex items-center gap-2 text-[#0F172A]">
+        <span className={props.done ? "text-emerald-600" : "text-[#FE2C55]"}>{props.icon}</span>
+        <p className="text-sm font-black">{props.title}</p>
+        {props.done && <Check className="ml-auto text-emerald-600" size={16} />}
+      </div>
+      <p className="mt-1 text-xs font-semibold leading-5 text-[#475569]">{props.text}</p>
+      <button
+        className={`mt-3 h-11 w-full rounded-[8px] text-sm font-black ${props.done ? "bg-emerald-600 text-white" : "bg-[#010101] text-white"}`}
+        disabled={props.done}
+        onClick={props.onAction}
+        type="button"
+      >
+        {props.actionLabel}
+      </button>
+    </div>
+  );
+}
+
+function TrackerLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs font-bold text-[#64748B]">{label}</span>
+      <span className="text-sm font-black text-[#0F172A]">{value}</span>
+    </div>
+  );
+}
