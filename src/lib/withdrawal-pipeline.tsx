@@ -223,15 +223,14 @@ export function WithdrawalTracker(props: {
           ) : (
             <>
               <div className="mt-3 flex items-end gap-2">
-                <p className="text-[30px] font-black leading-none text-[#25F4EE]">{countdown.days}</p>
-                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">days left</p>
-                <p className="ml-auto pb-1 font-mono text-sm font-black text-white/80">{countdown.clock}</p>
+                <p className="text-[30px] font-black leading-none text-[#25F4EE]">{businessLeft}</p>
+                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">business days remaining</p>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-gradient-to-r from-[#25F4EE] to-[#FE2C55]" style={{ width: `${progressPct}%` }} />
               </div>
               <p className="mt-2 flex items-center gap-1 text-[11px] font-bold text-white/50">
-                <Timer size={13} /> Estimated completion: {longDate(new Date(endsAt))}
+                <Timer size={13} /> Expected by {longDate(new Date(endsAt))} · business days only (Mon-Fri)
               </p>
             </>
           )}
