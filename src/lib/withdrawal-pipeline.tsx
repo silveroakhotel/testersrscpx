@@ -14,6 +14,7 @@ export type WithdrawalState = {
   requestedAt: string;
   stage: number;
   stageStartedAt: string;
+  stageActivated?: boolean;
   tasks: Record<string, boolean>;
 };
 
@@ -168,11 +169,12 @@ export function WithdrawalTracker(props: {
   const stageIndex = Math.min(state.stage, WITHDRAWAL_STAGES.length - 1);
   const stage = WITHDRAWAL_STAGES[stageIndex];
   const isFinal = stage.id === "released";
+  const activated = state.stageActivated !== false;
   const endsAt = stageEndsAt(state);
   const remaining = Math.max(0, endsAt - now);
-  const businessLeft = businessDaysBetween(now, endsAt);
+  const businessLeft = activated ? businessDaysBetween(now, endsAt) : stage.days;
   const startedAt = new Date(state.stageStartedAt).getTime();
-  const progressPct = isFinal ? 100 : Math.min(100, Math.max(4, ((now - startedAt) / Math.max(1, endsAt - startedAt)) * 100));
+  const progressPct = isFinal ? 100 : !activated ? 0 : Math.min(100, Math.max(4, ((now - startedAt) / Math.max(1, endsAt - startedAt)) * 100));
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60000);
@@ -181,16 +183,26 @@ export function WithdrawalTracker(props: {
 
 
   useEffect(() => {
+    if (!activated) return;
     const key = `stage_${stage.id}`;
     if (state.emailsSent.includes(key)) return;
     sendWithdrawalEmail(user, stage.email, state);
     onChange({ ...state, emailsSent: [...state.emailsSent, key] });
-  }, [onChange, stage.email, stage.id, state, user]);
+  }, [activated, onChange, stage.email, stage.id, state, user]);
 
   useEffect(() => {
-    if (isFinal || remaining > 0) return;
-    onChange({ ...state, stage: stageIndex + 1, stageStartedAt: new Date().toISOString() });
-  }, [isFinal, onChange, remaining, stageIndex, state]);
+    if (isFinal || !activated || remaining > 0) return;
+    onChange({
+      ...state,
+      stage: stageIndex + 1,
+      stageActivated: false,
+      stageStartedAt: new Date().toISOString(),
+    });
+  }, [activated, isFinal, onChange, remaining, stageIndex, state]);
+
+  function startStage() {
+    onChange({ ...state, stageActivated: true, stageStartedAt: new Date().toISOString() });
+  }
 
   function toggleTask(key: string) {
     onChange({ ...state, tasks: { ...state.tasks, [key]: !state.tasks[key] } });
@@ -215,6 +227,23 @@ export function WithdrawalTracker(props: {
           <p className="mt-1 text-lg font-black">{stage.label}</p>
           {isFinal ? (
             <p className="mt-2 text-sm font-bold leading-6 text-white/70">Funds transmitted to {state.method}. Posting within 1-3 business days.</p>
+          ) : !activated ? (
+            <>
+              <div className="mt-3 flex items-end gap-2">
+                <p className="text-[30px] font-black leading-none text-[#25F4EE]">{stage.days}</p>
+                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">business days once started</p>
+              </div>
+              <p className="mt-3 text-[11px] font-bold leading-5 text-white/60">
+                This stage has not started yet. Review the requirements below and tap Begin review to start the {stage.days}-business-day window.
+              </p>
+              <button
+                type="button"
+                onClick={startStage}
+                className="mt-3 h-11 w-full rounded-[8px] bg-[#25F4EE] text-sm font-black text-black"
+              >
+                Begin review
+              </button>
+            </>
           ) : (
             <>
               <div className="mt-3 flex items-end gap-2">
@@ -241,7 +270,11 @@ export function WithdrawalTracker(props: {
                   {done ? <Check size={13} /> : index + 1}
                 </span>
                 <p className={`text-sm font-black ${done ? "text-white/70" : active ? "text-white" : "text-white/35"}`}>{item.label}</p>
-                {active && !isFinal && <span className="ml-auto text-[10px] font-black uppercase tracking-[0.12em] text-[#25F4EE]">In progress</span>}
+                {active && !isFinal && (
+                  <span className={`ml-auto text-[10px] font-black uppercase tracking-[0.12em] ${activated ? "text-[#25F4EE]" : "text-white/50"}`}>
+                    {activated ? `${item.days} business days` : "Not started"}
+                  </span>
+                )}
                 {done && <span className="ml-auto text-[10px] font-black uppercase tracking-[0.12em] text-white/40">Cleared</span>}
               </div>
             );
