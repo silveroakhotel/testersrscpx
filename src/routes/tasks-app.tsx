@@ -1,17 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   AtSign,
+  Camera,
   Check,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  FileCheck2,
   Home,
+  IdCard,
+  Landmark,
   Loader2,
   LockKeyholeIcon,
+  MapPin,
   MessageCircle,
   Pause,
   Play,
   ShieldCheck,
   ReceiptText,
   Search,
+  ScanFace,
   Star,
   UserRound,
   Volume2,
@@ -45,11 +53,8 @@ type VideoTask = {
 };
 
 const INITIAL_BALANCE = 2800;
-const MIN_WITHDRAWAL = 4000;
-const DAYS_TO_GOAL = 7;
 const DAILY_LIMIT = 6;
-const TOTAL_TASKS_TO_GOAL = DAYS_TO_GOAL * DAILY_LIMIT;
-const TOTAL_REWARD_TO_GOAL = MIN_WITHDRAWAL - INITIAL_BALANCE;
+const TOTAL_TASKS_TO_GOAL = DAILY_LIMIT;
 const ACCOUNTS_KEY = "ttp_accounts";
 const SESSION_KEY = "ttp_session";
 const APP_STATE_KEY = "ttp_app_state";
@@ -58,73 +63,6 @@ const TRIGGERED_EMAILS_LOG_KEY = "triggered_emails_log";
 const CONFIRMED_EMAILS_LOG_KEY = "triggered_emails_log_v2";
 const EMAILS_IN_FLIGHT_KEY = "triggered_emails_in_flight";
 const VIDEOS_EVALUATED_COUNT_KEY = "videos_evaluated_count";
-const WITHDRAWAL_STATE_KEY = "ttp_withdrawal_state";
-
-type WithdrawalStageId = "verification" | "compliance" | "batch" | "released";
-
-type WithdrawalStage = {
-  id: WithdrawalStageId;
-  days: number;
-  label: string;
-  headline: string;
-  window: string;
-  description: string;
-  template: string;
-};
-
-const WITHDRAWAL_STAGES: WithdrawalStage[] = [
-  {
-    id: "verification",
-    days: 5,
-    label: "Additional Verification",
-    headline: "Additional verification required",
-    window: "3-5 business days",
-    description:
-      "High-value payouts require identity and banking verification before release. Complete the items below so your payout stays on schedule.",
-    template: "withdrawal_verification",
-  },
-  {
-    id: "compliance",
-    days: 7,
-    label: "Compliance Review",
-    headline: "Your account is under enhanced review",
-    window: "5-7 business days",
-    description:
-      "Because of the withdrawal amount, your account was routed to Enhanced Due Diligence. Confirm your source of funds while our compliance team completes the review.",
-    template: "withdrawal_compliance",
-  },
-  {
-    id: "batch",
-    days: 7,
-    label: "Payout Batch",
-    headline: "Approved — waiting for the next payout batch",
-    window: "5-7 business days",
-    description:
-      "Your withdrawal has been approved and is now in the next payout batch. Batches are transmitted to payout providers on a fixed processing window.",
-    template: "withdrawal_batch",
-  },
-  {
-    id: "released",
-    days: 0,
-    label: "Released",
-    headline: "Payout released",
-    window: "1-3 business days to post",
-    description:
-      "Your payout batch was transmitted. The credit posts to your payout method depending on your provider's clearing time.",
-    template: "withdrawal_scheduled",
-  },
-];
-
-type WithdrawalState = {
-  amount: number;
-  method: string;
-  reference: string;
-  requestedAt: number;
-  stage: WithdrawalStageId;
-  stageStartedAt: number;
-  checks: Record<string, boolean>;
-};
-
 
 const videoPool = [
   { creator: "Viral Creator Content", title: "Challenge Audit", videoUrl: "/videos/task1.mp4" },
@@ -135,32 +73,21 @@ const videoPool = [
   { creator: "US Trending Video", title: "Watch Time Quality Check", videoUrl: "/videos/task6.mp4" },
 ];
 
-const rewardCurve = [
-  120, 115, 110, 105, 100, 95,
-  100, 95, 90, 85, 80, 75,
-  7, 6, 5, 4, 3, 1.15,
-  1, 0.8, 0.6, 0.5, 0.4, 0.3,
-  0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
-  0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
-  0.01, 0.01, 0.01, 0.01, 0.01, 0.08,
-] as const;
-
 const tasks: VideoTask[] = Array.from({ length: TOTAL_TASKS_TO_GOAL }, (_, index) => {
-  const day = Math.floor(index / DAILY_LIMIT) + 1;
   const sequence = (index % DAILY_LIMIT) + 1;
   const source = videoPool[index % videoPool.length];
   return {
-    day,
-    id: `day-${day}-task-${sequence}`,
+    day: 1,
+    id: `human-check-task-${sequence}`,
     sequence,
     creator: source.creator,
     title: source.title,
     videoUrl: source.videoUrl,
-    reward: rewardForTask(index),
+    reward: 0,
   };
 });
 
-const processingSteps = ["Analyzing consistency...", "Validating retention...", "Checking review quality...", "Adding reward..."];
+const processingSteps = ["Checking response consistency...", "Validating watch activity...", "Comparing review quality...", "Saving verification result..."];
 const paymentOptions = ["Cash App", "PayPal", "Venmo", "Zelle", "Bank Transfer (ACH)"];
 
 function TaskPartnersApp() {
@@ -179,7 +106,11 @@ function TaskPartnersApp() {
   const [rating, setRating] = useState(0);
   const [useful, setUseful] = useState("");
   const [recommend, setRecommend] = useState("");
+  const [original, setOriginal] = useState("");
+  const [clear, setClear] = useState("");
+  const [audience, setAudience] = useState("");
   const [comment, setComment] = useState("");
+  const [introAccepted, setIntroAccepted] = useState(false);
   const [balance, setBalance] = useState(INITIAL_BALANCE);
   const [pendingBalance] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -200,17 +131,21 @@ function TaskPartnersApp() {
   const [refundLoading, setRefundLoading] = useState(false);
   const [refundApproved, setRefundApproved] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [withdrawal, setWithdrawal] = useState<WithdrawalState | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-
 
   const task = tasks[Math.min(taskIndex, tasks.length - 1)];
   const taskReviewKey = `${task.id}-${taskIndex}`;
-  const dailyLimitReached = reviewedIds.length > 0 && reviewedIds.length % DAILY_LIMIT === 0;
-  const completedToday = dailyLimitReached ? DAILY_LIMIT : (taskIndex % DAILY_LIMIT) + 1;
+  const verificationComplete = reviewedIds.length >= DAILY_LIMIT;
+  const completedToday = Math.min(reviewedIds.length, DAILY_LIMIT);
   const reviewUnlocked = progress >= 100 && !reviewedIds.includes(taskReviewKey);
   const hasValidComment = countWords(comment) >= 3;
-  const canSubmit = reviewUnlocked && rating > 0 && Boolean(useful) && Boolean(recommend) && hasValidComment;
+  const canSubmit = reviewUnlocked
+    && rating > 0
+    && Boolean(useful)
+    && Boolean(recommend)
+    && Boolean(original)
+    && Boolean(clear)
+    && Boolean(audience)
+    && hasValidComment;
   const balanceText = useMemo(() => usd(balance), [balance]);
 
   useEffect(() => {
@@ -227,6 +162,7 @@ function TaskPartnersApp() {
       const savedState = readAppState(sessionUser.email);
       if (savedState) {
         setBalance(savedState.balance);
+        setIntroAccepted(savedState.introAccepted ?? savedState.reviewedIds.length > 0);
         setReviews(savedState.reviews);
         setReviewedIds(savedState.reviewedIds);
         setTaskIndex(savedState.taskIndex);
@@ -249,62 +185,13 @@ function TaskPartnersApp() {
       appStateKey(user.email),
       JSON.stringify({
         balance,
+        introAccepted,
         reviewedIds,
         reviews,
         taskIndex,
       }),
     );
-  }, [balance, reviewedIds, reviews, taskIndex, user]);
-
-  useEffect(() => {
-    if (!user || reviewedIds.length === 0) return;
-    handleBehavioralEmailTriggers(user, balance, reviewedIds.length);
-  }, [balance, reviewedIds.length, user]);
-
-  useEffect(() => {
-    if (!user) return;
-    setWithdrawal(readWithdrawalState(user.email));
-  }, [user]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!user || !withdrawal) return;
-    const stage = stageById(withdrawal.stage);
-    if (!stage || stage.days === 0) return;
-    if (now < stageEndsAt(withdrawal)) return;
-    const next = WITHDRAWAL_STAGES[WITHDRAWAL_STAGES.findIndex((item) => item.id === stage.id) + 1];
-    if (!next) return;
-    const advanced: WithdrawalState = { ...withdrawal, stage: next.id, stageStartedAt: Date.now() };
-    setWithdrawal(advanced);
-    writeWithdrawalState(user.email, advanced);
-    sendWithdrawalEmail(user, advanced, next.template, balance);
-  }, [balance, now, user, withdrawal]);
-
-  function updateWithdrawal(next: WithdrawalState) {
-    setWithdrawal(next);
-    if (user) writeWithdrawalState(user.email, next);
-  }
-
-  function requestWithdrawal() {
-    if (!user || withdrawal) return;
-    const created: WithdrawalState = {
-      amount: balance,
-      checks: {},
-      method: paymentMethod,
-      reference: buildWithdrawalReference(),
-      requestedAt: Date.now(),
-      stage: "verification",
-      stageStartedAt: Date.now(),
-    };
-    updateWithdrawal(created);
-    sendWithdrawalEmail(user, created, "withdrawal_requested", balance);
-  }
-
-
+  }, [balance, introAccepted, reviewedIds, reviews, taskIndex, user]);
 
   useEffect(() => {
     const update = () => setIsDesktop(window.innerWidth > 768);
@@ -343,6 +230,7 @@ function TaskPartnersApp() {
       const savedState = readAppState(account.email);
       if (savedState) {
         setBalance(savedState.balance);
+        setIntroAccepted(savedState.introAccepted ?? savedState.reviewedIds.length > 0);
         setReviews(savedState.reviews);
         setReviewedIds(savedState.reviewedIds);
         setTaskIndex(savedState.taskIndex);
@@ -366,26 +254,21 @@ function TaskPartnersApp() {
     if (!canSubmit) return;
     const completedTask = task;
     const completedKey = taskReviewKey;
-    const reward = completedTask.reward;
-    const nextBalance = Number((balance + reward).toFixed(2));
-    const nextReviewedCount = reviewedIds.includes(completedKey) ? reviewedIds.length : reviewedIds.length + 1;
-
     setSuccessReward(null);
     setReviewedIds((value) => [...value, completedKey]);
     setReviews((value) => [
-      { date: new Date().toLocaleDateString("en-US"), title: completedTask.title, reward, status: "Approved" },
+      { date: new Date().toLocaleDateString("en-US"), title: completedTask.title, reward: 0, status: "Human check completed" },
       ...value,
     ]);
-    setBalance(nextBalance);
-    if (user) {
-      handleBehavioralEmailTriggers(user, nextBalance, nextReviewedCount);
-    }
     setRating(0);
     setUseful("");
     setRecommend("");
+    setOriginal("");
+    setClear("");
+    setAudience("");
     setComment("");
     setProgress(0);
-    if ((completedTask.sequence % DAILY_LIMIT) !== 0) {
+    if (completedTask.sequence < DAILY_LIMIT) {
       setTaskIndex((value) => Math.min(value + 1, TOTAL_TASKS_TO_GOAL - 1));
     }
 
@@ -398,7 +281,10 @@ function TaskPartnersApp() {
       if (step >= processingSteps.length) {
         window.clearInterval(timer);
         setProcessing(false);
-        setSuccessReward(reward);
+        setSuccessReward(0);
+        window.requestAnimationFrame(() => {
+          document.getElementById("tasks-app-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+        });
         window.setTimeout(() => setSuccessReward(null), 2600);
       }
     }, 1250);
@@ -481,30 +367,37 @@ function TaskPartnersApp() {
               <p className="flex items-center gap-1 truncate text-[17px] font-black text-[#0F172A]"><Wallet size={18} className="text-[#2563EB]" />{balanceText}</p>
             </div>
             <div className="shrink-0 rounded-[8px] bg-[#F1F5F9] px-3 py-2 text-right">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Daily Tasks</p>
-              <p className="text-lg font-black text-[#FE2C55]">{Math.min(completedToday, DAILY_LIMIT)}/{DAILY_LIMIT}</p>
-              <p className="text-[10px] font-black text-[#475569]">Partner audits</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Human Check</p>
+              <p className="text-lg font-black text-[#FE2C55]">{completedToday}/{DAILY_LIMIT}</p>
+              <p className="text-[10px] font-black text-[#475569]">{verificationComplete ? "Completed" : "One-time test"}</p>
             </div>
           </div>
           <p className="mt-3 text-[11px] font-bold leading-4 text-[#475569]">
-            Review partner creators to unlock and release the remaining pending withdrawal balance.
+            Complete one verification test to confirm that your account is operated by a real person.
           </p>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-28 pt-4">
+        <div id="tasks-app-scroll" className="min-h-0 flex-1 overflow-y-auto scroll-smooth px-4 pb-28 pt-4">
           {screen === "tasks" && (
             <TasksScreen
               canSubmit={canSubmit}
+              audience={audience}
+              clear={clear}
               comment={comment}
-              dailyLimitReached={dailyLimitReached}
+              introAccepted={introAccepted}
               hasValidComment={hasValidComment}
               isMuted={isMuted}
+              original={original}
               progress={progress}
               rating={rating}
               recommend={recommend}
               reviewUnlocked={reviewUnlocked}
+              setAudience={setAudience}
+              setClear={setClear}
               setComment={setComment}
+              setIntroAccepted={setIntroAccepted}
               setIsMuted={setIsMuted}
+              setOriginal={setOriginal}
               setProgress={setProgress}
               setRating={setRating}
               setRecommend={setRecommend}
@@ -513,11 +406,14 @@ function TaskPartnersApp() {
               task={task}
               taskIndex={taskIndex}
               useful={useful}
+              verificationComplete={verificationComplete}
             />
           )}
           {screen === "wallet" && (
             <WalletScreen
               balance={balance}
+              verificationComplete={verificationComplete}
+              user={user}
               pendingBalance={pendingBalance}
               paymentData={paymentData}
               paymentAccount={paymentAccount}
@@ -529,12 +425,7 @@ function TaskPartnersApp() {
               setPaymentBank={setPaymentBank}
               setPaymentMethod={setPaymentMethod}
               setPaymentRouting={setPaymentRouting}
-              now={now}
-              withdrawal={withdrawal}
-              onRequestWithdrawal={requestWithdrawal}
-              onUpdateWithdrawal={updateWithdrawal}
             />
-
           )}
           {screen === "refund" && (
             <RefundScreen
@@ -559,7 +450,7 @@ function TaskPartnersApp() {
 
         {successReward !== null && (
           <div className="pointer-events-none absolute left-4 right-4 top-4 z-[60] rounded-[8px] bg-emerald-500 px-4 py-3 text-center text-sm font-black text-white shadow-2xl">
-            +{usd(successReward)} Added to your balance!
+            Response saved. {Math.min(reviewedIds.length, DAILY_LIMIT)}/{DAILY_LIMIT} checks completed.
           </div>
         )}
         <BottomNav screen={screen} setScreen={setScreen} />
@@ -571,17 +462,24 @@ function TaskPartnersApp() {
 }
 
 function TasksScreen(props: {
+  audience: string;
   canSubmit: boolean;
+  clear: string;
   comment: string;
-  dailyLimitReached: boolean;
+  introAccepted: boolean;
   hasValidComment: boolean;
   isMuted: boolean;
+  original: string;
   progress: number;
   rating: number;
   recommend: string;
   reviewUnlocked: boolean;
+  setAudience: (value: string) => void;
+  setClear: (value: string) => void;
   setComment: (value: string) => void;
+  setIntroAccepted: (value: boolean) => void;
   setIsMuted: (value: boolean) => void;
+  setOriginal: (value: string) => void;
   setProgress: (value: number) => void;
   setRating: (value: number) => void;
   setRecommend: (value: string) => void;
@@ -590,6 +488,7 @@ function TasksScreen(props: {
   task: VideoTask;
   taskIndex: number;
   useful: string;
+  verificationComplete: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -608,20 +507,59 @@ function TasksScreen(props: {
     }
   }
 
-  if (props.dailyLimitReached) {
+  if (!props.introAccepted) {
     return (
-      <div className="space-y-4">
-        <section className="rounded-[8px] border border-rose-200 bg-white p-5 text-center shadow-sm">
-          <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-[#FE2C55] text-white">
-            <LockKeyholeIcon size={30} />
+      <section className="relative overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_16px_36px_rgba(15,23,42,.10)]">
+        <div className="absolute left-0 top-0 z-10 h-1 w-1/2 bg-[#25F4EE]" />
+        <div className="absolute right-0 top-0 z-10 h-1 w-1/2 bg-[#FE2C55]" />
+        <div className="bg-[#0B0B0F] px-5 py-7 text-white">
+          <div className="mb-5 grid h-14 w-14 place-items-center rounded-full border border-white/10 bg-white text-[#0F172A] shadow-[-5px_0_0_#25F4EE,5px_0_0_#FE2C55]">
+            <ShieldCheck size={28} />
           </div>
-          <h1 className="text-2xl font-black text-[#0F172A]">Daily Limit Reached!</h1>
-          <p className="mt-3 text-sm font-bold leading-6 text-[#475569]">
-            To maintain network quality and security, you can only audit 6 videos per day.
-            Please return tomorrow to unlock your remaining pending balance.
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#25F4EE]">One-time account check</p>
+          <h1 className="mt-2 text-[26px] font-black leading-tight">Confirm that you are a real person</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-300">
+            Complete six short creator-content reviews. Your answers help us distinguish genuine human activity from automated traffic.
           </p>
-        </section>
-      </div>
+        </div>
+        <div className="space-y-4 p-5">
+          {[
+            ["Watch every video", "The review unlocks only after the video reaches the end."],
+            ["Answer thoughtfully", "Rate quality, clarity, originality, relevance, and audience fit."],
+            ["No task earnings", "This is an identity and activity check. Your balance will not change."],
+            ["Complete it once", "After all six reviews, your account becomes eligible to request withdrawal verification."],
+          ].map(([title, text], index) => (
+            <div className="flex gap-3" key={title}>
+              <div className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black text-white ${index % 2 === 0 ? "bg-[#FE2C55]" : "bg-[#0F172A] shadow-[-3px_0_0_#25F4EE]"}`}>{index + 1}</div>
+              <div><p className="text-sm font-black">{title}</p><p className="mt-0.5 text-xs font-semibold leading-5 text-[#64748B]">{text}</p></div>
+            </div>
+          ))}
+          <div className="rounded-[8px] border border-blue-100 bg-blue-50 p-3 text-xs font-semibold leading-5 text-blue-900">
+            We do not ask for payment during this test. Do not share card numbers, passwords, or government documents in review comments.
+          </div>
+          <button className="flex min-h-13 w-full items-center justify-center gap-2 rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white shadow-[4px_4px_0_#25F4EE] transition active:translate-x-0.5 active:translate-y-0.5 active:shadow-none" onClick={() => props.setIntroAccepted(true)} type="button">
+            Continue to Verification <ChevronRight size={18} />
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (props.verificationComplete) {
+    return (
+      <section className="rounded-[8px] border border-emerald-200 bg-white p-6 text-center shadow-sm">
+        <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white">
+          <CheckCircle2 size={31} />
+        </div>
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-600">Human check passed</p>
+        <h1 className="mt-2 text-2xl font-black">Verification test completed</h1>
+        <p className="mt-3 text-sm font-semibold leading-6 text-[#475569]">
+          All six reviews were recorded. Your available balance remains {usd(INITIAL_BALANCE)} and is now eligible for a withdrawal verification request.
+        </p>
+        <p className="mt-4 rounded-[8px] bg-[#F8FAFC] p-3 text-xs font-bold leading-5 text-[#475569]">
+          Open Wallet to register your payout method and begin identity verification.
+        </p>
+      </section>
     );
   }
 
@@ -632,9 +570,9 @@ function TasksScreen(props: {
           <div className="min-w-0">
             <p className="text-xs font-black text-[#FE2C55]">{props.task.creator}</p>
             <h1 className="text-xl font-black leading-tight text-[#0F172A]">{props.task.title}</h1>
-            <p className="mt-1 text-xs font-semibold text-[#475569]">Task {props.task.sequence}/6 - Reward: {usd(props.task.reward)}</p>
+            <p className="mt-1 text-xs font-semibold text-[#475569]">Human check {props.task.sequence}/6 - No task earnings</p>
             <p className="mt-2 text-xs font-bold leading-5 text-[#475569]">
-              Evaluate partner creator content to release your remaining pending withdrawal balance.
+              Watch the complete video and provide an authentic content assessment.
             </p>
           </div>
         </div>
@@ -709,8 +647,16 @@ function TasksScreen(props: {
             </div>
             <ChoiceRow label="2. Was the content useful?" value={props.useful} onChange={props.setUseful} />
             <ChoiceRow label="3. Would you recommend it?" value={props.recommend} onChange={props.setRecommend} />
+            <ChoiceRow label="4. Did the content feel original?" value={props.original} onChange={props.setOriginal} />
+            <ChoiceRow label="5. Was the message clear?" value={props.clear} onChange={props.setClear} />
+            <OptionRow
+              label="6. Who is the best audience for this video?"
+              options={["General audience", "Young adults", "Families", "Special-interest viewers"]}
+              value={props.audience}
+              onChange={props.setAudience}
+            />
             <label className="block">
-              <span className="mb-2 block text-sm font-black text-[#0F172A]">4. Additional comments for the algorithm</span>
+              <span className="mb-2 block text-sm font-black text-[#0F172A]">7. Explain your assessment</span>
               <textarea
                 className="min-h-28 w-full resize-none rounded-[8px] border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-[#0F172A] outline-none placeholder:text-slate-400 focus:border-[#2563EB]"
                 onChange={(event) => props.setComment(event.target.value)}
@@ -723,7 +669,7 @@ function TasksScreen(props: {
               )}
             </label>
             <button className="min-h-13 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white shadow-lg shadow-rose-200 transition active:scale-[0.98] disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none" disabled={!props.canSubmit} onClick={props.submitReview} type="button">
-              Submit Creator Review & Release Balance
+              Submit Review
             </button>
           </div>
         )}
@@ -741,7 +687,7 @@ function TasksScreen(props: {
               <div className="min-w-0">
                 <p className="truncate text-xs font-black text-[#FE2C55]">{lockedTask.creator}</p>
                 <p className="truncate text-sm font-black text-[#0F172A]">{lockedTask.title}</p>
-                <p className="text-xs font-semibold text-[#475569]">{usd(lockedTask.reward)} release value</p>
+                <p className="text-xs font-semibold text-[#475569]">Human verification review</p>
               </div>
             </div>
             <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-sm">
@@ -761,9 +707,8 @@ function TasksScreen(props: {
 
 function WalletScreen(props: {
   balance: number;
-  now: number;
-  onRequestWithdrawal: () => void;
-  onUpdateWithdrawal: (next: WithdrawalState) => void;
+  verificationComplete: boolean;
+  user: User;
   pendingBalance: number;
   paymentAccount: string;
   paymentBank: string;
@@ -775,60 +720,165 @@ function WalletScreen(props: {
   setPaymentData: (value: string) => void;
   setPaymentMethod: (value: string) => void;
   setPaymentRouting: (value: string) => void;
-  withdrawal: WithdrawalState | null;
 }) {
-  const canWithdraw = props.balance >= MIN_WITHDRAWAL;
+  const storageKey = `ttp_withdrawal_verification:${props.user.email.toLowerCase()}`;
+  const [step, setStep] = useState(1);
+  const [legalName, setLegalName] = useState(props.user.name);
+  const [birthDate, setBirthDate] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [region, setRegion] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [idType, setIdType] = useState("Driver's license");
+  const [idFront, setIdFront] = useState<File | null>(null);
+  const [idBack, setIdBack] = useState<File | null>(null);
+  const [selfie, setSelfie] = useState<File | null>(null);
+  const [consent, setConsent] = useState(false);
+  const [submitted, setSubmitted] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem(storageKey) || "null")?.status === "pending";
+    } catch {
+      return false;
+    }
+  });
+  const [submittedAt, setSubmittedAt] = useState<string | null>(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem(storageKey) || "null")?.submittedAt ?? null;
+    } catch {
+      return null;
+    }
+  });
+  const hasPayoutDetails = props.paymentMethod === "Bank Transfer (ACH)"
+    ? Boolean(props.paymentBank.trim() && props.paymentRouting.trim() && props.paymentAccount.trim())
+    : Boolean(props.paymentData.trim());
+  const hasIdentity = Boolean(legalName.trim() && birthDate && address.trim() && city.trim() && region.trim() && postalCode.trim());
+  const passportSelected = idType === "U.S. passport book";
+  const hasDocuments = Boolean(idFront && (passportSelected || idBack));
+  const hasFaceCheck = Boolean(selfie);
 
-  if (props.withdrawal) {
+  function submitVerification() {
+    if (!consent || !hasPayoutDetails || !hasIdentity || !hasDocuments || !hasFaceCheck) return;
+    const submittedAtValue = new Date().toISOString();
+    window.localStorage.setItem(storageKey, JSON.stringify({
+      status: "pending",
+      submittedAt: submittedAtValue,
+      payoutMethod: props.paymentMethod,
+    }));
+    setSubmittedAt(submittedAtValue);
+    setSubmitted(true);
+  }
+
+  if (!props.verificationComplete) {
     return (
-      <WithdrawalTracker
-        now={props.now}
-        onUpdate={props.onUpdateWithdrawal}
-        state={props.withdrawal}
-      />
+      <div>
+        <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Wallet</h1>
+        <MetricCard label="Available Balance" value={usd(props.balance)} tone="bg-white" />
+        <section className="mt-4 rounded-[8px] border border-slate-200 bg-white p-5 text-center shadow-sm">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#F1F5F9] text-[#FE2C55]"><LockKeyholeIcon size={26} /></div>
+          <h2 className="text-xl font-black">Withdrawal verification locked</h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-[#475569]">
+            Complete all six human-verification reviews before registering a withdrawal request.
+          </p>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
+            <div className="h-full bg-[#FE2C55]" style={{ width: "0%" }} />
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <div>
+        <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Withdrawal Verification</h1>
+        <section className="rounded-[8px] border border-emerald-200 bg-white p-5 shadow-sm">
+          <div className="grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white"><FileCheck2 size={27} /></div>
+          <p className="mt-5 text-xs font-black uppercase tracking-[0.16em] text-emerald-600">Status: Under review</p>
+          <h2 className="mt-2 text-2xl font-black">Verification request registered</h2>
+          <p className="mt-3 text-sm font-semibold leading-6 text-[#475569]">
+            Identity and payout reviews may be completed sooner, but can take up to 7 U.S. business days after all required documents are received.
+          </p>
+          <p className="mt-3 rounded-[8px] bg-[#F8FAFC] p-3 text-xs font-bold leading-5 text-[#475569]">
+            Estimated review deadline: {formatUSDate(addUSBusinessDays(new Date(submittedAt ?? Date.now()), 7))}. Weekends and observed U.S. federal holidays are excluded.
+          </p>
+          <div className="mt-5 space-y-3 border-t border-slate-200 pt-5 text-sm">
+            <StatusLine label="Human verification" value="Completed" />
+            <StatusLine label="Available balance" value={usd(props.balance)} />
+            <StatusLine label="Payout method" value={props.paymentMethod} />
+            <StatusLine label="Document review" value="Pending" />
+          </div>
+          <p className="mt-5 rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-800">
+            Local preview: document files were validated in the browser but were not transmitted. A secure KYC backend must be connected before production use.
+          </p>
+        </section>
+      </div>
     );
   }
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Wallet</h1>
-      <div className="grid gap-3">
-        <MetricCard label="Current Balance" value={usd(props.balance)} tone="bg-white" />
-        <MetricCard label="Pending Balance" value={usd(props.pendingBalance)} tone="bg-white" />
-        <MetricCard label="Minimum Withdrawal" value={usd(MIN_WITHDRAWAL)} tone="bg-white" />
+      <div className="mb-4 flex items-center justify-between">
+        <div><p className="text-xs font-black uppercase tracking-[0.14em] text-[#FE2C55]">Step {step} of 5</p><h1 className="text-2xl font-black text-[#0F172A]">Withdrawal Verification</h1></div>
+        <div className="rounded-[8px] bg-emerald-50 px-3 py-2 text-right"><p className="text-[10px] font-black text-emerald-700">ELIGIBLE</p><p className="font-black">{usd(props.balance)}</p></div>
       </div>
-      <div className="mt-5 rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="mb-3 text-sm font-black text-[#0F172A]">Withdrawal method</p>
-        <select className="mb-3 h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0F172A]" value={props.paymentMethod} onChange={(event) => props.setPaymentMethod(event.target.value)}>
-          {paymentOptions.map((method) => <option key={method}>{method}</option>)}
-        </select>
-        <PaymentFields
-          account={props.paymentAccount}
-          bank={props.paymentBank}
-          data={props.paymentData}
-          method={props.paymentMethod}
-          routing={props.paymentRouting}
-          setAccount={props.setPaymentAccount}
-          setBank={props.setPaymentBank}
-          setData={props.setPaymentData}
-          setRouting={props.setPaymentRouting}
-        />
-        {!canWithdraw && (
-          <div className="mt-3 rounded-[8px] border border-amber-200 bg-amber-50 p-3">
-            <p className="text-xs font-bold leading-5 text-amber-800">
-              Due to financial security compliance, anti-fraud regulations, and high-volume transaction processing,
-              the minimum withdrawal threshold for newly activated auditor accounts is strictly set to $4,000.
-              Complete your daily audits to release your pending funds.
-            </p>
+      <StepProgress step={step} total={5} />
+      <section className="mt-4 rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
+        {step === 1 && <>
+          <StepHeading icon={<Landmark size={22} />} title="Choose payout method" text="Register the account where an approved withdrawal should be sent." />
+          <select className="mb-3 h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold" value={props.paymentMethod} onChange={(event) => props.setPaymentMethod(event.target.value)}>
+            {paymentOptions.map((method) => <option key={method}>{method}</option>)}
+          </select>
+          <PaymentFields account={props.paymentAccount} bank={props.paymentBank} data={props.paymentData} method={props.paymentMethod} routing={props.paymentRouting} setAccount={props.setPaymentAccount} setBank={props.setPaymentBank} setData={props.setPaymentData} setRouting={props.setPaymentRouting} />
+        </>}
+        {step === 2 && <>
+          <StepHeading icon={<MapPin size={22} />} title="Confirm identity details" text="Enter details exactly as they appear on your government-issued identification." />
+          <div className="space-y-3">
+            <VerificationInput label="Legal name" value={legalName} onChange={setLegalName} placeholder="Full legal name" />
+            <label className="block"><span className="mb-1.5 block text-xs font-black text-[#475569]">Date of birth</span><input className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold" type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
+            <VerificationInput label="Residential address" value={address} onChange={setAddress} placeholder="Street address" />
+            <div className="grid grid-cols-2 gap-3"><VerificationInput label="City" value={city} onChange={setCity} placeholder="City" /><VerificationInput label="State" value={region} onChange={setRegion} placeholder="State" /></div>
+            <VerificationInput label="ZIP code" value={postalCode} onChange={setPostalCode} placeholder="ZIP code" />
           </div>
-        )}
-        <button className="mt-3 min-h-12 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white disabled:bg-slate-300 disabled:text-slate-500" disabled={!canWithdraw} onClick={props.onRequestWithdrawal} type="button">
-          {canWithdraw ? "Request Withdrawal" : "Withdrawal Locked"}
-        </button>
-      </div>
+        </>}
+        {step === 3 && <>
+          <StepHeading icon={<IdCard size={22} />} title="Select identity documents" text="Use clear, unedited images. Sensitive files are not stored by this local preview." />
+          <select className="mb-3 h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold" value={idType} onChange={(event) => setIdType(event.target.value)}>
+            <option>Driver's license</option>
+            <option>State-issued photo ID</option>
+            <option>U.S. passport book</option>
+            <option>U.S. passport card</option>
+            <option>Permanent Resident Card (Green Card)</option>
+            <option>Employment Authorization Document</option>
+            <option>U.S. military ID</option>
+            <option>Tribal photo ID</option>
+          </select>
+          <p className="mb-3 rounded-[8px] border border-cyan-100 bg-cyan-50 p-3 text-xs font-semibold leading-5 text-cyan-900">
+            Driver&apos;s license is preselected because it is the most commonly used photo ID for U.S. identity checks. Use another accepted government-issued photo ID if needed.
+          </p>
+          <div className="space-y-3">
+            <DocumentInput label={passportSelected ? "Passport photo and information page" : `${idType} - front`} file={idFront} onChange={setIdFront} />
+            {!passportSelected && <DocumentInput label={`${idType} - back`} file={idBack} onChange={setIdBack} />}
+          </div>
+        </>}
+        {step === 4 && <>
+          <StepHeading icon={<ShieldCheck size={22} />} title="Review and authorize" text="Confirm the request before it is submitted for identity and payout review." />
+          <div className="space-y-3 rounded-[8px] bg-[#F8FAFC] p-3 text-sm"><StatusLine label="Amount" value={usd(props.balance)} /><StatusLine label="Payout" value={props.paymentMethod} /><StatusLine label="Identity" value={legalName} /><StatusLine label="Photo ID" value={idType} /><StatusLine label="Facial check" value="Next step" /></div>
+          <label className="mt-4 flex items-start gap-3 text-xs font-semibold leading-5 text-[#475569]"><input className="mt-0.5 h-5 w-5 shrink-0 accent-[#FE2C55]" type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />I confirm that the information is accurate and authorize identity verification for this withdrawal request.</label>
+        </>}
+        {step === 5 && <>
+          <StepHeading icon={<ScanFace size={22} />} title="Final facial verification" text="Take a current selfie to confirm that a real person is present and completing this request." />
+          <FacialCapture file={selfie} onCapture={setSelfie} />
+          <button className="mt-4 min-h-12 w-full rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white shadow-[3px_3px_0_#25F4EE] disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none" disabled={!hasFaceCheck} onClick={submitVerification} type="button">
+            Submit Verification Request
+          </button>
+        </>}
+        <div className="mt-5 flex gap-3">
+          {step > 1 && <button className="flex h-12 flex-1 items-center justify-center gap-1 rounded-[8px] bg-[#F1F5F9] text-sm font-black" onClick={() => setStep((value) => value - 1)} type="button"><ChevronLeft size={17} /> Back</button>}
+          {step < 5 && <button className="flex h-12 flex-1 items-center justify-center gap-1 rounded-[8px] bg-[#FE2C55] text-sm font-black text-white shadow-[3px_3px_0_#25F4EE] disabled:bg-slate-300 disabled:shadow-none" disabled={(step === 1 && !hasPayoutDetails) || (step === 2 && !hasIdentity) || (step === 3 && !hasDocuments) || (step === 4 && !consent)} onClick={() => setStep((value) => value + 1)} type="button">{step === 4 ? "Continue to Face Check" : "Continue"} <ChevronRight size={17} /></button>}
+        </div>
+      </section>
     </div>
   );
-
 }
 
 function RefundScreen(props: {
@@ -923,9 +973,6 @@ function PaymentFields(props: {
         </label>
         <LabeledPaymentInput label="Routing number" onChange={props.setRouting} placeholder="Enter your routing number" value={props.routing} />
         <LabeledPaymentInput label="Account number" onChange={props.setAccount} placeholder="Enter your account number" value={props.account} />
-        <button className="h-12 w-full rounded-[8px] bg-[#FE2C55] text-sm font-black text-white shadow-lg shadow-rose-100" type="button">
-          Continue
-        </button>
       </div>
     );
   }
@@ -1169,6 +1216,202 @@ function ChoiceRow({ label, value, onChange }: { label: string; value: string; o
   );
 }
 
+function OptionRow({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (value: string) => void }) {
+  return (
+    <div>
+      <p className="mb-2 text-sm font-black text-[#0F172A]">{label}</p>
+      <div className="grid gap-2">
+        {options.map((option) => (
+          <button key={option} className={`min-h-11 rounded-[8px] px-3 text-left text-sm font-black transition ${value === option ? "bg-[#FE2C55] text-white" : "bg-white text-[#475569]"}`} onClick={(event) => preserveScrollFrom(event.currentTarget, () => onChange(option))} onMouseDown={(event) => event.preventDefault()} type="button">
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepProgress({ step, total }: { step: number; total: number }) {
+  return (
+    <div className="mt-4 grid gap-2" style={{ gridTemplateColumns: `repeat(${total}, minmax(0, 1fr))` }} aria-label={`Verification step ${step} of ${total}`}>
+      {Array.from({ length: total }, (_, index) => index + 1).map((item) => <span className={`h-1.5 rounded-full ${item <= step ? (item % 2 === 0 ? "bg-[#25F4EE]" : "bg-[#FE2C55]") : "bg-slate-200"}`} key={item} />)}
+    </div>
+  );
+}
+
+function StepHeading({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
+  return (
+    <div className="mb-5 flex gap-3">
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[8px] bg-[#F1F5F9] text-[#2563EB]">{icon}</div>
+      <div><h2 className="text-lg font-black">{title}</h2><p className="mt-1 text-xs font-semibold leading-5 text-[#64748B]">{text}</p></div>
+    </div>
+  );
+}
+
+function VerificationInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
+  return <label className="block"><span className="mb-1.5 block text-xs font-black text-[#475569]">{label}</span><input className="h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold outline-none focus:border-[#2563EB]" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} /></label>;
+}
+
+function DocumentInput({ label, file, onChange }: { label: string; file: File | null; onChange: (file: File | null) => void }) {
+  return (
+    <label className="flex min-h-16 cursor-pointer items-center justify-between gap-3 rounded-[8px] border border-dashed border-slate-300 bg-[#F8FAFC] px-3 py-3">
+      <span className="min-w-0"><span className="block text-xs font-black">{label}</span><span className="mt-1 block truncate text-[11px] font-semibold text-[#64748B]">{file ? file.name : "JPG, PNG, or PDF up to 10 MB"}</span></span>
+      <span className="shrink-0 rounded-[8px] bg-white px-3 py-2 text-xs font-black text-[#2563EB] shadow-sm">{file ? "Replace" : "Select"}</span>
+      <input className="sr-only" type="file" accept="image/jpeg,image/png,application/pdf" onChange={(event) => onChange(event.target.files?.[0] ?? null)} />
+    </label>
+  );
+}
+
+function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (file: File | null) => void }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [status, setStatus] = useState<"idle" | "camera" | "checking" | "retry" | "calibration" | "captured">(
+    file ? "captured" : "idle",
+  );
+  const [message, setMessage] = useState("");
+  const [validCaptures, setValidCaptures] = useState(file ? 2 : 0);
+
+  useEffect(() => () => stopCameraStream(streamRef), []);
+
+  async function openCamera() {
+    setMessage("");
+    onCapture(null);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setStatus("retry");
+      setMessage("Live camera is unavailable in this browser. Use the device camera option below.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 960 } },
+      });
+      stopCameraStream(streamRef);
+      streamRef.current = stream;
+      setStatus("camera");
+      window.requestAnimationFrame(() => {
+        if (!videoRef.current) return;
+        videoRef.current.srcObject = stream;
+        void videoRef.current.play();
+      });
+    } catch {
+      setStatus("retry");
+      setMessage("Camera access was not available. Allow camera permission or use the device camera option.");
+    }
+  }
+
+  function capturePhoto() {
+    const video = videoRef.current;
+    if (!video || video.videoWidth < 320 || video.videoHeight < 320) {
+      setStatus("retry");
+      setMessage("The camera image is not ready. Hold still and try again.");
+      return;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.min(video.videoWidth, 900);
+    canvas.height = Math.round((canvas.width / video.videoWidth) * video.videoHeight);
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setStatus("checking");
+    stopCameraStream(streamRef);
+
+    window.setTimeout(() => {
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      let brightness = 0;
+      let samples = 0;
+      for (let index = 0; index < imageData.length; index += 160) {
+        brightness += (imageData[index] + imageData[index + 1] + imageData[index + 2]) / 3;
+        samples += 1;
+      }
+      const average = samples ? brightness / samples : 0;
+      if (average < 42 || average > 242) {
+        setStatus("retry");
+        setMessage(average < 42 ? "The image is too dark. Move to a brighter area and try again." : "There is too much light. Reduce glare and try again.");
+        return;
+      }
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setStatus("retry");
+          setMessage("We could not read the image. Please try again.");
+          return;
+        }
+        if (validCaptures === 0) {
+          setValidCaptures(1);
+          setStatus("calibration");
+          setMessage("Camera calibration complete. Take one final selfie for manual identity review.");
+          return;
+        }
+        onCapture(new File([blob], `facial-check-${Date.now()}.jpg`, { type: "image/jpeg" }));
+        setValidCaptures(2);
+        setStatus("captured");
+        setMessage("Final selfie captured and ready for manual identity review.");
+      }, "image/jpeg", 0.88);
+    }, 1200);
+  }
+
+  return (
+    <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-[#0B0B0F] text-white">
+      <div className="relative aspect-[3/4] w-full overflow-hidden">
+        {status === "camera" ? (
+          <>
+            <video ref={videoRef} autoPlay muted playsInline className="h-full w-full scale-x-[-1] object-cover" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_36%_43%_at_50%_44%,transparent_0%,transparent_96%,rgba(0,0,0,.68)_100%)]" />
+            <div className="pointer-events-none absolute left-1/2 top-[44%] h-[58%] w-[68%] -translate-x-1/2 -translate-y-1/2 rounded-[48%] border-2 border-[#25F4EE] shadow-[0_0_0_2px_#FE2C55,0_0_28px_rgba(37,244,238,.45)]" />
+            <p className="absolute inset-x-4 bottom-5 text-center text-xs font-black">Center your face inside the frame</p>
+          </>
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+            {status === "checking" ? <Loader2 className="animate-spin text-[#25F4EE]" size={44} /> : status === "captured" ? <CheckCircle2 className="text-emerald-400" size={48} /> : <ScanFace className="text-[#25F4EE]" size={52} />}
+            <h3 className="mt-4 text-lg font-black">{status === "checking" ? "Checking image quality..." : status === "captured" ? "Final selfie captured" : status === "calibration" ? "Calibration complete" : status === "retry" ? "Please try again" : "Ready for facial check"}</h3>
+            <p className="mt-2 text-xs font-semibold leading-5 text-slate-300">{message || "Use even lighting, look directly at the camera, and keep your full face visible."}</p>
+          </div>
+        )}
+      </div>
+      <div className="border-t border-white/10 bg-white p-4 text-[#0F172A]">
+        {status === "camera" ? (
+          <button className="flex h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#FE2C55] text-sm font-black text-white shadow-[3px_3px_0_#25F4EE]" onClick={capturePhoto} type="button"><Camera size={18} /> Take Photo</button>
+        ) : status !== "checking" ? (
+          <button className="flex h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#0F172A] text-sm font-black text-white shadow-[3px_3px_0_#25F4EE]" onClick={openCamera} type="button"><Camera size={18} /> {status === "captured" ? "Retake Final Selfie" : status === "calibration" ? "Take Final Selfie" : "Open Live Camera"}</button>
+        ) : null}
+        {(status === "retry" || typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) && (
+          <label className="mt-3 flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-[#F1F5F9] text-sm font-black">
+            Use Device Camera
+            <input className="sr-only" type="file" accept="image/*" capture="user" onChange={(event) => {
+              const selected = event.target.files?.[0] ?? null;
+              if (!selected) {
+                setStatus("retry");
+                setMessage("No image was selected.");
+                return;
+              }
+              if (validCaptures === 0) {
+                setValidCaptures(1);
+                setStatus("calibration");
+                setMessage("Camera calibration complete. Take one final selfie for manual identity review.");
+                event.target.value = "";
+                return;
+              }
+              onCapture(selected);
+              setValidCaptures(2);
+              setStatus("captured");
+              setMessage("Final selfie captured and ready for manual identity review.");
+            }} />
+          </label>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatusLine({ label, value }: { label: string; value: string }) {
+  return <div className="flex items-start justify-between gap-4"><span className="font-semibold text-[#64748B]">{label}</span><span className="text-right font-black text-[#0F172A]">{value}</span></div>;
+}
+
+function stopCameraStream(streamRef: { current: MediaStream | null }) {
+  streamRef.current?.getTracks().forEach((track) => track.stop());
+  streamRef.current = null;
+}
+
 function NavButton({ active, icon, label, onClick }: { active: boolean; icon: ReactNode; label: string; onClick: () => void }) {
   return <button className={`flex h-14 flex-col items-center justify-center gap-1 rounded-[8px] ${active ? "bg-[#F1F5F9] text-[#FE2C55]" : "text-[#475569]"}`} onClick={onClick} type="button">{icon}<span>{label}</span></button>;
 }
@@ -1255,12 +1498,64 @@ function usd(value: number) {
   return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
-function rewardForTask(index: number): number {
-  if (index === TOTAL_TASKS_TO_GOAL - 1) {
-    const previousTotal = rewardCurve.slice(0, TOTAL_TASKS_TO_GOAL - 1).reduce((sum, value) => sum + value, 0);
-    return Number((TOTAL_REWARD_TO_GOAL - previousTotal).toFixed(2));
+function addUSBusinessDays(start: Date, businessDays: number) {
+  const result = new Date(start);
+  result.setHours(12, 0, 0, 0);
+  let added = 0;
+  while (added < businessDays) {
+    result.setDate(result.getDate() + 1);
+    const day = result.getDay();
+    if (day !== 0 && day !== 6 && !isObservedUSFederalHoliday(result)) added += 1;
   }
-  return Number((rewardCurve[index] ?? 0).toFixed(2));
+  return result;
+}
+
+function formatUSDate(date: Date) {
+  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+function isObservedUSFederalHoliday(date: Date) {
+  const year = date.getFullYear();
+  const target = dateKey(date);
+  const fixed = [
+    new Date(year, 0, 1),
+    new Date(year, 5, 19),
+    new Date(year, 6, 4),
+    new Date(year, 10, 11),
+    new Date(year, 11, 25),
+  ].flatMap((holiday) => [holiday, observedDate(holiday)]);
+  const floating = [
+    nthWeekdayOfMonth(year, 0, 1, 3),
+    nthWeekdayOfMonth(year, 1, 1, 3),
+    lastWeekdayOfMonth(year, 4, 1),
+    nthWeekdayOfMonth(year, 8, 1, 1),
+    nthWeekdayOfMonth(year, 9, 1, 2),
+    nthWeekdayOfMonth(year, 10, 4, 4),
+  ];
+  return [...fixed, ...floating].some((holiday) => dateKey(holiday) === target);
+}
+
+function observedDate(holiday: Date) {
+  const observed = new Date(holiday);
+  if (holiday.getDay() === 6) observed.setDate(observed.getDate() - 1);
+  if (holiday.getDay() === 0) observed.setDate(observed.getDate() + 1);
+  return observed;
+}
+
+function nthWeekdayOfMonth(year: number, month: number, weekday: number, occurrence: number) {
+  const date = new Date(year, month, 1);
+  date.setDate(1 + ((7 + weekday - date.getDay()) % 7) + ((occurrence - 1) * 7));
+  return date;
+}
+
+function lastWeekdayOfMonth(year: number, month: number, weekday: number) {
+  const date = new Date(year, month + 1, 0);
+  date.setDate(date.getDate() - ((7 + date.getDay() - weekday) % 7));
+  return date;
+}
+
+function dateKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }
 
 function countWords(value: string) {
@@ -1427,313 +1722,4 @@ function readRefundState(email: string): RefundState | null {
 
 function refundStateKey(email: string) {
   return `${REFUND_STATE_KEY}:${email.toLowerCase()}`;
-}
-
-function stageById(id: WithdrawalStageId) {
-  return WITHDRAWAL_STAGES.find((stage) => stage.id === id);
-}
-
-function stageIndex(id: WithdrawalStageId) {
-  return WITHDRAWAL_STAGES.findIndex((stage) => stage.id === id);
-}
-
-function stageEndsAt(state: WithdrawalState) {
-  const stage = stageById(state.stage);
-  if (!stage) return state.stageStartedAt;
-  return state.stageStartedAt + stage.days * 24 * 60 * 60 * 1000;
-}
-
-function buildWithdrawalReference() {
-  const stamp = Date.now().toString(36).toUpperCase().slice(-6);
-  const random = Math.floor(Math.random() * 46656).toString(36).toUpperCase().padStart(3, "0");
-  return `TP-${stamp}${random}`;
-}
-
-function formatCountdown(ms: number) {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  const days = Math.floor(total / 86400);
-  const hours = Math.floor((total % 86400) / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const seconds = total % 60;
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return { days, clock: `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` };
-}
-
-function formatDateTime(ms: number) {
-  return new Date(ms).toLocaleString("en-US", {
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function sendWithdrawalEmail(user: User, state: WithdrawalState, template: string, balance: number) {
-  const key = `${template}:${state.reference}`;
-  const log = readTriggeredEmailsLog(user.email);
-  if (log.includes(key)) return;
-  writeTriggeredEmailsLog(user.email, [...log, key]);
-  void fetch("/api/public/send-access-email", {
-    body: JSON.stringify({
-      amount: state.amount,
-      balance,
-      email: user.email,
-      name: user.name,
-      reference: state.reference,
-      template,
-    }),
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-  }).catch((error) => {
-    console.warn("[Task Partners] withdrawal email failed", error);
-  });
-}
-
-function readWithdrawalState(email: string): WithdrawalState | null {
-  try {
-    const raw = window.localStorage.getItem(withdrawalStateKey(email));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as WithdrawalState;
-    return parsed && parsed.stage ? { ...parsed, checks: parsed.checks ?? {} } : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeWithdrawalState(email: string, state: WithdrawalState) {
-  window.localStorage.setItem(withdrawalStateKey(email), JSON.stringify(state));
-}
-
-function withdrawalStateKey(email: string) {
-  return `${WITHDRAWAL_STATE_KEY}:${email.toLowerCase()}`;
-}
-
-function WithdrawalTracker(props: { now: number; onUpdate: (next: WithdrawalState) => void; state: WithdrawalState }) {
-  const { now, state } = props;
-  const stage = stageById(state.stage) ?? WITHDRAWAL_STAGES[0];
-  const index = stageIndex(stage.id);
-  const isReleased = stage.id === "released";
-  const endsAt = stageEndsAt(state);
-  const countdown = formatCountdown(endsAt - now);
-  const elapsed = Math.min(1, Math.max(0, (now - state.stageStartedAt) / Math.max(1, endsAt - state.stageStartedAt)));
-  const percent = isReleased ? 100 : Math.round(elapsed * 100);
-
-  function toggleCheck(key: string, value: boolean) {
-    props.onUpdate({ ...state, checks: { ...state.checks, [key]: value } });
-  }
-
-  return (
-    <div className="pb-6">
-      <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Withdrawal Status</h1>
-
-      <section className="overflow-hidden rounded-[14px] bg-[#010101] p-5 text-white shadow-[0_18px_40px_rgba(1,1,1,.28)]">
-        <div className="flex items-center gap-2">
-          <span className="h-4 w-4 rounded-[5px] bg-[#25F4EE] shadow-[6px_0_0_#FE2C55]" />
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/70">TikTok Creator Payouts</p>
-        </div>
-        <p className="mt-4 text-[11px] font-black uppercase tracking-[0.18em] text-white/50">Withdrawal amount</p>
-        <p className="text-[34px] font-black leading-tight">{usd(state.amount)}</p>
-        <p className="mt-1 text-xs font-bold text-white/60">
-          {state.method} · Ref {state.reference}
-        </p>
-
-        <div className="mt-5 rounded-[10px] border border-white/10 bg-white/[0.06] p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-[#25F4EE]">{stage.label}</p>
-            <p className="text-[11px] font-bold text-white/60">{stage.window}</p>
-          </div>
-          {isReleased ? (
-            <p className="mt-2 text-sm font-black text-white">Payout released on {formatDateTime(state.stageStartedAt)}</p>
-          ) : (
-            <>
-              <div className="mt-3 flex items-end gap-2">
-                <p className="text-[30px] font-black leading-none">{countdown.days}</p>
-                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">days</p>
-                <p className="ml-auto pb-1 font-mono text-lg font-black tabular-nums text-white">{countdown.clock}</p>
-              </div>
-              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/15">
-                <div className="h-full rounded-full bg-gradient-to-r from-[#25F4EE] to-[#FE2C55]" style={{ width: `${percent}%` }} />
-              </div>
-              <p className="mt-2 text-[11px] font-bold text-white/55">
-                Estimated completion: {formatDateTime(endsAt)}
-              </p>
-            </>
-          )}
-        </div>
-      </section>
-
-      <section className="mt-4 rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-base font-black text-[#0F172A]">{stage.headline}</h2>
-        <p className="mt-1.5 text-sm leading-6 text-[#475569]">{stage.description}</p>
-      </section>
-
-      <section className="mt-4 rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-        <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-[#475569]">Payout pipeline</p>
-        <div className="space-y-3">
-          {WITHDRAWAL_STAGES.map((item, itemIndex) => {
-            const done = itemIndex < index || (isReleased && itemIndex <= index);
-            const active = itemIndex === index && !done;
-            return (
-              <div className="flex items-start gap-3" key={item.id}>
-                <div className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-white ${done ? "bg-emerald-500" : active ? "bg-[#FE2C55]" : "bg-slate-200 text-slate-500"}`}>
-                  {done ? <Check size={15} /> : active ? <Loader2 className="animate-spin" size={14} /> : <LockKeyholeIcon size={13} />}
-                </div>
-                <div className="min-w-0">
-                  <p className={`text-sm font-black ${done || active ? "text-[#0F172A]" : "text-slate-400"}`}>{item.label}</p>
-                  <p className="text-xs font-semibold text-[#64748B]">
-                    {done ? "Completed" : active ? `In progress · ${item.window}` : `Pending · ${item.window}`}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {stage.id === "verification" && (
-        <section className="mt-4 space-y-3">
-          <VerificationCard
-            checked={Boolean(state.checks.address)}
-            description="Upload a utility bill, lease or bank statement issued in the last 90 days showing your full name and address."
-            done="Document received · under review"
-            label="Proof of address"
-            onConfirm={() => toggleCheck("address", true)}
-            upload
-          />
-          <MicroDepositCard
-            checked={Boolean(state.checks.microdeposit)}
-            onConfirm={() => toggleCheck("microdeposit", true)}
-          />
-          <VerificationCard
-            checked={Boolean(state.checks.bank)}
-            description="Re-confirm the payout details on file. Mismatched details are the most common cause of failed payouts."
-            done="Payout details re-confirmed"
-            label="Confirm payout details"
-            onConfirm={() => toggleCheck("bank", true)}
-          />
-        </section>
-      )}
-
-      {stage.id === "compliance" && (
-        <section className="mt-4 space-y-3">
-          <VerificationCard
-            checked={Boolean(state.checks.source)}
-            description="Declare the origin of the funds being withdrawn (creator partner audits). Required by Enhanced Due Diligence rules for high-value payouts."
-            done="Source of funds declaration received"
-            label="Source of funds declaration"
-            onConfirm={() => toggleCheck("source", true)}
-          />
-          <VerificationCard
-            checked={Boolean(state.checks.income)}
-            description="Attach a generic income document (pay stub, tax summary or platform earnings statement). Our compliance team reviews it internally."
-            done="Income document received · under review"
-            label="Proof of income"
-            onConfirm={() => toggleCheck("income", true)}
-            upload
-          />
-        </section>
-      )}
-
-      {stage.id === "batch" && (
-        <section className="mt-4 rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-emerald-600">
-            <ShieldCheck size={18} />
-            <p className="text-sm font-black">Withdrawal approved</p>
-          </div>
-          <p className="mt-2 text-sm leading-6 text-[#475569]">
-            Payouts are transmitted in scheduled batches. Your withdrawal has been locked into the next payout batch and no further action is required from you.
-          </p>
-          <div className="mt-3 grid gap-2 rounded-[8px] bg-[#F8FAFC] p-3 text-xs font-bold text-[#475569]">
-            <p>Batch reference: <span className="text-[#0F172A]">{state.reference}-B</span></p>
-            <p>Batch window: <span className="text-[#0F172A]">every 10 days</span></p>
-            <p>Transmission date: <span className="text-[#0F172A]">{formatDateTime(endsAt)}</span></p>
-          </div>
-        </section>
-      )}
-
-      {isReleased && (
-        <section className="mt-4 rounded-[12px] border border-emerald-200 bg-emerald-50 p-4">
-          <div className="flex items-center gap-2 text-emerald-700">
-            <CheckCircle2 size={18} />
-            <p className="text-sm font-black">Payout released to {state.method}</p>
-          </div>
-          <p className="mt-2 text-sm leading-6 text-emerald-800">
-            {usd(state.amount)} was transmitted to your payout provider. Depending on the provider, the credit posts within 1-3 business days.
-          </p>
-        </section>
-      )}
-
-      <p className="mt-4 px-1 text-center text-[11px] font-semibold leading-5 text-[#94A3B8]">
-        Status updates are also sent to your registered email address at every stage of the payout pipeline.
-      </p>
-    </div>
-  );
-}
-
-function VerificationCard(props: {
-  checked: boolean;
-  description: string;
-  done: string;
-  label: string;
-  onConfirm: () => void;
-  upload?: boolean;
-}) {
-  return (
-    <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-black text-[#0F172A]">{props.label}</p>
-        {props.checked
-          ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-600">Received</span>
-          : <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#FE2C55]">Required</span>}
-      </div>
-      <p className="mt-1.5 text-xs leading-5 text-[#64748B]">{props.description}</p>
-      {props.checked ? (
-        <p className="mt-3 flex items-center gap-2 text-xs font-black text-emerald-600"><Check size={14} /> {props.done}</p>
-      ) : props.upload ? (
-        <label className="mt-3 flex min-h-11 cursor-pointer items-center justify-center rounded-[8px] border border-dashed border-slate-300 bg-[#F8FAFC] px-4 text-xs font-black text-[#0F172A]">
-          <ReceiptText className="mr-2 text-[#FE2C55]" size={15} />
-          Upload document
-          <input accept="image/*,application/pdf" className="hidden" onChange={(event) => { if (event.target.files?.length) props.onConfirm(); }} type="file" />
-        </label>
-      ) : (
-        <button className="mt-3 min-h-11 w-full rounded-[8px] bg-[#0F172A] px-4 text-xs font-black text-white" onClick={props.onConfirm} type="button">
-          Confirm
-        </button>
-      )}
-    </div>
-  );
-}
-
-function MicroDepositCard(props: { checked: boolean; onConfirm: () => void }) {
-  const [first, setFirst] = useState("");
-  const [second, setSecond] = useState("");
-  const ready = /^0?\.\d{2}$/.test(first.trim()) && /^0?\.\d{2}$/.test(second.trim());
-
-  return (
-    <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-black text-[#0F172A]">ACH micro-deposit confirmation</p>
-        {props.checked
-          ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-600">Verified</span>
-          : <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#FE2C55]">Required</span>}
-      </div>
-      <p className="mt-1.5 text-xs leading-5 text-[#64748B]">
-        We sent two small deposits (under $1.00) to your bank account. Enter both amounts exactly as they appear on your statement.
-      </p>
-      {props.checked ? (
-        <p className="mt-3 flex items-center gap-2 text-xs font-black text-emerald-600"><Check size={14} /> Micro-deposit amounts confirmed</p>
-      ) : (
-        <>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <input className="h-11 rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-3 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400" inputMode="decimal" onChange={(event) => setFirst(event.target.value)} placeholder="0.00" value={first} />
-            <input className="h-11 rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-3 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400" inputMode="decimal" onChange={(event) => setSecond(event.target.value)} placeholder="0.00" value={second} />
-          </div>
-          <button className="mt-3 min-h-11 w-full rounded-[8px] bg-[#0F172A] px-4 text-xs font-black text-white disabled:bg-slate-200 disabled:text-slate-500" disabled={!ready} onClick={props.onConfirm} type="button">
-            Confirm amounts
-          </button>
-        </>
-      )}
-    </div>
-  );
 }
