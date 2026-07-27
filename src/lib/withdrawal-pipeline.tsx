@@ -337,7 +337,7 @@ export function WithdrawalTracker(props: {
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">Batch window</p>
               <p className="mt-1 text-sm font-black text-emerald-800">Next transmission: {longDate(new Date(endsAt))}</p>
               <p className="mt-2 text-xs font-semibold leading-5 text-emerald-800">
-                Payout batches are transmitted every 10 days. Your withdrawal is locked in and cannot be cancelled.
+                Batches are transmitted in the next scheduled window. Your withdrawal is locked in and cannot be cancelled.
               </p>
             </div>
             <div className="space-y-3 rounded-[8px] bg-[#F8FAFC] p-4 text-sm">
