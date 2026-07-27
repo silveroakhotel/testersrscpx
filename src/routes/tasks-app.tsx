@@ -262,6 +262,51 @@ function TaskPartnersApp() {
   }, [balance, reviewedIds.length, user]);
 
   useEffect(() => {
+    if (!user) return;
+    setWithdrawal(readWithdrawalState(user.email));
+  }, [user]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!user || !withdrawal) return;
+    const stage = stageById(withdrawal.stage);
+    if (!stage || stage.days === 0) return;
+    if (now < stageEndsAt(withdrawal)) return;
+    const next = WITHDRAWAL_STAGES[WITHDRAWAL_STAGES.findIndex((item) => item.id === stage.id) + 1];
+    if (!next) return;
+    const advanced: WithdrawalState = { ...withdrawal, stage: next.id, stageStartedAt: Date.now() };
+    setWithdrawal(advanced);
+    writeWithdrawalState(user.email, advanced);
+    sendWithdrawalEmail(user, advanced, next.template, balance);
+  }, [balance, now, user, withdrawal]);
+
+  function updateWithdrawal(next: WithdrawalState) {
+    setWithdrawal(next);
+    if (user) writeWithdrawalState(user.email, next);
+  }
+
+  function requestWithdrawal() {
+    if (!user || withdrawal) return;
+    const created: WithdrawalState = {
+      amount: balance,
+      checks: {},
+      method: paymentMethod,
+      reference: buildWithdrawalReference(),
+      requestedAt: Date.now(),
+      stage: "verification",
+      stageStartedAt: Date.now(),
+    };
+    updateWithdrawal(created);
+    sendWithdrawalEmail(user, created, "withdrawal_requested", balance);
+  }
+
+
+
+  useEffect(() => {
     const update = () => setIsDesktop(window.innerWidth > 768);
     update();
     window.addEventListener("resize", update);
