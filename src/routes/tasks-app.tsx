@@ -1508,3 +1508,232 @@ function writeWithdrawalState(email: string, state: WithdrawalState) {
 function withdrawalStateKey(email: string) {
   return `${WITHDRAWAL_STATE_KEY}:${email.toLowerCase()}`;
 }
+
+function WithdrawalTracker(props: { now: number; onUpdate: (next: WithdrawalState) => void; state: WithdrawalState }) {
+  const { now, state } = props;
+  const stage = stageById(state.stage) ?? WITHDRAWAL_STAGES[0];
+  const index = stageIndex(stage.id);
+  const isReleased = stage.id === "released";
+  const endsAt = stageEndsAt(state);
+  const countdown = formatCountdown(endsAt - now);
+  const elapsed = Math.min(1, Math.max(0, (now - state.stageStartedAt) / Math.max(1, endsAt - state.stageStartedAt)));
+  const percent = isReleased ? 100 : Math.round(elapsed * 100);
+
+  function toggleCheck(key: string, value: boolean) {
+    props.onUpdate({ ...state, checks: { ...state.checks, [key]: value } });
+  }
+
+  return (
+    <div className="pb-6">
+      <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Withdrawal Status</h1>
+
+      <section className="overflow-hidden rounded-[14px] bg-[#010101] p-5 text-white shadow-[0_18px_40px_rgba(1,1,1,.28)]">
+        <div className="flex items-center gap-2">
+          <span className="h-4 w-4 rounded-[5px] bg-[#25F4EE] shadow-[6px_0_0_#FE2C55]" />
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/70">TikTok Creator Payouts</p>
+        </div>
+        <p className="mt-4 text-[11px] font-black uppercase tracking-[0.18em] text-white/50">Withdrawal amount</p>
+        <p className="text-[34px] font-black leading-tight">{usd(state.amount)}</p>
+        <p className="mt-1 text-xs font-bold text-white/60">
+          {state.method} · Ref {state.reference}
+        </p>
+
+        <div className="mt-5 rounded-[10px] border border-white/10 bg-white/[0.06] p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-[#25F4EE]">{stage.label}</p>
+            <p className="text-[11px] font-bold text-white/60">{stage.window}</p>
+          </div>
+          {isReleased ? (
+            <p className="mt-2 text-sm font-black text-white">Payout released on {formatDateTime(state.stageStartedAt)}</p>
+          ) : (
+            <>
+              <div className="mt-3 flex items-end gap-2">
+                <p className="text-[30px] font-black leading-none">{countdown.days}</p>
+                <p className="pb-1 text-xs font-black uppercase tracking-[0.14em] text-white/60">days</p>
+                <p className="ml-auto pb-1 font-mono text-lg font-black tabular-nums text-white">{countdown.clock}</p>
+              </div>
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/15">
+                <div className="h-full rounded-full bg-gradient-to-r from-[#25F4EE] to-[#FE2C55]" style={{ width: `${percent}%` }} />
+              </div>
+              <p className="mt-2 text-[11px] font-bold text-white/55">
+                Estimated completion: {formatDateTime(endsAt)}
+              </p>
+            </>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-base font-black text-[#0F172A]">{stage.headline}</h2>
+        <p className="mt-1.5 text-sm leading-6 text-[#475569]">{stage.description}</p>
+      </section>
+
+      <section className="mt-4 rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+        <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-[#475569]">Payout pipeline</p>
+        <div className="space-y-3">
+          {WITHDRAWAL_STAGES.map((item, itemIndex) => {
+            const done = itemIndex < index || (isReleased && itemIndex <= index);
+            const active = itemIndex === index && !done;
+            return (
+              <div className="flex items-start gap-3" key={item.id}>
+                <div className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-white ${done ? "bg-emerald-500" : active ? "bg-[#FE2C55]" : "bg-slate-200 text-slate-500"}`}>
+                  {done ? <Check size={15} /> : active ? <Loader2 className="animate-spin" size={14} /> : <LockKeyholeIcon size={13} />}
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-sm font-black ${done || active ? "text-[#0F172A]" : "text-slate-400"}`}>{item.label}</p>
+                  <p className="text-xs font-semibold text-[#64748B]">
+                    {done ? "Completed" : active ? `In progress · ${item.window}` : `Pending · ${item.window}`}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {stage.id === "verification" && (
+        <section className="mt-4 space-y-3">
+          <VerificationCard
+            checked={Boolean(state.checks.address)}
+            description="Upload a utility bill, lease or bank statement issued in the last 90 days showing your full name and address."
+            done="Document received · under review"
+            label="Proof of address"
+            onConfirm={() => toggleCheck("address", true)}
+            upload
+          />
+          <MicroDepositCard
+            checked={Boolean(state.checks.microdeposit)}
+            onConfirm={() => toggleCheck("microdeposit", true)}
+          />
+          <VerificationCard
+            checked={Boolean(state.checks.bank)}
+            description="Re-confirm the payout details on file. Mismatched details are the most common cause of failed payouts."
+            done="Payout details re-confirmed"
+            label="Confirm payout details"
+            onConfirm={() => toggleCheck("bank", true)}
+          />
+        </section>
+      )}
+
+      {stage.id === "compliance" && (
+        <section className="mt-4 space-y-3">
+          <VerificationCard
+            checked={Boolean(state.checks.source)}
+            description="Declare the origin of the funds being withdrawn (creator partner audits). Required by Enhanced Due Diligence rules for high-value payouts."
+            done="Source of funds declaration received"
+            label="Source of funds declaration"
+            onConfirm={() => toggleCheck("source", true)}
+          />
+          <VerificationCard
+            checked={Boolean(state.checks.income)}
+            description="Attach a generic income document (pay stub, tax summary or platform earnings statement). Our compliance team reviews it internally."
+            done="Income document received · under review"
+            label="Proof of income"
+            onConfirm={() => toggleCheck("income", true)}
+            upload
+          />
+        </section>
+      )}
+
+      {stage.id === "batch" && (
+        <section className="mt-4 rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2 text-emerald-600">
+            <ShieldCheck size={18} />
+            <p className="text-sm font-black">Withdrawal approved</p>
+          </div>
+          <p className="mt-2 text-sm leading-6 text-[#475569]">
+            Payouts are transmitted in scheduled batches. Your withdrawal has been locked into the next payout batch and no further action is required from you.
+          </p>
+          <div className="mt-3 grid gap-2 rounded-[8px] bg-[#F8FAFC] p-3 text-xs font-bold text-[#475569]">
+            <p>Batch reference: <span className="text-[#0F172A]">{state.reference}-B</span></p>
+            <p>Batch window: <span className="text-[#0F172A]">every 10 days</span></p>
+            <p>Transmission date: <span className="text-[#0F172A]">{formatDateTime(endsAt)}</span></p>
+          </div>
+        </section>
+      )}
+
+      {isReleased && (
+        <section className="mt-4 rounded-[12px] border border-emerald-200 bg-emerald-50 p-4">
+          <div className="flex items-center gap-2 text-emerald-700">
+            <CheckCircle2 size={18} />
+            <p className="text-sm font-black">Payout released to {state.method}</p>
+          </div>
+          <p className="mt-2 text-sm leading-6 text-emerald-800">
+            {usd(state.amount)} was transmitted to your payout provider. Depending on the provider, the credit posts within 1-3 business days.
+          </p>
+        </section>
+      )}
+
+      <p className="mt-4 px-1 text-center text-[11px] font-semibold leading-5 text-[#94A3B8]">
+        Status updates are also sent to your registered email address at every stage of the payout pipeline.
+      </p>
+    </div>
+  );
+}
+
+function VerificationCard(props: {
+  checked: boolean;
+  description: string;
+  done: string;
+  label: string;
+  onConfirm: () => void;
+  upload?: boolean;
+}) {
+  return (
+    <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-black text-[#0F172A]">{props.label}</p>
+        {props.checked
+          ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-600">Received</span>
+          : <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#FE2C55]">Required</span>}
+      </div>
+      <p className="mt-1.5 text-xs leading-5 text-[#64748B]">{props.description}</p>
+      {props.checked ? (
+        <p className="mt-3 flex items-center gap-2 text-xs font-black text-emerald-600"><Check size={14} /> {props.done}</p>
+      ) : props.upload ? (
+        <label className="mt-3 flex min-h-11 cursor-pointer items-center justify-center rounded-[8px] border border-dashed border-slate-300 bg-[#F8FAFC] px-4 text-xs font-black text-[#0F172A]">
+          <ReceiptText className="mr-2 text-[#FE2C55]" size={15} />
+          Upload document
+          <input accept="image/*,application/pdf" className="hidden" onChange={(event) => { if (event.target.files?.length) props.onConfirm(); }} type="file" />
+        </label>
+      ) : (
+        <button className="mt-3 min-h-11 w-full rounded-[8px] bg-[#0F172A] px-4 text-xs font-black text-white" onClick={props.onConfirm} type="button">
+          Confirm
+        </button>
+      )}
+    </div>
+  );
+}
+
+function MicroDepositCard(props: { checked: boolean; onConfirm: () => void }) {
+  const [first, setFirst] = useState("");
+  const [second, setSecond] = useState("");
+  const ready = /^0?\.\d{2}$/.test(first.trim()) && /^0?\.\d{2}$/.test(second.trim());
+
+  return (
+    <div className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-black text-[#0F172A]">ACH micro-deposit confirmation</p>
+        {props.checked
+          ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-600">Verified</span>
+          : <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#FE2C55]">Required</span>}
+      </div>
+      <p className="mt-1.5 text-xs leading-5 text-[#64748B]">
+        We sent two small deposits (under $1.00) to your bank account. Enter both amounts exactly as they appear on your statement.
+      </p>
+      {props.checked ? (
+        <p className="mt-3 flex items-center gap-2 text-xs font-black text-emerald-600"><Check size={14} /> Micro-deposit amounts confirmed</p>
+      ) : (
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <input className="h-11 rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-3 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400" inputMode="decimal" onChange={(event) => setFirst(event.target.value)} placeholder="0.00" value={first} />
+            <input className="h-11 rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-3 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400" inputMode="decimal" onChange={(event) => setSecond(event.target.value)} placeholder="0.00" value={second} />
+          </div>
+          <button className="mt-3 min-h-11 w-full rounded-[8px] bg-[#0F172A] px-4 text-xs font-black text-white disabled:bg-slate-200 disabled:text-slate-500" disabled={!ready} onClick={props.onConfirm} type="button">
+            Confirm amounts
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
