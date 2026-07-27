@@ -14,6 +14,7 @@ import {
   LockKeyholeIcon,
   MapPin,
   MessageCircle,
+  Send,
   Pause,
   Play,
   ShieldCheck,
@@ -794,9 +795,9 @@ function WalletScreen(props: {
         <section className="rounded-[8px] border border-emerald-200 bg-white p-5 shadow-sm">
           <div className="grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white"><FileCheck2 size={27} /></div>
           <p className="mt-5 text-xs font-black uppercase tracking-[0.16em] text-emerald-600">Status: Under review</p>
-          <h2 className="mt-2 text-2xl font-black">Verification request registered</h2>
+          <h2 className="mt-2 text-2xl font-black">Verification request submitted</h2>
           <p className="mt-3 text-sm font-semibold leading-6 text-[#475569]">
-            Identity and payout reviews may be completed sooner, but can take up to 7 U.S. business days after all required documents are received.
+            Your withdrawal verification is now queued for manual review. The review can be completed sooner, but may take up to 7 U.S. business days depending on account, payout, and identity-check volume.
           </p>
           <p className="mt-3 rounded-[8px] bg-[#F8FAFC] p-3 text-xs font-bold leading-5 text-[#475569]">
             Estimated review deadline: {formatUSDate(addUSBusinessDays(new Date(submittedAt ?? Date.now()), 7))}. Weekends and observed U.S. federal holidays are excluded.
@@ -805,10 +806,10 @@ function WalletScreen(props: {
             <StatusLine label="Human verification" value="Completed" />
             <StatusLine label="Available balance" value={usd(props.balance)} />
             <StatusLine label="Payout method" value={props.paymentMethod} />
-            <StatusLine label="Document review" value="Pending" />
+            <StatusLine label="Manual review" value="Pending" />
           </div>
           <p className="mt-5 rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-800">
-            Local preview: document files were validated in the browser but were not transmitted. A secure KYC backend must be connected before production use.
+            Testing mode: document files are checked in this browser to continue the flow, but are not stored or uploaded by this demo version.
           </p>
         </section>
       </div>
@@ -841,7 +842,7 @@ function WalletScreen(props: {
           </div>
         </>}
         {step === 3 && <>
-          <StepHeading icon={<IdCard size={22} />} title="Select identity documents" text="Use clear, unedited images. Sensitive files are not stored by this local preview." />
+          <StepHeading icon={<IdCard size={22} />} title="Select identity documents" text="Use clear, unedited images. In this test version, files are checked locally and are not stored." />
           <select className="mb-3 h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold" value={idType} onChange={(event) => setIdType(event.target.value)}>
             <option>Driver's license</option>
             <option>State-issued photo ID</option>
@@ -861,7 +862,7 @@ function WalletScreen(props: {
           </div>
         </>}
         {step === 4 && <>
-          <StepHeading icon={<ShieldCheck size={22} />} title="Review and authorize" text="Confirm the request before it is submitted for identity and payout review." />
+          <StepHeading icon={<ShieldCheck size={22} />} title="Review and authorize" text="Confirm the request before it enters the manual review queue." />
           <div className="space-y-3 rounded-[8px] bg-[#F8FAFC] p-3 text-sm"><StatusLine label="Amount" value={usd(props.balance)} /><StatusLine label="Payout" value={props.paymentMethod} /><StatusLine label="Identity" value={legalName} /><StatusLine label="Photo ID" value={idType} /><StatusLine label="Facial check" value="Next step" /></div>
           <label className="mt-4 flex items-start gap-3 text-xs font-semibold leading-5 text-[#475569]"><input className="mt-0.5 h-5 w-5 shrink-0 accent-[#FE2C55]" type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />I confirm that the information is accurate and authorize identity verification for this withdrawal request.</label>
         </>}
@@ -1013,65 +1014,220 @@ function LabeledPaymentInput({ label, onChange, placeholder, value }: { label: s
 }
 
 function SupportScreen({ user }: { user: User }) {
+  type ChatStatus = "idle" | "waiting" | "online" | "reading" | "typing";
+  type ChatMessage = { from: "assistant" | "system" | "user"; text: string };
+
   const [message, setMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    { from: "support", text: `Hi ${user.name.split(" ")[0] || "there"}, your account is active and support is online. Ask me about access, withdrawals, refunds, daily audits, account security, or payout details.` },
-  ]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatStatus, setChatStatus] = useState<ChatStatus>("idle");
+  const [queuedMessages, setQueuedMessages] = useState<string[]>([]);
+  const requestInFlight = useRef(false);
+
+  useEffect(() => {
+    if (chatStatus !== "waiting") return;
+
+    const timer = window.setTimeout(() => {
+      setChatMessages((current) => [
+        ...current,
+        {
+          from: "system",
+          text: "Chloe from Task Partners Support joined the conversation.",
+        },
+        {
+          from: "assistant",
+          text: `Hi ${user.name.split(" ")[0] || "there"}, I am Chloe, the Task Partners virtual support assistant. I can help with general account, verification, refund, withdrawal, and technical questions.`,
+        },
+      ]);
+      setChatStatus("online");
+    }, 15_000);
+
+    return () => window.clearTimeout(timer);
+  }, [chatStatus, user.name]);
+
+  useEffect(() => {
+    if (chatStatus !== "online" || requestInFlight.current || !queuedMessages.length) return;
+    const combinedQuestion = queuedMessages.join("\n");
+    setQueuedMessages([]);
+    void requestSupportReply(combinedQuestion);
+  }, [chatStatus, queuedMessages]);
+
+  function startChat() {
+    setChatMessages([
+      {
+        from: "system",
+        text: "Automated intake: Please describe your issue. A support assistant will join shortly. Do not share passwords, payment card details, bank credentials, identity numbers, documents, or selfies in this chat.",
+      },
+    ]);
+    setChatStatus("waiting");
+  }
+
+  async function requestSupportReply(question: string) {
+    requestInFlight.current = true;
+    setChatStatus("reading");
+
+    const historySource =
+      chatMessages[chatMessages.length - 1]?.from === "user"
+        ? chatMessages
+        : [...chatMessages, { from: "user" as const, text: question }];
+    const history = historySource
+      .filter((item) => item.from !== "system")
+      .slice(-10)
+      .map((item) => ({
+        role: item.from === "user" ? ("user" as const) : ("assistant" as const),
+        text: item.text,
+      }));
+    const readingDelay = Math.min(4_500, Math.max(1_400, question.length * 28));
+    const startedAt = Date.now();
+    let reply = "";
+
+    try {
+      const response = await fetch("/api/public/support-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: user.name.split(" ")[0] || "customer",
+          messages: history,
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { reply?: string };
+      if (response.ok && data.reply) reply = data.reply;
+    } catch (error) {
+      console.error("[Support chat] request failed", error);
+    }
+
+    const remainingReadTime = Math.max(0, readingDelay - (Date.now() - startedAt));
+    await wait(remainingReadTime);
+    setChatStatus("typing");
+
+    const finalReply =
+      reply ||
+      getOfflineSupportReply(question);
+    await wait(Math.min(5_000, Math.max(1_500, finalReply.length * 18)));
+
+    setChatMessages((current) => [...current, { from: "assistant", text: finalReply }]);
+    requestInFlight.current = false;
+    setChatStatus("online");
+  }
 
   function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = message.trim();
-    if (!trimmed) return;
-    const reply = getSupportReply(trimmed);
-    setChatMessages((value) => [
-      ...value,
-      { from: "user", text: trimmed },
-      { from: "support", text: reply },
-    ]);
+    if (!trimmed || chatStatus === "idle") return;
+
+    setChatMessages((current) => [...current, { from: "user", text: trimmed }]);
     setMessage("");
+    if (chatStatus === "waiting" || requestInFlight.current) {
+      setQueuedMessages((current) => [...current, trimmed]);
+      return;
+    }
+    void requestSupportReply(trimmed);
   }
 
   return (
     <div className="space-y-4">
       <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#E0F2FE] text-[#2563EB]">
-            <ShieldCheck size={22} />
-          </div>
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black text-[#0F172A]">Support Center</h1>
-            <p className="mt-2 text-sm font-bold leading-6 text-[#475569]">
-              Get answers about audits, refund processing, withdrawal rules, and account verification.
-            </p>
+            <h2 className="text-lg font-black text-[#0F172A]">Live Support</h2>
+            <p className="mt-1 text-xs font-bold text-[#64748B]">Chat with Chloe, our virtual support assistant</p>
           </div>
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${chatStatus === "idle" ? "bg-slate-300" : chatStatus === "waiting" ? "animate-pulse bg-amber-400" : "bg-emerald-500"}`} />
         </div>
-      </section>
 
-      <section className="rounded-[8px] border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-emerald-600 shadow-sm">
-            <CheckCircle2 size={22} />
-          </div>
-          <div>
-            <h2 className="text-lg font-black text-emerald-900">Order & Access Status</h2>
-            <p className="mt-1 text-sm font-bold leading-6 text-emerald-800">
-              Your Task Partners access is active. Complete today&apos;s creator audits, keep your payout details updated, and contact support here before opening a billing dispute so we can resolve access, refund, or payout questions quickly.
+        {chatStatus === "idle" ? (
+          <div className="mt-4 rounded-[8px] border border-slate-200 bg-[#F8FAFC] p-4 text-center">
+            <img
+              alt="Chloe, Task Partners virtual support assistant"
+              className="mx-auto h-16 w-16 rounded-full border-2 border-white object-cover object-top shadow-md"
+              height="64"
+              loading="lazy"
+              src="/assets/chloe-task-partners.jpeg"
+              width="64"
+            />
+            <p className="mt-3 text-sm font-black text-[#0F172A]">Hi, I&apos;m Chloe</p>
+            <p className="mt-1 text-xs font-bold leading-5 text-[#64748B]">
+              Start a conversation with the Task Partners virtual support assistant.
             </p>
+            <button className="mt-4 h-12 w-full rounded-[8px] bg-[#FE2C55] text-sm font-black text-white transition-colors hover:bg-[#E9274F]" onClick={startChat} type="button">
+              Start live support
+            </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div aria-live="polite" className="mt-4 max-h-80 space-y-3 overflow-y-auto rounded-[8px] bg-[#F8FAFC] p-3">
+              {chatMessages.map((item, index) =>
+                item.from === "system" ? (
+                  <p className="mx-auto max-w-[94%] text-center text-[11px] font-bold leading-4 text-[#64748B]" key={`${item.from}-${index}`}>
+                    {item.text}
+                  </p>
+                ) : (
+                  <div className={`flex ${item.from === "user" ? "justify-end" : "justify-start"}`} key={`${item.from}-${index}`}>
+                    <div className={`flex max-w-[90%] items-end gap-2 ${item.from === "user" ? "" : ""}`}>
+                      {item.from === "assistant" && (
+                        <img
+                          alt=""
+                          aria-hidden="true"
+                          className="h-7 w-7 shrink-0 rounded-full border border-white object-cover object-top shadow-sm"
+                          height="28"
+                          src="/assets/chloe-task-partners.jpeg"
+                          width="28"
+                        />
+                      )}
+                      <div className={`${item.from === "user" ? "" : "space-y-1"}`}>
+                        {item.from === "assistant" && <p className="px-1 text-[10px] font-black uppercase text-[#64748B]">Chloe · Virtual Support</p>}
+                        <p className={`rounded-[8px] px-3 py-2 text-xs font-bold leading-5 ${item.from === "user" ? "bg-[#FE2C55] text-white" : "border border-slate-200 bg-white text-[#334155]"}`}>
+                          {item.text}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              )}
+              {chatStatus === "waiting" && (
+                <p className="text-center text-[11px] font-black text-amber-700">Connecting to support...</p>
+              )}
+              {(chatStatus === "reading" || chatStatus === "typing") && (
+                <div className="flex items-center gap-2 text-[11px] font-black text-[#64748B]">
+                  <Loader2 className="animate-spin text-[#25F4EE]" size={14} />
+                  Chloe is {chatStatus === "reading" ? "reading your message" : "typing"}...
+                </div>
+              )}
+            </div>
+            <form className="mt-3 flex gap-2" onSubmit={sendMessage}>
+              <input
+                aria-label="Support message"
+                className="h-12 min-w-0 flex-1 rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-3 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400 focus:border-[#25F4EE]"
+                maxLength={1200}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder={chatStatus === "waiting" ? "Describe your issue..." : "Type your message..."}
+                value={message}
+              />
+              <button aria-label="Send message" className="grid h-12 w-12 shrink-0 place-items-center rounded-[8px] bg-[#FE2C55] text-white disabled:bg-slate-300" disabled={!message.trim()} type="submit">
+                <Send size={18} />
+              </button>
+            </form>
+            <p className="mt-2 text-[10px] font-bold leading-4 text-[#64748B]">
+              Never send passwords, verification codes, card or bank details, identity numbers, documents, or selfies in chat.
+            </p>
+            <a className="mt-3 block text-center text-xs font-black text-[#2563EB] underline underline-offset-2" href="mailto:support@taskpartners.live?subject=Human%20support%20request">
+              Request human support
+            </a>
+          </>
+        )}
       </section>
 
       <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-black text-[#0F172A]">Frequently Asked Questions</h2>
         <div className="mt-4 space-y-3">
           {[
-            ["Why do I need to complete audits?", "Partner creator audits validate account activity and release your remaining pending withdrawal balance."],
-            ["Why is there a daily limit?", "The 6-video limit protects review quality, prevents automated behavior, and keeps the partner network compliant."],
-            ["Why is withdrawal locked at $4,000?", "New auditor accounts follow a financial security threshold before high-volume payouts can be requested."],
+            ["Why do I need to complete the video reviews?", "The six-video review is a one-time account activity check used to distinguish a person from automated traffic. It does not change your displayed balance."],
+            ["How many reviews are required?", "There are six reviews in the one-time human check. After all six are submitted, the withdrawal verification workflow becomes available."],
+            ["Why does withdrawal require verification?", "Withdrawal verification helps confirm payout ownership and account identity before a request can be reviewed. Never send documents or banking credentials through chat."],
+            ["How long does withdrawal review take?", "The dashboard may show an estimated review window of up to 7 US business days. Timing can vary, and support cannot guarantee approval or a specific payout date."],
             ["How long does the refund take?", "Confirmed refund details remain saved and processing. Because the payout goes through bank verification, payment network review, and account validation, the credit may take up to 15 business days."],
             ["I already paid. Where is my access?", "Your access is active inside this app. Sign in with the email used during registration and continue from the Tasks tab."],
-            ["What should I do before disputing a charge?", "Open this Support tab first. We can confirm access, explain the daily audit cycle, verify refund status, and help with payout details."],
-            ["Can I update my payout method?", "Yes. Go to Wallet or Refund, choose Cash App, PayPal, Venmo, Zelle, or Bank Transfer, then enter the requested details."],
+            ["What should I do about an unrecognized charge?", "Email support@taskpartners.live and contact your payment provider promptly. Do not share full card details or security codes in chat."],
+            ["Can I update my payout method?", "Yes. Open Wallet or Refund and follow the on-screen form. For account-specific changes or status, request human support."],
           ].map(([question, answer]) => (
             <div className="rounded-[8px] border border-slate-200 bg-[#F8FAFC] p-3" key={question}>
               <p className="text-sm font-black text-[#0F172A]">{question}</p>
@@ -1080,70 +1236,33 @@ function SupportScreen({ user }: { user: User }) {
           ))}
         </div>
       </section>
-
-      <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-black text-[#0F172A]">Live Chat</h2>
-        <div className="mt-4 max-h-72 space-y-2 overflow-y-auto rounded-[8px] bg-[#F8FAFC] p-3">
-          {chatMessages.map((item, index) => (
-            <div className={`flex ${item.from === "user" ? "justify-end" : "justify-start"}`} key={`${item.from}-${index}`}>
-              <p className={`max-w-[82%] rounded-[8px] px-3 py-2 text-xs font-bold leading-5 ${item.from === "user" ? "bg-[#FE2C55] text-white" : "bg-white text-[#475569] shadow-sm"}`}>
-                {item.text}
-              </p>
-            </div>
-          ))}
-        </div>
-        <form className="mt-3 flex gap-2" onSubmit={sendMessage}>
-          <input
-            className="min-w-0 flex-1 rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-3 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400"
-            onChange={(event) => setMessage(event.target.value)}
-            placeholder="Type your question..."
-            value={message}
-          />
-          <button className="h-12 rounded-[8px] bg-[#2563EB] px-4 text-sm font-black text-white" type="submit">
-            Send
-          </button>
-        </form>
-      </section>
     </div>
   );
 }
 
-function getSupportReply(question: string) {
+function wait(milliseconds: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+function getOfflineSupportReply(question: string) {
   const text = question.toLowerCase();
 
-  if (/(withdraw|withdrawal|cash out|payout|saque|4000|4,000)/.test(text)) {
-    return "I understand. Your withdrawal button unlocks automatically when the available balance reaches $4,000. Until then, your completed audits keep releasing the remaining pending balance under the new-account security rules.";
+  if (/(login|email|access|account|profile|sign in)/.test(text)) {
+    return "For access issues, confirm that you entered the same email used when your account was created. You can update basic information in Profile. If the account still does not load, email support@taskpartners.live with your name and account email only. Do not send your password.";
   }
-
-  if (/(refund|tax|37|37.12|reembolso|fee)/.test(text)) {
-    return "Your $37.12 refund is handled in the Refund tab. Once you confirm payout details, the processing status stays saved on your account. The refund goes through bank verification, payment network review, and account validation, so it may take up to 15 business days to post.";
+  if (/(withdraw|payout|cash out|balance|2800)/.test(text)) {
+    return "Complete the one-time six-video account check first. After it is complete, open Wallet and follow the withdrawal verification steps shown there. Account-specific approval or timing must be reviewed by human support at support@taskpartners.live.";
   }
-
-  if (/(daily|limit|6|tomorrow|amanha|hoje|today)/.test(text)) {
-    return "Each account can audit 6 videos per day. That limit protects review quality and prevents automated activity. If today's limit is reached, the next audit cycle unlocks after the daily reset.";
+  if (/(refund|charge|billing|payment|cancel)/.test(text)) {
+    return "Open the Refund tab to review or confirm the available refund details. For an account-specific refund, billing question, or unrecognized charge, email support@taskpartners.live. Do not send full card or bank information.";
   }
-
-  if (/(task|audit|video|review|avaliar|creator|criador)/.test(text)) {
-    return "To complete a creator audit, watch the full video until it ends, rate the content, answer the questions, and submit a comment with at least 3 real words. The reward is added right after validation.";
+  if (/(video|review|task|human check|verification)/.test(text)) {
+    return "The account check contains six video reviews and is completed once. Watch each video through the end, answer the review questions, and submit the form. It verifies account activity and does not change your displayed balance.";
   }
-
-  if (/(bank|routing|account|cash app|paypal|venmo|zelle|payment)/.test(text)) {
-    return "You can register Cash App, PayPal, Venmo, Zelle, or Bank Transfer. For Bank Transfer, enter your bank name, routing number, and account number before confirming.";
+  if (/(document|identity|selfie|id|driver|passport)/.test(text)) {
+    return "Document and identity steps must be completed only through the secure verification screens in Wallet. Never send identity documents, ID numbers, or selfies through chat. For a status review, contact support@taskpartners.live.";
   }
-
-  if (/(login|password|email|account|register|cadastro|senha)/.test(text)) {
-    return "Use your full name and email to access the dashboard. If the email is new, the account is created automatically. If it already exists, we load the saved account data.";
-  }
-
-  if (/(safe|secure|security|fraud|trust|seguro|confianca)/.test(text)) {
-    return "Task Partners uses account verification, daily limits, and payout thresholds to reduce automated activity and protect approved auditor balances.";
-  }
-
-  if (/(charge|dispute|billing|paid|access|order|purchase|refund me|cancel)/.test(text)) {
-    return "Your access is active in this app. Before opening a billing dispute, send us the issue here so support can verify access, refund status, or payout details and help resolve it quickly.";
-  }
-
-  return "I can help with withdrawals, refunds, daily audit limits, payout methods, login, account security, and creator review requirements. Could you tell me which one you need help with?";
+  return "I can help with account access, the six-video verification, withdrawals, refunds, and technical issues. Please tell me which screen you are on and what happened. Do not include passwords, card details, bank credentials, or identity documents.";
 }
 
 function ProfileScreen({ user, reviews, balance }: { user: User; reviews: Review[]; balance: number }) {

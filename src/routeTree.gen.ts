@@ -33,6 +33,7 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BackRedirectRouteImport } from './routes/back-redirect'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicSupportChatRouteImport } from './routes/api/public/support-chat'
 import { Route as ApiPublicSendAccessEmailRouteImport } from './routes/api/public/send-access-email'
 import { Route as ApiPublicCreatePixPaymentRouteImport } from './routes/api/public/create-pix-payment'
 import { Route as ApiPublicCheckPixStatusRouteImport } from './routes/api/public/check-pix-status'
@@ -157,6 +158,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSupportChatRoute = ApiPublicSupportChatRouteImport.update({
+  id: '/api/public/support-chat',
+  path: '/api/public/support-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSendAccessEmailRoute =
   ApiPublicSendAccessEmailRouteImport.update({
     id: '/api/public/send-access-email',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
+  '/api/public/support-chat': typeof ApiPublicSupportChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByTo {
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
+  '/api/public/support-chat': typeof ApiPublicSupportChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
+  '/api/public/support-chat': typeof ApiPublicSupportChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
     | '/api/public/send-access-email'
+    | '/api/public/support-chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
     | '/api/public/send-access-email'
+    | '/api/public/support-chat'
   id:
     | '__root__'
     | '/'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
     | '/api/public/send-access-email'
+    | '/api/public/support-chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -381,6 +393,7 @@ export interface RootRouteChildren {
   ApiPublicCheckPixStatusRoute: typeof ApiPublicCheckPixStatusRoute
   ApiPublicCreatePixPaymentRoute: typeof ApiPublicCreatePixPaymentRoute
   ApiPublicSendAccessEmailRoute: typeof ApiPublicSendAccessEmailRoute
+  ApiPublicSupportChatRoute: typeof ApiPublicSupportChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -553,6 +566,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/support-chat': {
+      id: '/api/public/support-chat'
+      path: '/api/public/support-chat'
+      fullPath: '/api/public/support-chat'
+      preLoaderRoute: typeof ApiPublicSupportChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/send-access-email': {
       id: '/api/public/send-access-email'
       path: '/api/public/send-access-email'
@@ -605,7 +625,18 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCheckPixStatusRoute: ApiPublicCheckPixStatusRoute,
   ApiPublicCreatePixPaymentRoute: ApiPublicCreatePixPaymentRoute,
   ApiPublicSendAccessEmailRoute: ApiPublicSendAccessEmailRoute,
+  ApiPublicSupportChatRoute: ApiPublicSupportChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
