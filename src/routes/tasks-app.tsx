@@ -377,12 +377,13 @@ function TaskPartnersApp() {
             <div className="shrink-0 rounded-[8px] bg-[#F1F5F9] px-3 py-2 text-right">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Human Check</p>
               <p className="text-lg font-black text-[#FE2C55]">{completedToday}/{DAILY_LIMIT}</p>
-              <p className="text-[10px] font-black text-[#475569]">{verificationComplete ? "Completed" : "One-time test"}</p>
+              <p className="text-[10px] font-black text-[#475569]">{verificationComplete ? "Completed" : "Required"}</p>
             </div>
           </div>
           <p className="mt-3 text-[11px] font-bold leading-4 text-[#475569]">
-            Complete one verification test to confirm that your account is operated by a real person.
+            Complete the human verification below to confirm that your account is operated by a real person.
           </p>
+
         </header>
 
         <div id="tasks-app-scroll" className="min-h-0 flex-1 overflow-y-auto scroll-smooth px-4 pb-28 pt-4">
