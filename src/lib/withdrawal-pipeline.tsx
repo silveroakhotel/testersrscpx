@@ -35,7 +35,7 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     label: "Additional Verification",
     badge: "Action required",
     headline: "Additional verification in progress",
-    text: "Your payout requires additional account verification. Complete the pending items below while our review team validates your account. This stage normally takes 3-5 business days.",
+    text: "Your payout requires additional account verification. Complete the pending items below so our review team can validate your account. Verification is completed within 5 business days of the request.",
   },
   {
     id: "compliance",
@@ -44,7 +44,7 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     label: "Compliance Review",
     badge: "Enhanced review",
     headline: "Your account is under enhanced review due to the withdrawal amount",
-    text: "High-value creator payouts go through Enhanced Due Diligence. Confirm the source of your funds below. This stage normally takes 5-7 business days.",
+    text: "High-value creator payouts go through Enhanced Due Diligence before approval. Confirm the source of your funds below. Enhanced review is completed within 7 business days.",
   },
   {
     id: "batch",
@@ -53,7 +53,7 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     label: "Payout Batch",
     badge: "Approved",
     headline: "Your withdrawal has been approved and is now in the next payout batch",
-    text: "Payouts are transmitted in scheduled batches every 10 days. Your funds are locked in for the next batch window and no further action is required from you.",
+    text: "Payouts are transmitted in scheduled batches. Your funds are locked in for the next batch window, transmitted within 7 business days. No further action is required from you.",
   },
   {
     id: "released",
@@ -65,6 +65,7 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     text: "Your payout batch has been transmitted. Depending on your provider, the credit posts within 1-3 business days.",
   },
 ];
+
 
 const WITHDRAWAL_STATE_PREFIX = "ttp_withdrawal_state:";
 
