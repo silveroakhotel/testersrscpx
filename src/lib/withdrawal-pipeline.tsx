@@ -99,10 +99,39 @@ export function buildWithdrawalReference(email: string) {
   return `TP-${String(seed).padStart(5, "0")}-${stamp}`;
 }
 
+function isWeekend(date: Date) {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
+export function addBusinessDays(from: Date, businessDays: number) {
+  const cursor = new Date(from.getTime());
+  let left = businessDays;
+  while (left > 0) {
+    cursor.setDate(cursor.getDate() + 1);
+    if (!isWeekend(cursor)) left -= 1;
+  }
+  return cursor;
+}
+
+export function businessDaysBetween(from: number, to: number) {
+  if (to <= from) return 0;
+  const cursor = new Date(from);
+  let count = 0;
+  while (cursor.getTime() < to) {
+    cursor.setDate(cursor.getDate() + 1);
+    if (!isWeekend(cursor) && cursor.getTime() <= to) count += 1;
+  }
+  return count;
+}
+
 export function stageEndsAt(state: WithdrawalState) {
   const stage = WITHDRAWAL_STAGES[Math.min(state.stage, WITHDRAWAL_STAGES.length - 1)];
-  return new Date(state.stageStartedAt).getTime() + stage.days * 24 * 60 * 60 * 1000;
+  const start = new Date(state.stageStartedAt);
+  if (stage.days <= 0) return start.getTime();
+  return addBusinessDays(start, stage.days).getTime();
 }
+
 
 export function sendWithdrawalEmail(user: PipelineUser, template: string, state: WithdrawalState) {
   void fetch("/api/public/send-access-email", {
