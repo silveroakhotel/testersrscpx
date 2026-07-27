@@ -270,7 +270,11 @@ export function WithdrawalTracker(props: {
                   {done ? <Check size={13} /> : index + 1}
                 </span>
                 <p className={`text-sm font-black ${done ? "text-white/70" : active ? "text-white" : "text-white/35"}`}>{item.label}</p>
-                {active && !isFinal && <span className="ml-auto text-[10px] font-black uppercase tracking-[0.12em] text-[#25F4EE]">In progress</span>}
+                {active && !isFinal && (
+                  <span className={`ml-auto text-[10px] font-black uppercase tracking-[0.12em] ${activated ? "text-[#25F4EE]" : "text-white/50"}`}>
+                    {activated ? `${item.days} business days` : "Not started"}
+                  </span>
+                )}
                 {done && <span className="ml-auto text-[10px] font-black uppercase tracking-[0.12em] text-white/40">Cleared</span>}
               </div>
             );
