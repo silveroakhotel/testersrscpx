@@ -189,7 +189,7 @@ export function WithdrawalTracker(props: {
   const activated = state.stageActivated !== false;
   const endsAt = stageEndsAt(state);
   const remaining = Math.max(0, endsAt - now);
-  const businessLeft = activated ? businessDaysBetween(now, endsAt) : stage.days;
+  
   const startedAt = new Date(state.stageStartedAt).getTime();
   const progressPct = isFinal ? 100 : !activated ? 0 : Math.min(100, Math.max(4, ((now - startedAt) / Math.max(1, endsAt - startedAt)) * 100));
 
