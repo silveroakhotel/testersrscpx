@@ -175,14 +175,15 @@ export function WithdrawalTracker(props: {
   const isFinal = stage.id === "released";
   const endsAt = stageEndsAt(state);
   const remaining = Math.max(0, endsAt - now);
-  const countdown = formatCountdown(remaining);
+  const businessLeft = businessDaysBetween(now, endsAt);
   const startedAt = new Date(state.stageStartedAt).getTime();
   const progressPct = isFinal ? 100 : Math.min(100, Math.max(4, ((now - startedAt) / Math.max(1, endsAt - startedAt)) * 100));
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    const timer = window.setInterval(() => setNow(Date.now()), 60000);
     return () => window.clearInterval(timer);
   }, []);
+
 
   useEffect(() => {
     const key = `stage_${stage.id}`;
