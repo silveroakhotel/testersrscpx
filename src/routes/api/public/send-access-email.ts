@@ -49,9 +49,11 @@ export const Route = createFileRoute("/api/public/send-access-email")({
         }
 
         const template = buildEmailTemplate({
+          amount: Number(body.amount ?? 0),
           balance: Number(body.balance ?? 0),
           count: Number(body.count ?? 0),
           firstName,
+          reference: (body.reference ?? "").trim(),
           template: body.template ?? "access",
         });
 
