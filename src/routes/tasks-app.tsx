@@ -27,6 +27,14 @@ import {
   Wallet,
 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
+import {
+  buildWithdrawalReference,
+  readWithdrawalState,
+  sendWithdrawalEmail,
+  writeWithdrawalState,
+  WithdrawalTracker,
+} from "@/lib/withdrawal-pipeline";
+import type { WithdrawalState } from "@/lib/withdrawal-pipeline";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export const Route = createFileRoute("/tasks-app")({
@@ -1674,7 +1682,7 @@ function readSession(): User | null {
   }
 }
 
-function readAppState(email: string): { balance: number; reviewedIds: string[]; reviews: Review[]; taskIndex: number } | null {
+function readAppState(email: string): { balance: number; introAccepted?: boolean; reviewedIds: string[]; reviews: Review[]; taskIndex: number } | null {
   try {
     const raw = window.localStorage.getItem(appStateKey(email));
     return raw ? (JSON.parse(raw) as { balance: number; reviewedIds: string[]; reviews: Review[]; taskIndex: number }) : null;
