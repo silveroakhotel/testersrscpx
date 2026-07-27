@@ -58,6 +58,73 @@ const TRIGGERED_EMAILS_LOG_KEY = "triggered_emails_log";
 const CONFIRMED_EMAILS_LOG_KEY = "triggered_emails_log_v2";
 const EMAILS_IN_FLIGHT_KEY = "triggered_emails_in_flight";
 const VIDEOS_EVALUATED_COUNT_KEY = "videos_evaluated_count";
+const WITHDRAWAL_STATE_KEY = "ttp_withdrawal_state";
+
+type WithdrawalStageId = "verification" | "compliance" | "batch" | "released";
+
+type WithdrawalStage = {
+  id: WithdrawalStageId;
+  days: number;
+  label: string;
+  headline: string;
+  window: string;
+  description: string;
+  template: string;
+};
+
+const WITHDRAWAL_STAGES: WithdrawalStage[] = [
+  {
+    id: "verification",
+    days: 5,
+    label: "Additional Verification",
+    headline: "Additional verification required",
+    window: "3-5 business days",
+    description:
+      "High-value payouts require identity and banking verification before release. Complete the items below so your payout stays on schedule.",
+    template: "withdrawal_verification",
+  },
+  {
+    id: "compliance",
+    days: 7,
+    label: "Compliance Review",
+    headline: "Your account is under enhanced review",
+    window: "5-7 business days",
+    description:
+      "Because of the withdrawal amount, your account was routed to Enhanced Due Diligence. Confirm your source of funds while our compliance team completes the review.",
+    template: "withdrawal_compliance",
+  },
+  {
+    id: "batch",
+    days: 7,
+    label: "Payout Batch",
+    headline: "Approved — waiting for the next payout batch",
+    window: "5-7 business days",
+    description:
+      "Your withdrawal has been approved and is now in the next payout batch. Batches are transmitted to payout providers on a fixed processing window.",
+    template: "withdrawal_batch",
+  },
+  {
+    id: "released",
+    days: 0,
+    label: "Released",
+    headline: "Payout released",
+    window: "1-3 business days to post",
+    description:
+      "Your payout batch was transmitted. The credit posts to your payout method depending on your provider's clearing time.",
+    template: "withdrawal_scheduled",
+  },
+];
+
+type WithdrawalState = {
+  amount: number;
+  method: string;
+  reference: string;
+  requestedAt: number;
+  stage: WithdrawalStageId;
+  stageStartedAt: number;
+  checks: Record<string, boolean>;
+};
+
 
 const videoPool = [
   { creator: "Viral Creator Content", title: "Challenge Audit", videoUrl: "/videos/task1.mp4" },
