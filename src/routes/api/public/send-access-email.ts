@@ -1,12 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-type EmailTemplate = "access" | "email_3" | "email_6" | "email_consistency" | "email_42";
+type EmailTemplate =
+  | "access"
+  | "email_3"
+  | "email_6"
+  | "email_consistency"
+  | "email_42"
+  | "withdrawal_requested"
+  | "withdrawal_verification"
+  | "withdrawal_compliance"
+  | "withdrawal_batch"
+  | "withdrawal_scheduled";
 
 type AccessEmailBody = {
+  amount?: number;
   balance?: number;
   count?: number;
   email?: string;
   name?: string;
+  reference?: string;
   template?: EmailTemplate;
 };
 
