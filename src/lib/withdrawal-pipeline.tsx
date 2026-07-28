@@ -269,7 +269,8 @@ export function WithdrawalTracker(props: {
 
       <section className="mt-4 rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-black leading-6 text-[#0F172A]">{stage.headline}</h2>
-        <p className="mt-2 text-sm font-semibold leading-6 text-[#475569]">{stage.text}</p>
+
+
 
         {stage.id === "verification" && (
           <div className="mt-4 space-y-3">
