@@ -47,7 +47,7 @@ export const Route = createFileRoute("/api/public/support-chat")({
           return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
         }
 
-        const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+        const model = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 20_000);
 
@@ -138,6 +138,14 @@ Safety and accuracy rules:
 
 function buildFallbackReply(question: string, firstName: string) {
   const text = question.toLowerCase();
+
+  if (/(your name|who are you|what.*name|qual.*nome|como.*chama|quem.*voce|quem.*você|nome)/.test(text)) {
+    return `My name is Chloe, ${firstName}. I am here with Task Partners Support to help with access, Wallet verification, refunds, and technical issues. Tell me what you need help with.`;
+  }
+
+  if (/(hello|hi|hey|oi|ola|olá|bom dia|boa tarde|boa noite)/.test(text)) {
+    return `Hi ${firstName}, I am Chloe from Task Partners Support. Tell me which screen you are on and what you need help with.`;
+  }
 
   if (/(wallet|withdraw|withdrawal|payout|cash out|balance|2800|2,800)/.test(text)) {
     return `${firstName}, open Wallet after completing the six-video human check. If the withdrawal request is already started, follow the current verification stage shown on screen and keep the same payout method updated. For account-specific status, contact ${SUPPORT_EMAIL}.`;
