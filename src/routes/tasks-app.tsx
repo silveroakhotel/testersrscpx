@@ -1270,9 +1270,14 @@ function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (fil
   async function openCamera() {
     setMessage("");
     onCapture(null);
-    if (!navigator.mediaDevices?.getUserMedia) {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setStatus("retry");
-      setMessage("Live camera is unavailable in this browser. Use the device camera option below.");
+      setMessage("Live camera is unavailable in this browser. Tap 'Use Device Camera' below to continue.");
+      return;
+    }
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setStatus("retry");
+      setMessage("Camera requires a secure connection. Tap 'Use Device Camera' below to continue.");
       return;
     }
     try {
@@ -1288,9 +1293,16 @@ function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (fil
         videoRef.current.srcObject = stream;
         void videoRef.current.play();
       });
-    } catch {
+    } catch (error) {
+      const name = (error as { name?: string })?.name ?? "";
       setStatus("retry");
-      setMessage("Camera access was not available. Allow camera permission or use the device camera option.");
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setMessage("Camera permission was denied. Enable camera access in your browser settings, or tap 'Use Device Camera' below.");
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        setMessage("No front camera detected. Tap 'Use Device Camera' below to take the selfie with your device app.");
+      } else {
+        setMessage("Camera could not start. Tap 'Use Device Camera' below to continue.");
+      }
     }
   }
 
@@ -1368,7 +1380,7 @@ function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (fil
         ) : status !== "checking" ? (
           <button className="flex h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#0F172A] text-sm font-black text-white shadow-[3px_3px_0_#25F4EE]" onClick={openCamera} type="button"><Camera size={18} /> {status === "captured" ? "Retake Final Selfie" : status === "calibration" ? "Take Final Selfie" : "Open Live Camera"}</button>
         ) : null}
-        {(status === "retry" || typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) && (
+        {status !== "camera" && status !== "checking" && (
           <label className="mt-3 flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-[#F1F5F9] text-sm font-black">
             Use Device Camera
             <input className="sr-only" type="file" accept="image/*" capture="user" onChange={(event) => {
