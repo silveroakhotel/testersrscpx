@@ -1011,12 +1011,35 @@ function SupportScreen({ user }: { user: User }) {
   type ChatStatus = "idle" | "online" | "reading" | "typing";
   type ChatMessage = { from: "assistant" | "system" | "user"; text: string };
 
+  const chatStorageKey = `ttp_support_chat:${user.email.toLowerCase()}`;
   const [message, setMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatStatus, setChatStatus] = useState<ChatStatus>("idle");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(chatStorageKey) || "[]") as ChatMessage[];
+      return Array.isArray(saved) ? saved.filter((item) => item?.from && item?.text).slice(-40) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [chatStatus, setChatStatus] = useState<ChatStatus>(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(chatStorageKey) || "[]") as ChatMessage[];
+      return Array.isArray(saved) && saved.length ? "online" : "idle";
+    } catch {
+      return "idle";
+    }
+  });
   const [queuedMessages, setQueuedMessages] = useState<string[]>([]);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const requestInFlight = useRef(false);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(chatStorageKey, JSON.stringify(chatMessages.slice(-40)));
+    } catch {
+      // Keep chat working in memory if storage is unavailable.
+    }
+  }, [chatMessages, chatStorageKey]);
 
   useEffect(() => {
     const node = chatScrollRef.current;
@@ -1195,26 +1218,6 @@ function SupportScreen({ user }: { user: User }) {
         )}
       </section>
 
-      <section className="rounded-[8px] border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-black text-[#0F172A]">Frequently Asked Questions</h2>
-        <div className="mt-4 space-y-3">
-          {[
-            ["Why do I need to complete the video reviews?", "The six-video review is a one-time account activity check used to distinguish a person from automated traffic. It does not change your displayed balance."],
-            ["How many reviews are required?", "There are six reviews in the one-time human check. After all six are submitted, the withdrawal verification workflow becomes available."],
-            ["Why does withdrawal require verification?", "Withdrawal verification helps confirm payout ownership and account identity before a request can be reviewed. Never send documents or banking credentials through chat."],
-            ["How long does withdrawal review take?", "The dashboard may show an estimated review window of up to 7 US business days. Timing can vary, and support cannot guarantee approval or a specific payout date."],
-            ["How long does the refund take?", "Confirmed refund details remain saved and processing. Because the payout goes through bank verification, payment network review, and account validation, the credit may take up to 15 business days."],
-            ["I already paid. Where is my access?", "Your access is active inside this app. Sign in with the email used during registration and continue from the Tasks tab."],
-            ["What should I do about an unrecognized charge?", "Email support@taskpartners.live and contact your payment provider promptly. Do not share full card details or security codes in chat."],
-            ["Can I update my payout method?", "Yes. Open Wallet or Refund and follow the on-screen form. For account-specific changes or status, request human support."],
-          ].map(([question, answer]) => (
-            <div className="rounded-[8px] border border-slate-200 bg-[#F8FAFC] p-3" key={question}>
-              <p className="text-sm font-black text-[#0F172A]">{question}</p>
-              <p className="mt-1 text-xs font-bold leading-5 text-[#475569]">{answer}</p>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

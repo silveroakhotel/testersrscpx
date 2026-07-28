@@ -17,6 +17,23 @@ const MAX_MESSAGE_LENGTH = 1200;
 export const Route = createFileRoute("/api/public/support-chat")({
   server: {
     handlers: {
+      GET: async ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get("debug") !== "1") {
+          return Response.json({ ok: true });
+        }
+
+        return Response.json({
+          geminiConfigured: Boolean(getGeminiApiKey()),
+          model: getGeminiModel(),
+          acceptedSecretNames: [
+            "GEMINI_API_KEY",
+            "GOOGLE_API_KEY",
+            "GOOGLE_GENERATIVE_AI_API_KEY",
+            "GENAI_API_KEY",
+          ],
+        });
+      },
       POST: async ({ request }) => {
         let body: SupportChatBody;
         try {
@@ -48,7 +65,7 @@ export const Route = createFileRoute("/api/public/support-chat")({
           return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
         }
 
-        const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+        const model = getGeminiModel();
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 20_000);
 
@@ -122,6 +139,10 @@ function getGeminiApiKey() {
     process.env.GENAI_API_KEY ||
     ""
   ).trim();
+}
+
+function getGeminiModel() {
+  return (process.env.GEMINI_MODEL || "gemini-2.5-flash-lite").trim();
 }
 
 function buildSystemInstruction(firstName: string) {
