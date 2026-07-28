@@ -261,33 +261,10 @@ export function WithdrawalTracker(props: {
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-gradient-to-r from-[#25F4EE] to-[#FE2C55]" style={{ width: `${progressPct}%` }} />
               </div>
-              <p className="mt-2 flex items-center gap-1 text-[11px] font-bold text-white/60">
-                <Timer size={13} /> Estimated completion by {longDate(new Date(endsAt))} (business days only, Mon-Fri)
-              </p>
             </>
           )}
         </div>
 
-        <div className="mt-5 space-y-3">
-          {WITHDRAWAL_STAGES.map((item, index) => {
-            const done = index < stageIndex;
-            const active = index === stageIndex;
-            return (
-              <div key={item.id} className="flex items-center gap-3">
-                <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-black ${done ? "bg-[#25F4EE] text-black" : active ? "bg-[#FE2C55] text-white" : "bg-white/10 text-white/40"}`}>
-                  {done ? <Check size={13} /> : index + 1}
-                </span>
-                <p className={`text-sm font-black ${done ? "text-white/70" : active ? "text-white" : "text-white/35"}`}>{item.label}</p>
-                {active && !isFinal && (
-                  <span className={`ml-auto text-[10px] font-black uppercase tracking-[0.12em] ${activated ? "text-[#25F4EE]" : "text-white/50"}`}>
-                    {activated ? `${item.days} business days` : "Not started"}
-                  </span>
-                )}
-                {done && <span className="ml-auto text-[10px] font-black uppercase tracking-[0.12em] text-white/40">Cleared</span>}
-              </div>
-            );
-          })}
-        </div>
       </section>
 
       <section className="mt-4 rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
