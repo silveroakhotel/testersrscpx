@@ -6,6 +6,7 @@ type ChatMessage = {
 };
 
 type SupportChatBody = {
+  debug?: boolean;
   messages?: ChatMessage[];
   firstName?: string;
 };
@@ -40,6 +41,19 @@ export const Route = createFileRoute("/api/public/support-chat")({
           body = (await request.json()) as SupportChatBody;
         } catch {
           return Response.json({ error: "invalid_json" }, { status: 400 });
+        }
+
+        if (body.debug) {
+          return Response.json({
+            geminiConfigured: Boolean(getGeminiApiKey()),
+            model: getGeminiModel(),
+            acceptedSecretNames: [
+              "GEMINI_API_KEY",
+              "GOOGLE_API_KEY",
+              "GOOGLE_GENERATIVE_AI_API_KEY",
+              "GENAI_API_KEY",
+            ],
+          });
         }
 
         const messages = (body.messages ?? [])
