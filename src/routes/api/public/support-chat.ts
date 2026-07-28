@@ -42,12 +42,13 @@ export const Route = createFileRoute("/api/public/support-chat")({
           .trim()
           .slice(0, 50) || "customer";
         const lastQuestion = messages[messages.length - 1]?.text ?? "";
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = getGeminiApiKey();
         if (!apiKey) {
+          console.error("[Gemini support] missing API key. Expected GEMINI_API_KEY.");
           return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
         }
 
-        const model = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+        const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 20_000);
 
@@ -112,6 +113,16 @@ export const Route = createFileRoute("/api/public/support-chat")({
     },
   },
 });
+
+function getGeminiApiKey() {
+  return (
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GENAI_API_KEY ||
+    ""
+  ).trim();
+}
 
 function buildSystemInstruction(firstName: string) {
   return `
