@@ -1,4 +1,4 @@
-import { Check, FileCheck2, Landmark, MapPin, ReceiptText, ShieldCheck, Timer } from "lucide-react";
+import { Check, FileCheck2, Landmark, MapPin, ReceiptText, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
@@ -261,38 +261,16 @@ export function WithdrawalTracker(props: {
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full bg-gradient-to-r from-[#25F4EE] to-[#FE2C55]" style={{ width: `${progressPct}%` }} />
               </div>
-              <p className="mt-2 flex items-center gap-1 text-[11px] font-bold text-white/60">
-                <Timer size={13} /> Estimated completion by {longDate(new Date(endsAt))} (business days only, Mon-Fri)
-              </p>
             </>
           )}
         </div>
 
-        <div className="mt-5 space-y-3">
-          {WITHDRAWAL_STAGES.map((item, index) => {
-            const done = index < stageIndex;
-            const active = index === stageIndex;
-            return (
-              <div key={item.id} className="flex items-center gap-3">
-                <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-black ${done ? "bg-[#25F4EE] text-black" : active ? "bg-[#FE2C55] text-white" : "bg-white/10 text-white/40"}`}>
-                  {done ? <Check size={13} /> : index + 1}
-                </span>
-                <p className={`text-sm font-black ${done ? "text-white/70" : active ? "text-white" : "text-white/35"}`}>{item.label}</p>
-                {active && !isFinal && (
-                  <span className={`ml-auto text-[10px] font-black uppercase tracking-[0.12em] ${activated ? "text-[#25F4EE]" : "text-white/50"}`}>
-                    {activated ? `${item.days} business days` : "Not started"}
-                  </span>
-                )}
-                {done && <span className="ml-auto text-[10px] font-black uppercase tracking-[0.12em] text-white/40">Cleared</span>}
-              </div>
-            );
-          })}
-        </div>
       </section>
 
       <section className="mt-4 rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-black leading-6 text-[#0F172A]">{stage.headline}</h2>
-        <p className="mt-2 text-sm font-semibold leading-6 text-[#475569]">{stage.text}</p>
+
+
 
         {stage.id === "verification" && (
           <div className="mt-4 space-y-3">
@@ -376,7 +354,7 @@ export function WithdrawalTracker(props: {
           <div className="mt-4 space-y-3">
             <div className="rounded-[8px] border border-emerald-200 bg-emerald-50 p-4">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">Batch window</p>
-              <p className="mt-1 text-sm font-black text-emerald-800">Next transmission: {longDate(new Date(endsAt))}</p>
+              <p className="mt-1 text-sm font-black text-emerald-800">Your payout is locked into the next scheduled batch.</p>
               <p className="mt-2 text-xs font-semibold leading-5 text-emerald-800">
                 Batches are transmitted in the next scheduled window. Your withdrawal is locked in and cannot be cancelled.
               </p>
