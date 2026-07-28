@@ -44,9 +44,12 @@ export const Route = createFileRoute("/api/public/support-chat")({
         }
 
         if (body.debug) {
+          const apiKey = getGeminiApiKey();
+          const provider = apiKey ? await testGeminiProvider(apiKey) : null;
           return Response.json({
-            geminiConfigured: Boolean(getGeminiApiKey()),
+            geminiConfigured: Boolean(apiKey),
             model: getGeminiModel(),
+            provider,
             acceptedSecretNames: [
               "GEMINI_API_KEY",
               "GOOGLE_API_KEY",
@@ -76,7 +79,7 @@ export const Route = createFileRoute("/api/public/support-chat")({
         const apiKey = getGeminiApiKey();
         if (!apiKey) {
           console.error("[Gemini support] missing API key. Expected GEMINI_API_KEY.");
-          return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
+          return Response.json({ reply: buildFallbackReply(lastQuestion, firstName), source: "fallback_missing_key" });
         }
 
         const model = getGeminiModel();
@@ -120,7 +123,7 @@ export const Route = createFileRoute("/api/public/support-chat")({
 
           if (!response.ok) {
             console.error("[Gemini support] request failed", response.status, data.error?.message ?? "");
-            return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
+            return Response.json({ reply: buildFallbackReply(lastQuestion, firstName), source: "fallback_provider_error" });
           }
 
           const reply = data.candidates?.[0]?.content?.parts
@@ -129,14 +132,14 @@ export const Route = createFileRoute("/api/public/support-chat")({
             .trim();
 
           if (!reply) {
-            return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
+            return Response.json({ reply: buildFallbackReply(lastQuestion, firstName), source: "fallback_empty_reply" });
           }
 
-          return Response.json({ reply });
+          return Response.json({ reply, source: "gemini" });
         } catch (error) {
           const reason = error instanceof Error ? error.name : "unknown";
           console.error("[Gemini support] unavailable", reason);
-          return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
+          return Response.json({ reply: buildFallbackReply(lastQuestion, firstName), source: "fallback_unavailable" });
         } finally {
           clearTimeout(timeout);
         }
@@ -157,6 +160,44 @@ function getGeminiApiKey() {
 
 function getGeminiModel() {
   return (process.env.GEMINI_MODEL || "gemini-2.5-flash-lite").trim();
+}
+
+async function testGeminiProvider(apiKey: string) {
+  const model = getGeminiModel();
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: "Reply with OK." }] }],
+          generationConfig: { maxOutputTokens: 8, temperature: 0 },
+        }),
+        signal: controller.signal,
+      },
+    );
+    clearTimeout(timeout);
+    const data = (await response.json().catch(() => ({}))) as { error?: { message?: string; status?: string } };
+    return {
+      ok: response.ok,
+      status: response.status,
+      errorStatus: data.error?.status ?? null,
+      errorMessage: data.error?.message ? data.error.message.slice(0, 180) : null,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      errorStatus: error instanceof Error ? error.name : "unknown",
+      errorMessage: error instanceof Error ? error.message.slice(0, 180) : "Provider request failed",
+    };
+  }
 }
 
 function buildSystemInstruction(firstName: string) {
