@@ -1,4 +1,4 @@
-import { Check, FileCheck2, Landmark, MapPin, ReceiptText, ShieldCheck, Timer } from "lucide-react";
+import { Check, FileCheck2, Landmark, MapPin, ReceiptText, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
