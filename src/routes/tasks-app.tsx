@@ -1380,7 +1380,7 @@ function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (fil
         ) : status !== "checking" ? (
           <button className="flex h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-[#0F172A] text-sm font-black text-white shadow-[3px_3px_0_#25F4EE]" onClick={openCamera} type="button"><Camera size={18} /> {status === "captured" ? "Retake Final Selfie" : status === "calibration" ? "Take Final Selfie" : "Open Live Camera"}</button>
         ) : null}
-        {(status === "retry" || typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) && (
+        {status !== "camera" && status !== "checking" && (
           <label className="mt-3 flex h-12 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-[#F1F5F9] text-sm font-black">
             Use Device Camera
             <input className="sr-only" type="file" accept="image/*" capture="user" onChange={(event) => {
