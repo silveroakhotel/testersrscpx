@@ -354,7 +354,7 @@ export function WithdrawalTracker(props: {
           <div className="mt-4 space-y-3">
             <div className="rounded-[8px] border border-emerald-200 bg-emerald-50 p-4">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">Batch window</p>
-              <p className="mt-1 text-sm font-black text-emerald-800">Next transmission: {longDate(new Date(endsAt))}</p>
+              <p className="mt-1 text-sm font-black text-emerald-800">Your payout is locked into the next scheduled batch.</p>
               <p className="mt-2 text-xs font-semibold leading-5 text-emerald-800">
                 Batches are transmitted in the next scheduled window. Your withdrawal is locked in and cannot be cancelled.
               </p>
