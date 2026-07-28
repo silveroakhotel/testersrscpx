@@ -1,5 +1,3 @@
-import { Check, FileCheck2, Landmark, MapPin, ReceiptText, ShieldCheck } from "lucide-react";
-import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 export type PipelineUser = { name: string; email: string };
@@ -221,10 +219,6 @@ export function WithdrawalTracker(props: {
     onChange({ ...state, stageActivated: true, stageStartedAt: new Date().toISOString() });
   }
 
-  function toggleTask(key: string) {
-    onChange({ ...state, tasks: { ...state.tasks, [key]: !state.tasks[key] } });
-  }
-
   return (
     <div>
       <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Withdrawal Status</h1>
@@ -286,34 +280,6 @@ export function WithdrawalTracker(props: {
           Requested on {longDate(new Date(state.requestedAt))} · Reference {state.reference}. Status updates are also sent to your email at every stage.
         </p>
       </section>
-    </div>
-  );
-}
-
-function TrackerTask(props: {
-  actionLabel: string;
-  done: boolean;
-  icon: ReactNode;
-  onAction: () => void;
-  text: string;
-  title: string;
-}) {
-  return (
-    <div className={`rounded-[8px] border p-4 ${props.done ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-[#F8FAFC]"}`}>
-      <div className="flex items-center gap-2 text-[#0F172A]">
-        <span className={props.done ? "text-emerald-600" : "text-[#FE2C55]"}>{props.icon}</span>
-        <p className="text-sm font-black">{props.title}</p>
-        {props.done && <Check className="ml-auto text-emerald-600" size={16} />}
-      </div>
-      <p className="mt-1 text-xs font-semibold leading-5 text-[#475569]">{props.text}</p>
-      <button
-        className={`mt-3 h-11 w-full rounded-[8px] text-sm font-black ${props.done ? "bg-emerald-600 text-white" : "bg-[#010101] text-white"}`}
-        disabled={props.done}
-        onClick={props.onAction}
-        type="button"
-      >
-        {props.actionLabel}
-      </button>
     </div>
   );
 }
