@@ -269,10 +269,9 @@ export function WithdrawalTracker(props: {
 
       <section className="mt-4 rounded-[8px] border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-black leading-6 text-[#0F172A]">{stage.headline}</h2>
+        <p className="mt-2 text-sm font-semibold leading-6 text-[#475569]">{stage.text}</p>
 
-
-
-        {stage.id === "verification" && (
+        {activated && stage.id === "verification" && (
           <div className="mt-4 space-y-3">
             <TrackerTask
               done={Boolean(state.tasks.address)}
@@ -326,7 +325,7 @@ export function WithdrawalTracker(props: {
           </div>
         )}
 
-        {stage.id === "compliance" && (
+        {activated && stage.id === "compliance" && (
           <div className="mt-4 space-y-3">
             <TrackerTask
               done={Boolean(state.tasks.source)}
@@ -350,7 +349,7 @@ export function WithdrawalTracker(props: {
           </div>
         )}
 
-        {stage.id === "batch" && (
+        {activated && stage.id === "batch" && (
           <div className="mt-4 space-y-3">
             <div className="rounded-[8px] border border-emerald-200 bg-emerald-50 p-4">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">Batch window</p>
