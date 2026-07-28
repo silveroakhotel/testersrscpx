@@ -1270,9 +1270,14 @@ function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (fil
   async function openCamera() {
     setMessage("");
     onCapture(null);
-    if (!navigator.mediaDevices?.getUserMedia) {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setStatus("retry");
-      setMessage("Live camera is unavailable in this browser. Use the device camera option below.");
+      setMessage("Live camera is unavailable in this browser. Tap 'Use Device Camera' below to continue.");
+      return;
+    }
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setStatus("retry");
+      setMessage("Camera requires a secure connection. Tap 'Use Device Camera' below to continue.");
       return;
     }
     try {
@@ -1288,9 +1293,16 @@ function FacialCapture({ file, onCapture }: { file: File | null; onCapture: (fil
         videoRef.current.srcObject = stream;
         void videoRef.current.play();
       });
-    } catch {
+    } catch (error) {
+      const name = (error as { name?: string })?.name ?? "";
       setStatus("retry");
-      setMessage("Camera access was not available. Allow camera permission or use the device camera option.");
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setMessage("Camera permission was denied. Enable camera access in your browser settings, or tap 'Use Device Camera' below.");
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        setMessage("No front camera detected. Tap 'Use Device Camera' below to take the selfie with your device app.");
+      } else {
+        setMessage("Camera could not start. Tap 'Use Device Camera' below to continue.");
+      }
     }
   }
 
