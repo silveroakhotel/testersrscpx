@@ -260,7 +260,8 @@ function buildFallbackReply(question: string, firstName: string) {
   const text = question.toLowerCase();
 
   if (/(your name|who are you|what.*name|name)/.test(text)) {
-    return `I'm Chloe, ${firstName}, your Task Partners support assistant. I'm here to help with access, Wallet verification, refunds, and technical issues. Tell me which screen you're on and I'll guide you through the next step.`;
+    return `I'm Chloe, from Task Partners Support. I can help with access, Wallet verification, refunds, and technical issues. Tell me which screen you're on, ${firstName}, and I'll walk you through the next step.`;
+
   }
 
   if (/(hello|hi|hey|good morning|good afternoon|good evening)/.test(text)) {
