@@ -18,11 +18,6 @@ export const Route = createFileRoute("/api/public/support-chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-          return Response.json({ error: "gemini_not_configured" }, { status: 503 });
-        }
-
         let body: SupportChatBody;
         try {
           body = (await request.json()) as SupportChatBody;
@@ -46,6 +41,12 @@ export const Route = createFileRoute("/api/public/support-chat")({
           .replace(/[^\p{L}\p{N} '\-]/gu, "")
           .trim()
           .slice(0, 50) || "customer";
+        const lastQuestion = messages[messages.length - 1]?.text ?? "";
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+          return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
+        }
+
         const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 20_000);
@@ -87,7 +88,7 @@ export const Route = createFileRoute("/api/public/support-chat")({
 
           if (!response.ok) {
             console.error("[Gemini support] request failed", response.status, data.error?.message ?? "");
-            return Response.json({ error: "support_provider_error" }, { status: 502 });
+            return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
           }
 
           const reply = data.candidates?.[0]?.content?.parts
@@ -96,14 +97,14 @@ export const Route = createFileRoute("/api/public/support-chat")({
             .trim();
 
           if (!reply) {
-            return Response.json({ error: "empty_support_reply" }, { status: 502 });
+            return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
           }
 
           return Response.json({ reply });
         } catch (error) {
           const reason = error instanceof Error ? error.name : "unknown";
           console.error("[Gemini support] unavailable", reason);
-          return Response.json({ error: "support_unavailable" }, { status: 503 });
+          return Response.json({ reply: buildFallbackReply(lastQuestion, firstName) });
         } finally {
           clearTimeout(timeout);
         }
@@ -121,6 +122,7 @@ You can explain:
 - Account access and profile navigation.
 - The one-time six-video account activity check. It confirms that a person is operating the account; it does not generate earnings.
 - The displayed account balance and general withdrawal verification workflow.
+- The Wallet flow after the human check: payout method, account verification stages, compliance review, payout batch, and support follow-up.
 - Payout details, refunds, technical issues, and how to contact support.
 
 Safety and accuracy rules:
@@ -132,4 +134,30 @@ Safety and accuracy rules:
 - If the customer alleges fraud, an unauthorized charge, or account compromise, advise them to contact ${SUPPORT_EMAIL} and their payment provider promptly.
 - Keep replies under 120 words and end with one useful next step.
 `.trim();
+}
+
+function buildFallbackReply(question: string, firstName: string) {
+  const text = question.toLowerCase();
+
+  if (/(wallet|withdraw|withdrawal|payout|cash out|balance|2800|2,800)/.test(text)) {
+    return `${firstName}, open Wallet after completing the six-video human check. If the withdrawal request is already started, follow the current verification stage shown on screen and keep the same payout method updated. For account-specific status, contact ${SUPPORT_EMAIL}.`;
+  }
+
+  if (/(refund|charge|billing|payment|cancel|37|37.12)/.test(text)) {
+    return `${firstName}, refund details are handled in the Refund tab. Once your payout details are confirmed, the processing status stays saved on your account. For a billing dispute or unrecognized charge, email ${SUPPORT_EMAIL} with your account email.`;
+  }
+
+  if (/(video|review|task|human|robot|bot|verification|audit)/.test(text)) {
+    return `${firstName}, the six video reviews are a one-time human check. Watch each video until the end, complete the questions, and submit the review. After all six are complete, Wallet will show the next verification step.`;
+  }
+
+  if (/(document|identity|selfie|id|driver|passport|license|face|camera)/.test(text)) {
+    return `${firstName}, identity steps should only be completed inside Wallet. Do not send documents, ID numbers, or selfies in chat. If a screen fails or a camera step does not work, email ${SUPPORT_EMAIL} with your account email and the screen name.`;
+  }
+
+  if (/(login|email|access|account|profile|sign in|name)/.test(text)) {
+    return `${firstName}, use the same name and email you used for access. If your dashboard does not load or the wrong profile appears, email ${SUPPORT_EMAIL} with your account email only. Do not send passwords or verification codes.`;
+  }
+
+  return `${firstName}, I can help with access, the six-video check, Wallet verification, refunds, and technical issues. Tell me which screen you are on and what you clicked, without sending passwords, card details, bank credentials, or identity documents.`;
 }

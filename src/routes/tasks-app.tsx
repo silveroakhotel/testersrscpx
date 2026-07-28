@@ -1008,35 +1008,21 @@ function LabeledPaymentInput({ label, onChange, placeholder, value }: { label: s
 }
 
 function SupportScreen({ user }: { user: User }) {
-  type ChatStatus = "idle" | "waiting" | "online" | "reading" | "typing";
+  type ChatStatus = "idle" | "online" | "reading" | "typing";
   type ChatMessage = { from: "assistant" | "system" | "user"; text: string };
 
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatStatus, setChatStatus] = useState<ChatStatus>("idle");
   const [queuedMessages, setQueuedMessages] = useState<string[]>([]);
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const requestInFlight = useRef(false);
 
   useEffect(() => {
-    if (chatStatus !== "waiting") return;
-
-    const timer = window.setTimeout(() => {
-      setChatMessages((current) => [
-        ...current,
-        {
-          from: "system",
-          text: "Chloe from Task Partners Support joined the conversation.",
-        },
-        {
-          from: "assistant",
-          text: `Hi ${user.name.split(" ")[0] || "there"}, I am Chloe from Task Partners Support. I can help with general account, verification, refund, withdrawal, and technical questions.`,
-        },
-      ]);
-      setChatStatus("online");
-    }, 15_000);
-
-    return () => window.clearTimeout(timer);
-  }, [chatStatus, user.name]);
+    const node = chatScrollRef.current;
+    if (!node) return;
+    node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
+  }, [chatMessages, chatStatus]);
 
   useEffect(() => {
     if (chatStatus !== "online" || requestInFlight.current || !queuedMessages.length) return;
@@ -1049,10 +1035,14 @@ function SupportScreen({ user }: { user: User }) {
     setChatMessages([
       {
         from: "system",
-        text: "Support intake: Please describe your issue. Chloe will join shortly. Do not share passwords, payment card details, bank credentials, identity numbers, documents, or selfies in this chat.",
+        text: "Send your question in the chat. Chloe will review it and reply shortly. Do not share passwords, payment card details, bank credentials, identity numbers, documents, or selfies here.",
+      },
+      {
+        from: "assistant",
+        text: `Hi ${user.name.split(" ")[0] || "there"}, I am Chloe from Task Partners Support. Tell me what happened and I will help you with the next step.`,
       },
     ]);
-    setChatStatus("waiting");
+    setChatStatus("online");
   }
 
   async function requestSupportReply(question: string) {
@@ -1108,7 +1098,7 @@ function SupportScreen({ user }: { user: User }) {
 
     setChatMessages((current) => [...current, { from: "user", text: trimmed }]);
     setMessage("");
-    if (chatStatus === "waiting" || requestInFlight.current) {
+    if (requestInFlight.current) {
       setQueuedMessages((current) => [...current, trimmed]);
       return;
     }
@@ -1121,9 +1111,9 @@ function SupportScreen({ user }: { user: User }) {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-black text-[#0F172A]">Live Support</h2>
-            <p className="mt-1 text-xs font-bold text-[#64748B]">Chat with Chloe from Task Partners Support</p>
+            <p className="mt-1 text-xs font-bold text-[#64748B]">Chloe is online now</p>
           </div>
-          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${chatStatus === "idle" ? "bg-slate-300" : chatStatus === "waiting" ? "animate-pulse bg-amber-400" : "bg-emerald-500"}`} />
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${chatStatus === "idle" ? "animate-pulse bg-emerald-500" : "bg-emerald-500"}`} />
         </div>
 
         {chatStatus === "idle" ? (
@@ -1138,7 +1128,7 @@ function SupportScreen({ user }: { user: User }) {
             />
             <p className="mt-3 text-sm font-black text-[#0F172A]">Hi, I&apos;m Chloe</p>
             <p className="mt-1 text-xs font-bold leading-5 text-[#64748B]">
-              Start a conversation with Task Partners Support.
+              I&apos;m online now. Start a conversation and send your question in the chat.
             </p>
             <button className="mt-4 h-12 w-full rounded-[8px] bg-[#FE2C55] text-sm font-black text-white transition-colors hover:bg-[#E9274F]" onClick={startChat} type="button">
               Start live support
@@ -1146,7 +1136,7 @@ function SupportScreen({ user }: { user: User }) {
           </div>
         ) : (
           <>
-            <div aria-live="polite" className="mt-4 max-h-80 space-y-3 overflow-y-auto rounded-[8px] bg-[#F8FAFC] p-3">
+            <div aria-live="polite" className="mt-4 max-h-80 space-y-3 overflow-y-auto rounded-[8px] bg-[#F8FAFC] p-3" ref={chatScrollRef}>
               {chatMessages.map((item, index) =>
                 item.from === "system" ? (
                   <p className="mx-auto max-w-[94%] text-center text-[11px] font-bold leading-4 text-[#64748B]" key={`${item.from}-${index}`}>
@@ -1175,9 +1165,6 @@ function SupportScreen({ user }: { user: User }) {
                   </div>
                 ),
               )}
-              {chatStatus === "waiting" && (
-                <p className="text-center text-[11px] font-black text-amber-700">Connecting to support...</p>
-              )}
               {(chatStatus === "reading" || chatStatus === "typing") && (
                 <div className="flex items-center gap-2 text-[11px] font-black text-[#64748B]">
                   <Loader2 className="animate-spin text-[#25F4EE]" size={14} />
@@ -1191,7 +1178,7 @@ function SupportScreen({ user }: { user: User }) {
                 className="h-12 min-w-0 flex-1 rounded-[8px] border border-slate-200 bg-[#F8FAFC] px-3 text-sm font-bold text-[#0F172A] outline-none placeholder:text-slate-400 focus:border-[#25F4EE]"
                 maxLength={1200}
                 onChange={(event) => setMessage(event.target.value)}
-                placeholder={chatStatus === "waiting" ? "Describe your issue..." : "Type your message..."}
+                placeholder="Type your message..."
                 value={message}
               />
               <button aria-label="Send message" className="grid h-12 w-12 shrink-0 place-items-center rounded-[8px] bg-[#FE2C55] text-white disabled:bg-slate-300" disabled={!message.trim()} type="submit">
