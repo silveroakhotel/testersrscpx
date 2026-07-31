@@ -15,27 +15,6 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 const mobileGuardScript = String.raw`
 (() => {
-  if (window.location.pathname === "/lp/") {
-    window.history.replaceState(null, "", "/lp" + window.location.search + window.location.hash);
-  }
-
-  const earlyParams = new URLSearchParams(window.location.search);
-  if ((window.location.pathname === "/" || window.location.pathname === "") && earlyParams.get("__route") === "tasks-app") {
-    earlyParams.delete("__route");
-    const nextSearch = earlyParams.toString();
-    window.history.replaceState(null, "", "/tasks-app" + (nextSearch ? "?" + nextSearch : "") + window.location.hash);
-  }
-
-  if (window.location.pathname === "/" || window.location.pathname === "") {
-    if (window.location.search.length === 0) {
-      window.location.replace("/landingpage");
-      return;
-    }
-
-    window.location.replace("/inicio" + window.location.search + window.location.hash);
-    return;
-  }
-
   if (window.__mobileGuardInstalled) return;
   window.__mobileGuardInstalled = true;
   window.__earlyMobileGuard = true;
@@ -193,6 +172,32 @@ const mobileGuardScript = String.raw`
 })();
 `;
 
+const earlyRootRedirectScript = String.raw`
+(() => {
+  if (window.location.pathname === "/lp/") {
+    window.history.replaceState(null, "", "/lp" + window.location.search + window.location.hash);
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  if ((window.location.pathname === "/" || window.location.pathname === "") && params.get("__route") === "tasks-app") {
+    params.delete("__route");
+    const nextSearch = params.toString();
+    window.location.replace("/tasks-app" + (nextSearch ? "?" + nextSearch : "") + window.location.hash);
+    return;
+  }
+
+  if (window.location.pathname === "/" || window.location.pathname === "") {
+    if (window.location.search.length === 0) {
+      window.location.replace("/landingpage");
+      return;
+    }
+
+    window.location.replace("/inicio" + window.location.search + window.location.hash);
+  }
+})();
+`;
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -299,6 +304,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en-US">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: earlyRootRedirectScript }} />
         <HeadContent />
         <script
           src="https://cdn.utmify.com.br/scripts/utms/latest.js"
