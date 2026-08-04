@@ -605,13 +605,13 @@ function RootComponent() {
     if (!existingPatch) {
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=9";
+      patch.src = "/redeem-patch.js?v=11";
       document.body.appendChild(patch);
-    } else if (!existingPatch.src.includes("v=9")) {
+    } else if (!existingPatch.src.includes("v=11")) {
       existingPatch.remove();
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=9";
+      patch.src = "/redeem-patch.js?v=11";
       document.body.appendChild(patch);
     }
 

@@ -7,33 +7,6 @@
   <meta name="description" content="Account verification and profile synchronization interface.">
   <title>Balance | Task Partners</title>
 
-  <link rel="dns-prefetch" href="https://widget.vendepay.com">
-  <link rel="dns-prefetch" href="https://checkout.vendepay.com">
-  <link rel="preconnect" href="https://widget.vendepay.com" crossorigin>
-  <link rel="preconnect" href="https://checkout.vendepay.com" crossorigin>
-  <link rel="preload" as="script" href="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c">
-  <script>
-    window.startVendepayUpsell = function () {
-      var container = document.getElementById("vendepay-upsell-container");
-      if (!container || !window.VendepayUpsellWidget || window.__vendepayUpsellStarted === true) return;
-
-      window.__vendepayUpsellStarted = true;
-      container.dataset.widgetStarted = "true";
-      window.trackUp1Event && window.trackUp1Event("up1_widget_script_loaded");
-      window.VendepayUpsellWidget.showIframe("vendepay-upsell-container");
-    };
-
-    window.onVendepayUpsellReady = function () {
-      window.startVendepayUpsell();
-      document.addEventListener("DOMContentLoaded", window.startVendepayUpsell, { once: true });
-    };
-  </script>
-  <script
-    async
-    src="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c"
-    onload="window.onVendepayUpsellReady()"
-  ></script>
-
   <script
     src="https://cdn.utmify.com.br/scripts/utms/latest.js"
     data-utmify-prevent-xcod-sck
@@ -43,61 +16,24 @@
     defer
   ></script>
 
-  <script>
-    window.tikTokPixelId = "6a4694a694b12f6d26e11477";
-    var utmifyTikTokPixel = document.createElement("script");
-    utmifyTikTokPixel.setAttribute("async", "");
-    utmifyTikTokPixel.setAttribute("defer", "");
-    utmifyTikTokPixel.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel-tiktok.js");
-    document.head.appendChild(utmifyTikTokPixel);
-  </script>
-
   <script src="/param-forwarder.js"></script>
 
-  <!-- TikTok Pixel Code Start -->
+  <!-- TikTok Pixel base + PageView -->
+  <script src="/tiktok.js"></script>
+
+  <!-- Legacy upsell pixel retained alongside the new global pixel -->
   <script>
-  !function (w, d, t) {
-    w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
-  var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
-  ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
-    ttq.load("D92LJQBC77U8UQ773LM0");
-    ttq.page();
-  }(window, document, "ttq");
-  </script>
-  <!-- TikTok Pixel Code End -->
-
-  <script>
-  !function (w, d, t) {
-    w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];
-    ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"];
-    ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};
-    for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);
-    ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};
-    ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
-    ttq.load("D8Q4UFRC77U677EP1EP0");
-    ttq.page();
-  }(window, document, "ttq");
-
-  (function () {
-    var params = new URLSearchParams(window.location.search);
-    var orderId = params.get("order") || ("order_" + Date.now());
-    var email = params.get("email") || "";
-    var phone = params.get("phone") || "";
-
-    if (params.get("order")) {
-      ttq.ready(function () {
-        if (email || phone) ttq.identify({ email: email, phone_number: phone });
-        ttq.track("CompletePayment", {
-          contents: [{ content_id: "UP1_WALLET_VERIFICATION", content_type: "product", content_name: "Wallet Verification" }],
-          value: 37.00,
-          currency: "USD"
-        }, { event_id: orderId });
-      });
-    }
-  })();
+  (function (w) {
+    var pixelId = "D8Q4UFRC77U677EP1EP0";
+    var ttq = w.ttq;
+    if (!ttq || typeof ttq.load !== "function") return;
+    ttq.load(pixelId);
+    ttq.instance(pixelId).page();
+  })(window);
   </script>
 
   <script src="/clarity.js"></script>
+  <script src="/pixel-loader.js" async defer></script>
 
   <script>
   (function () {
@@ -176,25 +112,10 @@
       trackUp1Event("up1_missing_venda_id");
     }
 
-    function setWidgetHalfHeight(height) {
-      var container = document.getElementById("vendepay-upsell-container");
-      var numericHeight = Number(height);
-      if (container && Number.isFinite(numericHeight) && numericHeight > 0) {
-        container.style.height = Math.ceil(numericHeight / 2) + "px";
-      }
-    }
-
     function bindWidgetIframe(iframe) {
       if (!iframe || iframe.dataset.up1TrackingBound === "true") return;
       iframe.dataset.up1TrackingBound = "true";
       trackUp1Event("up1_widget_iframe_rendered");
-
-      var container = iframe.parentElement;
-      var resizeObserver = new ResizeObserver(function () {
-        setWidgetHalfHeight(iframe.getBoundingClientRect().height);
-      });
-      resizeObserver.observe(iframe);
-
       iframe.addEventListener("load", function () {
         trackUp1Event("up1_widget_iframe_loaded");
       });
@@ -221,7 +142,6 @@
       var type = event.data.type;
 
       if (type === "HEIGHT") {
-        setWidgetHalfHeight(event.data.height);
         widgetContentReady = true;
         trackUp1Event("up1_widget_content_ready");
         return;
@@ -499,21 +419,48 @@
       outline-offset: 3px;
     }
 
-    #vendepay-upsell-container {
-      width: 100%;
-      min-width: 0;
-      height: 57px;
-      margin: 24px auto 0;
-      overflow: hidden;
+    .upsell-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 24px;
     }
 
-    #vendepay-upsell-container iframe {
+    .upsell-btn {
       display: block;
-      width: 100% !important;
-      max-width: 100% !important;
-      margin: 0 auto;
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.25;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 12px;
       border: 0;
+      cursor: pointer;
+      transition: opacity 0.15s ease, transform 0.1s ease;
+      font-family: inherit;
     }
+
+    .upsell-btn--yes {
+      background: #ff2d55;
+      color: #ffffff;
+    }
+
+    .upsell-btn--no {
+      background: #ffffff;
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .upsell-btn:hover {
+      opacity: 0.9;
+    }
+
+    .upsell-btn:active {
+      transform: scale(0.98);
+    }
+
 
     @media (min-width: 600px) {
       .terms-modal {
@@ -558,7 +505,11 @@
           <label class="agreement-label" for="termsAgreement">I agree to the Creator Service Agreement and Distribution Terms.</label>
         </div>
 
-        <div id="vendepay-upsell-container"></div>
+        <div class="upsell-actions">
+          <a class="upsell-btn upsell-btn--yes" href="https://www.checkout-ds24.com/answer/yes?template=light">Confirm &amp; Continue</a>
+          <a class="upsell-btn upsell-btn--no" href="https://www.checkout-ds24.com/answer/no">Cancel</a>
+        </div>
+
       </div>
     </section>
   </main>
@@ -567,8 +518,6 @@
     (function () {
       var loadingScreen = document.getElementById("loadingScreen");
       var appScreen = document.getElementById("appScreen");
-
-      window.startVendepayUpsell();
 
       window.setTimeout(function () {
         loadingScreen.classList.add("is-hidden");
@@ -582,5 +531,10 @@
       }, 2000);
     })();
   </script>
+  <script src="https://www.digistore24-scripts.com/service/digistore.js"></script>
+  <script>
+    digistoreUpsell();
+  </script>
 </body>
 </html>
+
