@@ -31,7 +31,6 @@ import type { FormEvent, ReactNode } from "react";
 import {
   buildWithdrawalReference,
   readWithdrawalState,
-  sendWithdrawalEmail,
   writeWithdrawalState,
   WithdrawalTracker,
 } from "@/lib/withdrawal-pipeline";
@@ -233,7 +232,6 @@ function TaskPartnersApp() {
           appStateKey(account.email),
           JSON.stringify({ balance: INITIAL_BALANCE, reviewedIds: [], reviews: [], taskIndex: 0 }),
         );
-        sendAccessEmail(account);
       }
       setUser(account);
       const savedState = readAppState(account.email);
@@ -263,8 +261,10 @@ function TaskPartnersApp() {
     if (!canSubmit) return;
     const completedTask = task;
     const completedKey = taskReviewKey;
+    const completedCount = Math.min(reviewedIds.length + 1, DAILY_LIMIT);
     setSuccessReward(null);
     setReviewedIds((value) => [...value, completedKey]);
+    if (user) handleBehavioralEmailTriggers(user, balance, completedCount);
     setReviews((value) => [
       { date: new Date().toLocaleDateString("en-US"), title: completedTask.title, reward: 0, status: "Human check completed" },
       ...value,
@@ -773,7 +773,6 @@ function WalletScreen(props: {
     window.localStorage.setItem(storageKey, JSON.stringify({ status: "pending", submittedAt: nowIso, payoutMethod: props.paymentMethod }));
     writeWithdrawalState(props.user.email, state);
     setWithdrawal(state);
-    sendWithdrawalEmail(props.user, "withdrawal_requested", state);
   }
 
 
@@ -1058,11 +1057,11 @@ function SupportScreen({ user }: { user: User }) {
     setChatMessages([
       {
         from: "system",
-        text: "Send your question in the chat. Chloe will review it and reply shortly. Do not share passwords, payment card details, bank credentials, identity numbers, documents, or selfies here.",
+        text: "Chloe will reply shortly.",
       },
       {
         from: "assistant",
-        text: `Hi ${user.name.split(" ")[0] || "there"}, I am Chloe from Task Partners Support. Tell me what happened and I will help you with the next step.`,
+        text: `Hi ${user.name.split(" ")[0] || "there"}! What can I help you with?`,
       },
     ]);
     setChatStatus("online");
@@ -1229,22 +1228,22 @@ function wait(milliseconds: number) {
 function getOfflineSupportReply(question: string) {
   const text = question.toLowerCase();
 
-  if (/(login|email|access|account|profile|sign in)/.test(text)) {
-    return "For access issues, confirm that you entered the same email used when your account was created. You can update basic information in Profile. If the account still does not load, email support@taskpartners.live with your name and account email only. Do not send your password.";
+  if (/(login|email|access|account|profile|sign in|entrar|conta)/.test(text)) {
+    return "No worries. Sign in with the same name and email used to create your account.";
   }
-  if (/(withdraw|payout|cash out|balance|2800)/.test(text)) {
-    return "Complete the one-time six-video account check first. After it is complete, open Wallet and follow the withdrawal verification steps shown there. Account-specific approval or timing must be reviewed by support at support@taskpartners.live.";
+  if (/(withdraw|payout|cash out|balance|money|dinheiro|cad[eê]|saque|saldo|2800)/.test(text)) {
+    return "Your balance is safe. Check Wallet for the current review stage; once it clears, your payout moves forward.";
   }
-  if (/(refund|charge|billing|payment|cancel)/.test(text)) {
-    return "Open the Refund tab to review or confirm the available refund details. For an account-specific refund, billing question, or unrecognized charge, email support@taskpartners.live. Do not send full card or bank information.";
+  if (/(refund|charge|billing|payment|cancel|reembolso|cobran[cç]a)/.test(text)) {
+    return "Don't worry. Your request stays saved; check the Refund tab for its latest status.";
   }
   if (/(video|review|task|human check|verification)/.test(text)) {
-    return "The account check contains six video reviews and is completed once. Watch each video through the end, answer the review questions, and submit the form. It verifies account activity and does not change your displayed balance.";
+    return "You're on the right track. Finish all six reviews and Wallet will unlock automatically.";
   }
   if (/(document|identity|selfie|id|driver|passport)/.test(text)) {
-    return "Document and identity steps must be completed only through the verification screens in Wallet. Never send identity documents, ID numbers, or selfies through chat. For a status review, contact support@taskpartners.live.";
+    return "Everything is on track. Complete the document step in Wallet, then wait for the review status to update.";
   }
-  return "I can help with account access, the six-video verification, withdrawals, refunds, and technical issues. Please tell me which screen you are on and what happened. Do not include passwords, card details, bank credentials, or identity documents.";
+  return "I've got you. Tell me which screen you're on and what you're waiting for.";
 }
 
 function ProfileScreen({ user, reviews, balance }: { user: User; reviews: Review[]; balance: number }) {
@@ -1675,16 +1674,6 @@ function countWords(value: string) {
   return value.trim().split(/\s+/).filter((word) => word.length > 1).length;
 }
 
-function sendAccessEmail(user: User) {
-  void fetch("/api/public/send-access-email", {
-    body: JSON.stringify({ email: user.email, name: user.name, template: "access" }),
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-  }).catch((error) => {
-    console.warn("[Task Partners] access email failed", error);
-  });
-}
-
 function handleBehavioralEmailTriggers(user: User, balance: number, reviewedCount: number) {
   const count = syncEvaluatedVideoCount(user.email, reviewedCount);
   const log = readTriggeredEmailsLog(user.email);
@@ -1726,14 +1715,7 @@ function handleBehavioralEmailTriggers(user: User, balance: number, reviewedCoun
 
 function pendingEmailTriggersForCount(count: number, log: string[]): Array<{ count: number; key: string; template: string }> {
   const milestones = [
-    { count: 3, key: "email_3", template: "email_3" },
-    { count: 6, key: "email_6", template: "email_6" },
-    { count: 12, key: "email_12", template: "email_consistency" },
-    { count: 18, key: "email_18", template: "email_consistency" },
-    { count: 24, key: "email_24", template: "email_consistency" },
-    { count: 30, key: "email_30", template: "email_consistency" },
-    { count: 36, key: "email_36", template: "email_consistency" },
-    { count: 42, key: "email_42", template: "email_42" },
+    { count: 6, key: "status_progress_complete_v1", template: "progress_complete" },
   ];
   return milestones.filter((milestone) => count >= milestone.count && !log.includes(milestone.key));
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type PipelineUser = { name: string; email: string };
 
@@ -148,22 +148,49 @@ export function stageEndsAt(state: WithdrawalState) {
   return addBusinessDays(start, stage.days).getTime();
 }
 
+function scheduledStageStarts(requestedAt: string) {
+  const requested = new Date(requestedAt);
+  const verification = requested;
+  const compliance = addBusinessDays(verification, WITHDRAWAL_STAGES[0].days);
+  const batch = addBusinessDays(compliance, WITHDRAWAL_STAGES[1].days);
+  const released = addBusinessDays(batch, WITHDRAWAL_STAGES[2].days);
+  return [verification, compliance, batch, released];
+}
 
-export function sendWithdrawalEmail(user: PipelineUser, template: string, state: WithdrawalState) {
-  void fetch("/api/public/send-access-email", {
-    body: JSON.stringify({
-      amount: state.amount,
-      balance: state.amount,
-      email: user.email,
-      name: user.name,
-      reference: state.reference,
-      template,
-    }),
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-  }).catch((error) => {
+function scheduledStageAt(requestedAt: string, now: number) {
+  const starts = scheduledStageStarts(requestedAt);
+  let stage = 0;
+  for (let index = 1; index < starts.length; index += 1) {
+    if (starts[index].getTime() <= now) stage = index;
+  }
+  return { stage, starts };
+}
+
+
+export async function sendWithdrawalEmail(user: PipelineUser, template: string, state: WithdrawalState, scheduledAt?: Date) {
+  try {
+    const response = await fetch("/api/public/send-access-email", {
+      body: JSON.stringify({
+        amount: state.amount,
+        balance: state.amount,
+        email: user.email,
+        name: user.name,
+        reference: state.reference,
+        scheduledAt: scheduledAt?.toISOString(),
+        template,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    });
+    if (!response.ok) {
+      console.warn("[Task Partners] withdrawal email failed", response.status, await response.text());
+      return false;
+    }
+    return true;
+  } catch (error) {
     console.warn("[Task Partners] withdrawal email failed", error);
-  });
+    return false;
+  }
 }
 
 function money(value: number) {
@@ -181,15 +208,18 @@ export function WithdrawalTracker(props: {
 }) {
   const { state, user, onChange } = props;
   const [now, setNow] = useState(() => Date.now());
-  const stageIndex = Math.min(state.stage, WITHDRAWAL_STAGES.length - 1);
+  const syncingEmails = useRef(false);
+  const schedule = scheduledStageAt(state.requestedAt, now);
+  const stageIndex = Math.max(Math.min(state.stage, WITHDRAWAL_STAGES.length - 1), schedule.stage);
   const stage = WITHDRAWAL_STAGES[stageIndex];
   const isFinal = stage.id === "released";
-  const activated = state.stageActivated !== false;
-  const endsAt = stageEndsAt(state);
+  const stageStartedAt = schedule.starts[stageIndex];
+  const nextStageAt = schedule.starts[stageIndex + 1];
+  const endsAt = nextStageAt?.getTime() ?? stageStartedAt.getTime();
   const remaining = Math.max(0, endsAt - now);
-  
-  const startedAt = new Date(state.stageStartedAt).getTime();
-  const progressPct = isFinal ? 100 : !activated ? 0 : Math.min(100, Math.max(4, ((now - startedAt) / Math.max(1, endsAt - startedAt)) * 100));
+
+  const startedAt = stageStartedAt.getTime();
+  const progressPct = isFinal ? 100 : Math.min(100, Math.max(4, ((now - startedAt) / Math.max(1, endsAt - startedAt)) * 100));
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60000);
@@ -198,26 +228,42 @@ export function WithdrawalTracker(props: {
 
 
   useEffect(() => {
-    if (!activated) return;
-    const key = `stage_${stage.id}`;
-    if (state.emailsSent.includes(key)) return;
-    sendWithdrawalEmail(user, stage.email, state);
-    onChange({ ...state, emailsSent: [...state.emailsSent, key] });
-  }, [activated, onChange, stage.email, stage.id, state, user]);
-
-  useEffect(() => {
-    if (isFinal || !activated || remaining > 0) return;
-    onChange({
-      ...state,
-      stage: stageIndex + 1,
-      stageActivated: false,
-      stageStartedAt: new Date().toISOString(),
+    if (syncingEmails.current) return;
+    const requestedWasPreviouslySent = state.emailsSent.some((key) => key.startsWith("stage_"));
+    const scheduledEmails = [
+      { key: "withdrawal_requested", template: "withdrawal_requested", scheduledAt: schedule.starts[0] },
+      ...WITHDRAWAL_STAGES.map((item, index) => ({
+        key: `stage_${item.id}`,
+        scheduledAt: schedule.starts[index],
+        template: item.email,
+      })),
+    ].filter((item) => {
+      if (state.emailsSent.includes(item.key)) return false;
+      if (item.key === "withdrawal_requested" && requestedWasPreviouslySent) return false;
+      return true;
     });
-  }, [activated, isFinal, onChange, remaining, stageIndex, state]);
+    const stageChanged = state.stage !== schedule.stage || state.stageStartedAt !== stageStartedAt.toISOString() || state.stageActivated === false;
+    if (!scheduledEmails.length && !stageChanged) return;
 
-  function startStage() {
-    onChange({ ...state, stageActivated: true, stageStartedAt: new Date().toISOString() });
-  }
+    syncingEmails.current = true;
+    void (async () => {
+      const emailsSent = [...state.emailsSent];
+      if (requestedWasPreviouslySent && !emailsSent.includes("withdrawal_requested")) emailsSent.push("withdrawal_requested");
+      for (const item of scheduledEmails) {
+        const scheduledAt = item.scheduledAt.getTime() > Date.now() ? item.scheduledAt : undefined;
+        const sent = await sendWithdrawalEmail(user, item.template, state, scheduledAt);
+        if (sent && !emailsSent.includes(item.key)) emailsSent.push(item.key);
+      }
+      onChange({
+        ...state,
+        emailsSent,
+        stage: schedule.stage,
+        stageActivated: true,
+        stageStartedAt: stageStartedAt.toISOString(),
+      });
+      syncingEmails.current = false;
+    })();
+  }, [onChange, schedule.stage, stageStartedAt, state, user]);
 
   return (
     <div>
@@ -238,17 +284,6 @@ export function WithdrawalTracker(props: {
           <p className="mt-1 text-lg font-black">{stage.label}</p>
           {isFinal ? (
             <p className="mt-2 text-sm font-bold leading-6 text-white/70">{stage.processing}</p>
-          ) : !activated ? (
-            <>
-              <p className="mt-2 text-sm font-bold leading-6 text-white/75">{stage.pending}</p>
-              <button
-                type="button"
-                onClick={startStage}
-                className="mt-3 h-11 w-full rounded-[8px] bg-[#25F4EE] text-sm font-black text-black"
-              >
-                Begin review
-              </button>
-            </>
           ) : (
             <>
               <p className="mt-2 text-sm font-bold leading-6 text-white/75">{stage.processing}</p>
