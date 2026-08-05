@@ -283,11 +283,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "dns-prefetch", href: "https://checkout.vendepay.com" },
-      { rel: "preconnect", href: "https://checkout.vendepay.com", crossOrigin: "anonymous" },
-      { rel: "dns-prefetch", href: "https://widget.vendepay.com" },
-      { rel: "preconnect", href: "https://widget.vendepay.com", crossOrigin: "anonymous" },
-      { rel: "prefetch", as: "script", href: "https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c" },
+      { rel: "dns-prefetch", href: "https://www.checkout-ds24.com" },
+      { rel: "preconnect", href: "https://www.checkout-ds24.com", crossOrigin: "anonymous" },
       { rel: "prefetch", as: "image", href: "/checkout-balance-banner.webp" },
       { rel: "stylesheet", href: "/assets/css2.css" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
@@ -326,7 +323,6 @@ document.head.appendChild(utmifyTikTokPixel);`,
           }}
         />
         <script src="/param-forwarder.js" />
-        <script src="/checkout-embed.js" />
         <script
           dangerouslySetInnerHTML={{
             __html: `!function (w, d, t) {
@@ -605,13 +601,13 @@ function RootComponent() {
     if (!existingPatch) {
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=11";
+      patch.src = "/redeem-patch.js?v=12";
       document.body.appendChild(patch);
-    } else if (!existingPatch.src.includes("v=11")) {
+    } else if (!existingPatch.src.includes("v=12")) {
       existingPatch.remove();
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=11";
+      patch.src = "/redeem-patch.js?v=12";
       document.body.appendChild(patch);
     }
 

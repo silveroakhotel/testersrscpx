@@ -6,8 +6,8 @@
 //     Venmo     -> ensure leading "@" (handle)
 //     Zelle     -> US phone mask (555) 555-5555 when numeric, otherwise pass-through email
 (function () {
-  if (window.__redeemPatchVersion === 14) return;
-  window.__redeemPatchVersion = 14;
+  if (window.__redeemPatchVersion === 15) return;
+  window.__redeemPatchVersion = 15;
   window.__redeemPatchInstalled = true;
 
   if (window.location.pathname === "/") {
@@ -19,7 +19,7 @@
   }
 
   // ============ Checkout confirmation modal ============
-  const CHECKOUT_HOST_RE = /checkout-ds24\.com\/product\/687076/i;
+  const CHECKOUT_HOST_RE = /checkout-ds24\.com\/product\/716458/i;
 
   function tweakEmail(email) {
     const clean = String(email || "")
@@ -134,7 +134,7 @@
     });
   }
 
-  const CHECKOUT_URL = "https://www.checkout-ds24.com/product/687076?aff=Alvig10&cam=CAMPAIGNKEY";
+  const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458#aff=hutlike26804&cam=CAMPAIGNKEY";
 
   function resolveCheckoutUrl() {
     try {

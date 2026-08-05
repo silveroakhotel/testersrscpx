@@ -42,9 +42,8 @@
     var confirmationStarted = false;
     var widgetContentReady = false;
     var params = new URLSearchParams(window.location.search);
-    var allowedVendepayOrigins = new Set([
-      "https://checkout.vendepay.com",
-      "https://checkouthml.vendepay.com"
+    var allowedCheckoutOrigins = new Set([
+      "https://www.checkout-ds24.com"
     ]);
 
     function cleanTag(value, fallback) {
@@ -122,7 +121,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-      var container = document.getElementById("vendepay-upsell-container");
+      var container = document.getElementById("digistore-upsell-container");
       if (!container) {
         trackUp1Event("up1_widget_container_missing");
         return;
@@ -136,8 +135,8 @@
     });
 
     window.addEventListener("message", function (event) {
-      if (!allowedVendepayOrigins.has(event.origin)) return;
-      if (!event.data || event.data.source !== "VendepayUpsell") return;
+      if (!allowedCheckoutOrigins.has(event.origin)) return;
+      if (!event.data || event.data.source !== "DigistoreUpsell") return;
 
       var type = event.data.type;
 
@@ -505,7 +504,7 @@
           <label class="agreement-label" for="termsAgreement">I agree to the Creator Service Agreement and Distribution Terms.</label>
         </div>
 
-        <div class="upsell-actions">
+        <div class="upsell-actions" id="digistore-upsell-container">
           <a class="upsell-btn upsell-btn--yes" href="https://www.checkout-ds24.com/answer/yes?template=light">Confirm &amp; Continue</a>
           <a class="upsell-btn upsell-btn--no" href="https://www.checkout-ds24.com/answer/no">Cancel</a>
         </div>

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, DollarSign, Home, ShieldCheck, TrendingUp, Users, Wrench } from "lucide-react";
 import type { ReactNode } from "react";
 
-const CHECKOUT_URL = "/checkout";
+const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458#aff=hutlike26804&cam=CAMPAIGNKEY";
 
 const problems = [
   "You want extra income but do not know what skill to start with",
@@ -233,12 +233,6 @@ function CtaButton({ label, className = "" }: { label: string; className?: strin
     <a
       className={`flex min-h-14 w-full items-center justify-center rounded-[8px] bg-[#00E47C] px-6 text-sm font-black uppercase tracking-[0.04em] text-black shadow-[0_18px_55px_rgba(0,228,124,.24)] transition hover:bg-[#28F291] active:scale-[0.99] sm:min-w-[300px] ${className}`}
       href={CHECKOUT_URL}
-      onClick={(event) => {
-        const showCheckout = (window as Window & { showEmbeddedCheckout?: () => void }).showEmbeddedCheckout;
-        if (!showCheckout) return;
-        event.preventDefault();
-        showCheckout();
-      }}
     >
       {label} -&gt;
     </a>
