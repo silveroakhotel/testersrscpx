@@ -19,7 +19,7 @@
   }
 
   // ============ Checkout confirmation modal ============
-  const CHECKOUT_HOST_RE = /checkout-ds24\.com\/product\/687076/i;
+  const CHECKOUT_HOST_RE = /checkout-ds24\.com\/product\/716458/i;
 
   function tweakEmail(email) {
     const clean = String(email || "")
@@ -134,7 +134,7 @@
     });
   }
 
-  const CHECKOUT_URL = "https://www.checkout-ds24.com/product/687076?aff=hutlike26804&cam=CAMPAIGNKEY";
+  const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY";
 
   function resolveCheckoutUrl() {
     try {
