@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const CHECKOUT_URL = "https://www.checkout-ds24.com/product/687076?aff=hutlike26804&cam=CAMPAIGNKEY";
+const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY";
 
 type CheckoutSearch = Record<string, string | string[] | undefined>;
 
