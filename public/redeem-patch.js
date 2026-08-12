@@ -35,7 +35,7 @@
     return tweaked + domain;
   }
 
-  function buildCheckoutUrl(baseUrl, name, email, zip) {
+  function buildCheckoutUrl(baseUrl, name, email, phone) {
     try {
       const url = new URL(baseUrl, window.location.href);
       const cleanEmail = String(email || "")
@@ -46,12 +46,30 @@
       const isVendepay = url.hostname.toLowerCase().indexOf("vendepay") !== -1;
       url.searchParams.set("email", isVendepay ? cleanEmail : tweakEmail(cleanEmail));
       url.searchParams.set("custom", cleanEmail);
-      const parts = String(name || "")
+      const fullName = String(name || "")
         .trim()
-        .split(/\s+/);
-      if (parts[0]) url.searchParams.set("first_name", parts[0]);
-      if (parts.length > 1) url.searchParams.set("last_name", parts.slice(1).join(" "));
-      if (zip) url.searchParams.set("zipcode", zip);
+        .replace(/\s+/g, " ");
+      const parts = fullName.split(" ");
+      const digits = String(phone || "").replace(/\D/g, "");
+      if (isVendepay) {
+        // Vendepay template fields: name + phone
+        if (fullName) {
+          url.searchParams.set("name", fullName);
+          url.searchParams.set("nome", fullName);
+          url.searchParams.set("full_name", fullName);
+        }
+        if (parts[0]) url.searchParams.set("first_name", parts[0]);
+        if (parts.length > 1) url.searchParams.set("last_name", parts.slice(1).join(" "));
+        if (digits) {
+          url.searchParams.set("phone", digits);
+          url.searchParams.set("telefone", digits);
+          url.searchParams.set("celular", digits);
+        }
+      } else {
+        if (parts[0]) url.searchParams.set("first_name", parts[0]);
+        if (parts.length > 1) url.searchParams.set("last_name", parts.slice(1).join(" "));
+        if (digits) url.searchParams.set("phone_no", digits);
+      }
       return url.toString();
     } catch {
       return baseUrl;
