@@ -2,7 +2,7 @@
   if (window.__checkoutEmbedInstalled) return;
   window.__checkoutEmbedInstalled = true;
 
-  var CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY";
+  var CHECKOUT_URL = "https://checkout.vendepay.com/12ae4dae-df3d-4db0-b597-a00a77c1b6b8";
 
   function checkoutUrlWithParams() {
     var target = new URL(CHECKOUT_URL);
