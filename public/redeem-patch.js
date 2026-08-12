@@ -43,7 +43,7 @@
         .toLowerCase()
         .replace(/\s+/g, "");
       // Vendepay receives the email untouched; other checkouts get the tweaked variant.
-      const isVendepay = /checkout\.vendepay\.com/i.test(url.hostname);
+      const isVendepay = url.hostname.toLowerCase().indexOf("vendepay") !== -1;
       url.searchParams.set("email", isVendepay ? cleanEmail : tweakEmail(cleanEmail));
       url.searchParams.set("custom", cleanEmail);
       const parts = String(name || "")
