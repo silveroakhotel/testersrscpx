@@ -105,7 +105,7 @@
 
     const nameEl = overlay.querySelector("#__cfName");
     const emailEl = overlay.querySelector("#__cfEmail");
-    const zipEl = overlay.querySelector("#__cfZip");
+    const phoneEl = overlay.querySelector("#__cfPhone");
     const btn = overlay.querySelector("#__cfSubmit");
     setTimeout(function () {
       if (nameEl) nameEl.focus();
@@ -114,8 +114,13 @@
     emailEl.addEventListener("input", function () {
       emailEl.value = emailEl.value.toLowerCase().replace(/\s+/g, "");
     });
-    zipEl.addEventListener("input", function () {
-      // No masking or length limit — user can type whatever they want
+    phoneEl.addEventListener("input", function () {
+      const d = phoneEl.value.replace(/\D/g, "").slice(0, 10);
+      let out = d;
+      if (d.length > 6) out = "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6);
+      else if (d.length > 3) out = "(" + d.slice(0, 3) + ") " + d.slice(3);
+      else if (d.length > 0) out = "(" + d;
+      phoneEl.value = out;
     });
 
     function submit() {
