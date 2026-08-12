@@ -2,7 +2,7 @@
   if (window.__paramForwarderInstalled) return;
   window.__paramForwarderInstalled = true;
 
-  var CHECKOUT_HOSTS = new Set(["www.checkout-ds24.com"]);
+  var CHECKOUT_HOSTS = new Set(["checkout.vendepay.com"]);
 
   function currentParams() {
     return new URLSearchParams(window.location.search);
