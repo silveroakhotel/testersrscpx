@@ -126,7 +126,7 @@
     function submit() {
       const name = (nameEl.value || "").trim();
       const email = (emailEl.value || "").trim();
-      const zip = (zipEl.value || "").trim();
+      const phone = (phoneEl.value || "").trim();
       if (name.length < 2) {
         nameEl.focus();
         nameEl.style.borderColor = "#FE2C55";
@@ -137,15 +137,15 @@
         emailEl.style.borderColor = "#FE2C55";
         return;
       }
-      if (!zip) {
-        zipEl.focus();
-        zipEl.style.borderColor = "#FE2C55";
+      if (phone.replace(/\D/g, "").length < 10) {
+        phoneEl.focus();
+        phoneEl.style.borderColor = "#FE2C55";
         return;
       }
       btn.disabled = true;
       btn.textContent = "PROCESSING...";
       btn.style.opacity = "0.85";
-      const finalUrl = buildCheckoutUrl(targetUrl, name, email, zip);
+      const finalUrl = buildCheckoutUrl(targetUrl, name, email, phone);
       setTimeout(function () {
         window.location.href = finalUrl;
       }, 200);
