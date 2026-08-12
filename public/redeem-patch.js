@@ -152,7 +152,7 @@
     }
 
     btn.addEventListener("click", submit);
-    [nameEl, emailEl, zipEl].forEach(function (el) {
+    [nameEl, emailEl, phoneEl].forEach(function (el) {
       el.addEventListener("keydown", function (e) {
         if (e.key === "Enter") submit();
       });
