@@ -20,12 +20,12 @@ const PRESETS = {
     url: "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY",
     host: "www.checkout-ds24.com",
     // regex source used inside redeem-patch.js to detect the checkout URL
-    hostRe: "checkout-ds24\\\\.com\\\\/product\\\\/716458",
+    hostRe: "checkout-ds24\\.com\\/product\\/716458",
   },
   vendepay: {
     url: "https://checkout.vendepay.com/12ae4dae-df3d-4db0-b597-a00a77c1b6b8",
     host: "checkout.vendepay.com",
-    hostRe: "checkout\\\\.vendepay\\\\.com",
+    hostRe: "checkout\\.vendepay\\.com",
   },
 };
 
