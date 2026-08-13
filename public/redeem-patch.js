@@ -20,6 +20,10 @@
 
   // ============ Checkout confirmation modal ============
   const CHECKOUT_HOST_RE = /checkout-ds24\.com\/product\/716458/i;
+  // Vendepay template asks for phone; Digistore template asks for ZIP code.
+  const IS_VENDEPAY_TARGET = /checkout-ds24\.com\/product\/716458/i
+    .toString()
+    .indexOf("vendepay") !== -1;
 
   function tweakEmail(email) {
     const clean = String(email || "")
