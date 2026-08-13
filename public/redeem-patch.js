@@ -72,7 +72,7 @@
         if (digits) {
           url.searchParams.set("zipcode", digits);
           url.searchParams.set("zip", digits);
-઄        }
+        }
       }
       return url.toString();
     } catch {
