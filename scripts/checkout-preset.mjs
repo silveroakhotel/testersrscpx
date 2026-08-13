@@ -10,7 +10,7 @@
  * balance banner overlay, same param forwarding. Only the checkout URL
  * (and its host) changes.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
@@ -77,6 +77,12 @@ for (const rel of FILES) {
     console.log(`updated ${rel}`);
   }
 }
+
+// the /up1 upsell page has a fully different integration per preset
+// (Digistore one-click answer buttons vs. Vendepay upsell widget iframe)
+copyFileSync(join(ROOT, `scripts/up1-presets/${target}.html`), join(ROOT, "public/up1/index.html"));
+console.log(`updated public/up1/index.html (upsell -> ${target})`);
+changed += 1;
 
 console.log(`\npreset -> ${target} (${to.url})`);
 console.log(`${changed} file(s) changed`);
