@@ -154,6 +154,7 @@
 
       if (type === "HEIGHT") {
         widgetContentReady = true;
+        if (typeof window.__revealUp1Upsell === "function") window.__revealUp1Upsell();
         trackUp1Event("up1_widget_content_ready");
         return;
       }
@@ -479,6 +480,24 @@
       height: 54px;
       margin: 24px auto 0;
       overflow: hidden;
+      opacity: 0;
+      transition: opacity 160ms ease;
+    }
+
+    /* Widget loads in the background (offscreen) so nothing flashes while it boots */
+    #vendepay-upsell-container.is-preloading {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      width: 100%;
+      max-width: 448px;
+      pointer-events: none;
+    }
+
+    #vendepay-upsell-container.is-ready {
+      position: static;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     #vendepay-upsell-container iframe {
@@ -532,7 +551,7 @@
           <label class="agreement-label" for="termsAgreement">I agree to the Creator Service Agreement and Distribution Terms.</label>
         </div>
 
-        <div id="vendepay-upsell-container"></div>
+        <div id="vendepay-upsell-container" class="is-preloading" aria-hidden="true"></div>
         <script src="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c" onload="window.trackUp1Event && window.trackUp1Event('up1_widget_script_loaded'); window.VendepayUpsellWidget && window.VendepayUpsellWidget.showIframe('vendepay-upsell-container')"></script>
 
       </div>
@@ -544,7 +563,20 @@
       var loadingScreen = document.getElementById("loadingScreen");
       var appScreen = document.getElementById("appScreen");
 
+
+      var upsellContainer = document.getElementById("vendepay-upsell-container");
+      var revealed = false;
+      function revealUpsell() {
+        if (revealed || !upsellContainer) return;
+        revealed = true;
+        upsellContainer.classList.remove("is-preloading");
+        upsellContainer.classList.add("is-ready");
+        upsellContainer.removeAttribute("aria-hidden");
+      }
+      window.__revealUp1Upsell = revealUpsell;
+
       window.setTimeout(function () {
+        revealUpsell();
         loadingScreen.classList.add("is-hidden");
         appScreen.classList.add("is-visible");
         appScreen.setAttribute("aria-hidden", "false");
