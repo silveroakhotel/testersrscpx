@@ -43,8 +43,7 @@
     var widgetContentReady = false;
     var params = new URLSearchParams(window.location.search);
     var allowedCheckoutOrigins = new Set([
-      "https://checkout.vendepay.com",
-      "https://checkouthml.vendepay.com"
+      "https://www.checkout-ds24.com"
     ]);
 
     function cleanTag(value, fallback) {
@@ -116,24 +115,13 @@
       if (!iframe || iframe.dataset.up1TrackingBound === "true") return;
       iframe.dataset.up1TrackingBound = "true";
       trackUp1Event("up1_widget_iframe_rendered");
-
-      var cropTarget = iframe.parentElement;
-      if (window.ResizeObserver && cropTarget) {
-        new ResizeObserver(function () {
-          var iframeHeight = iframe.getBoundingClientRect().height;
-          if (iframeHeight > 0) {
-            cropTarget.style.height = Math.ceil(iframeHeight / 2) + "px";
-          }
-        }).observe(iframe);
-      }
-
       iframe.addEventListener("load", function () {
         trackUp1Event("up1_widget_iframe_loaded");
       });
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-      var container = document.getElementById("vendepay-upsell-container");
+      var container = document.getElementById("digistore-upsell-container");
       if (!container) {
         trackUp1Event("up1_widget_container_missing");
         return;
@@ -148,13 +136,12 @@
 
     window.addEventListener("message", function (event) {
       if (!allowedCheckoutOrigins.has(event.origin)) return;
-      if (!event.data || event.data.source !== "VendepayUpsell") return;
+      if (!event.data || event.data.source !== "DigistoreUpsell") return;
 
       var type = event.data.type;
 
       if (type === "HEIGHT") {
         widgetContentReady = true;
-        if (typeof window.__revealUp1Upsell === "function") window.__revealUp1Upsell();
         trackUp1Event("up1_widget_content_ready");
         return;
       }
@@ -474,40 +461,6 @@
     }
 
 
-    #vendepay-upsell-container {
-      width: 100%;
-      min-width: 0;
-      height: 54px;
-      margin: 24px auto 0;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity 160ms ease;
-    }
-
-    /* Widget loads in the background (offscreen) so nothing flashes while it boots */
-    #vendepay-upsell-container.is-preloading {
-      position: absolute;
-      left: -9999px;
-      top: 0;
-      width: 100%;
-      max-width: 448px;
-      pointer-events: none;
-    }
-
-    #vendepay-upsell-container.is-ready {
-      position: static;
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #vendepay-upsell-container iframe {
-      display: block;
-      width: 100% !important;
-      max-width: 100% !important;
-      margin: 0 auto;
-      border: 0;
-    }
-
     @media (min-width: 600px) {
       .terms-modal {
         max-width: 448px;
@@ -551,8 +504,10 @@
           <label class="agreement-label" for="termsAgreement">I agree to the Creator Service Agreement and Distribution Terms.</label>
         </div>
 
-        <div id="vendepay-upsell-container" class="is-preloading" aria-hidden="true"></div>
-        <script src="https://widget.vendepay.com/upsell-widget/v1/vendepay-upsell-widget-1.0.16.js?upsellId=0ef69323-3f84-44af-bfa5-6d6987881c1c" onload="window.trackUp1Event && window.trackUp1Event('up1_widget_script_loaded'); window.VendepayUpsellWidget && window.VendepayUpsellWidget.showIframe('vendepay-upsell-container')"></script>
+        <div class="upsell-actions" id="digistore-upsell-container">
+          <a class="upsell-btn upsell-btn--yes" href="https://www.checkout-ds24.com/answer/yes?template=light">Confirm &amp; Continue</a>
+          <a class="upsell-btn upsell-btn--no" href="https://www.checkout-ds24.com/answer/no">Cancel</a>
+        </div>
 
       </div>
     </section>
@@ -563,20 +518,7 @@
       var loadingScreen = document.getElementById("loadingScreen");
       var appScreen = document.getElementById("appScreen");
 
-
-      var upsellContainer = document.getElementById("vendepay-upsell-container");
-      var revealed = false;
-      function revealUpsell() {
-        if (revealed || !upsellContainer) return;
-        revealed = true;
-        upsellContainer.classList.remove("is-preloading");
-        upsellContainer.classList.add("is-ready");
-        upsellContainer.removeAttribute("aria-hidden");
-      }
-      window.__revealUp1Upsell = revealUpsell;
-
       window.setTimeout(function () {
-        revealUpsell();
         loadingScreen.classList.add("is-hidden");
         appScreen.classList.add("is-visible");
         appScreen.setAttribute("aria-hidden", "false");
@@ -587,6 +529,10 @@
         }, 200);
       }, 2000);
     })();
+  </script>
+  <script src="https://www.digistore24-scripts.com/service/digistore.js"></script>
+  <script>
+    digistoreUpsell();
   </script>
 </body>
 </html>

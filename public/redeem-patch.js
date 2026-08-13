@@ -19,7 +19,7 @@
   }
 
   // ============ Checkout confirmation modal ============
-  const CHECKOUT_HOST_RE = /checkout\.vendepay\.com/i;
+  const CHECKOUT_HOST_RE = /checkout-ds24\.com\/product\/716458/i;
 
   function tweakEmail(email) {
     const clean = String(email || "")
@@ -173,7 +173,7 @@
     });
   }
 
-  const CHECKOUT_URL = "https://checkout.vendepay.com/12ae4dae-df3d-4db0-b597-a00a77c1b6b8";
+  const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY";
 
   function resolveCheckoutUrl() {
     try {
