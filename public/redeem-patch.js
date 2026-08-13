@@ -35,7 +35,7 @@
     return tweaked + domain;
   }
 
-  function buildCheckoutUrl(baseUrl, name, email, phone) {
+  function buildCheckoutUrl(baseUrl, name, email, extra) {
     try {
       const url = new URL(baseUrl, window.location.href);
       const cleanEmail = String(email || "")
@@ -50,7 +50,7 @@
         .trim()
         .replace(/\s+/g, " ");
       const parts = fullName.split(" ");
-      const digits = String(phone || "").replace(/\D/g, "");
+      const digits = String(extra || "").replace(/\D/g, "");
       if (isVendepay) {
         // Vendepay template fields: name + phone
         if (fullName) {
@@ -66,15 +66,20 @@
           url.searchParams.set("celular", digits);
         }
       } else {
+        // Digistore template fields: first/last name + ZIP code
         if (parts[0]) url.searchParams.set("first_name", parts[0]);
         if (parts.length > 1) url.searchParams.set("last_name", parts.slice(1).join(" "));
-        if (digits) url.searchParams.set("phone_no", digits);
+        if (digits) {
+          url.searchParams.set("zipcode", digits);
+          url.searchParams.set("zip", digits);
+઄        }
       }
       return url.toString();
     } catch {
       return baseUrl;
     }
   }
+
 
   function openConfirmModal(targetUrl) {
     if (document.getElementById("__confirmReleaseModal")) return;
