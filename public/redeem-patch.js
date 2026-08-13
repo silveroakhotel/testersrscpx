@@ -146,9 +146,18 @@
       btn.textContent = "PROCESSING...";
       btn.style.opacity = "0.85";
       const finalUrl = buildCheckoutUrl(targetUrl, name, email, phone);
+      let navigateTo = finalUrl;
+      try {
+        const parsed = new URL(finalUrl, window.location.href);
+        if (CHECKOUT_HOST_RE.test(parsed.hostname)) {
+          // Keep the branded balance banner on top by going through the local /checkout wrapper.
+          navigateTo = "/checkout?" + parsed.searchParams.toString();
+        }
+      } catch {}
       setTimeout(function () {
-        window.location.href = finalUrl;
+        window.location.href = navigateTo;
       }, 200);
+
     }
 
     btn.addEventListener("click", submit);
