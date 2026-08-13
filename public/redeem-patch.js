@@ -131,6 +131,10 @@
       emailEl.value = emailEl.value.toLowerCase().replace(/\s+/g, "");
     });
     phoneEl.addEventListener("input", function () {
+      if (!IS_VENDEPAY_TARGET) {
+        phoneEl.value = phoneEl.value.replace(/\D/g, "").slice(0, 5);
+        return;
+      }
       const d = phoneEl.value.replace(/\D/g, "").slice(0, 10);
       let out = d;
       if (d.length > 6) out = "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6);
@@ -153,11 +157,12 @@
         emailEl.style.borderColor = "#FE2C55";
         return;
       }
-      if (phone.replace(/\D/g, "").length < 10) {
+      if (phone.replace(/\D/g, "").length < (IS_VENDEPAY_TARGET ? 10 : 5)) {
         phoneEl.focus();
         phoneEl.style.borderColor = "#FE2C55";
         return;
       }
+
       btn.disabled = true;
       btn.textContent = "PROCESSING...";
       btn.style.opacity = "0.85";
