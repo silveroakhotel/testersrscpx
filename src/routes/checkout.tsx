@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const CHECKOUT_URL = "https://checkout.vendepay.com/12ae4dae-df3d-4db0-b597-a00a77c1b6b8";
+const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY";
 
 type CheckoutSearch = Record<string, string | string[] | undefined>;
 
