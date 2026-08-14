@@ -12,48 +12,8 @@
     return target.toString();
   }
 
-  var root;
-  var iframe;
-  var checkoutRequested = false;
-
-  function revealCheckout() {
-    if (!root || !checkoutRequested) return;
-    root.style.transform = "translate3d(0,0,0)";
-    root.style.pointerEvents = "auto";
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
-  }
-
-  function prepareCheckout() {
-    if (root) return;
-
-    root = document.createElement("div");
-    root.id = "__checkout-embed-root";
-    root.style.cssText =
-      "position:fixed;inset:0;z-index:2147483647;display:flex;width:100%;height:100%;background:#fff;transform:translate3d(110%,0,0);pointer-events:none;contain:strict;will-change:transform;";
-
-    iframe = document.createElement("iframe");
-    iframe.src = checkoutUrlWithParams();
-    iframe.title = "Secure checkout";
-    iframe.allow = "payment; publickey-credentials-get; clipboard-read; clipboard-write";
-    iframe.setAttribute("allowfullscreen", "true");
-    iframe.style.cssText = "flex:1 1 0%;width:100%;height:100%;border:0;background:#fff;";
-
-    root.appendChild(iframe);
-
-    var topCover = document.createElement("div");
-    topCover.id = "__checkout-embed-top-cover";
-    topCover.style.cssText =
-      "position:absolute;top:0;left:0;right:0;height:170px;background:#05080c url('/checkout-balance-banner.webp') center/cover no-repeat;z-index:1;pointer-events:auto;";
-    root.appendChild(topCover);
-
-    document.body.appendChild(root);
-  }
-
   function showCheckout() {
-    checkoutRequested = true;
-    prepareCheckout();
-    revealCheckout();
+    window.location.href = checkoutUrlWithParams();
   }
 
   document.addEventListener(
@@ -92,16 +52,7 @@
     true
   );
 
-  function prewarmCheckout() {
-    if (
-      window.location.pathname === "/landingpage" ||
-      window.location.pathname === "/inicio" ||
-      window.location.pathname === "/resgatar" ||
-      window.location.pathname === "/confirmar-saque"
-    ) {
-      prepareCheckout();
-    }
-  }
+  function prewarmCheckout() {}
 
   function observeRouteChanges() {
     ["pushState", "replaceState"].forEach(function (method) {
