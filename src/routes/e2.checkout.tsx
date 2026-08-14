@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 // Structure 02 checkout — replace with the real Digistore affiliate link when ready.
-const CHECKOUT_URL = "https://google.com";
+const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=belbrigida84a647&cam=CAMPAIGNKEY";
 
 type CheckoutSearch = Record<string, string | string[] | undefined>;
 

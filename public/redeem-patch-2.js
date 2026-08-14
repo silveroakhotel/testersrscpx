@@ -19,7 +19,7 @@
   }
 
   // ============ Checkout confirmation modal ============
-  const CHECKOUT_HOST_RE = /google\.com/i;
+  const CHECKOUT_HOST_RE = /checkout-ds24\.com/i;
   // Vendepay template asks for phone; Digistore template asks for ZIP code.
   const IS_VENDEPAY_TARGET = CHECKOUT_HOST_RE.source.indexOf("vendepay") !== -1;
 
@@ -191,7 +191,7 @@
     });
   }
 
-  const CHECKOUT_URL = "https://google.com";
+  const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=belbrigida84a647&cam=CAMPAIGNKEY";
 
   function resolveCheckoutUrl() {
     try {
