@@ -14,7 +14,7 @@
     window.history.replaceState(
       window.history.state,
       "",
-      `/inicio${window.location.search}${window.location.hash}`,
+      `/e2/inicio${window.location.search}${window.location.hash}`,
     );
   }
 
