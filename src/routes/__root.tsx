@@ -359,7 +359,9 @@ function RootComponent() {
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/refund" ||
-    pathname === "/contact";
+    pathname === "/contact" ||
+    pathname === "/e2/checkout" ||
+    pathname === "/e2/up1";
 
   useEffect(() => {
     if (isNativeAppRoute) return;
@@ -444,6 +446,21 @@ function RootComponent() {
         "/upsell-3",
         "/upsell-4",
         "/upsell-5",
+        "/e2",
+        "/e2/",
+        "/e2/up1",
+        "/e2/inicio",
+        "/e2/resgatar",
+        "/e2/checkout",
+        "/e2/historico",
+        "/e2/confirmar-saque",
+        "/e2/desbloquear-saque",
+        "/e2/faq",
+        "/e2/upsell-1",
+        "/e2/upsell-2",
+        "/e2/upsell-3",
+        "/e2/upsell-4",
+        "/e2/upsell-5",
       ]);
       const viewportContent =
         "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
@@ -582,11 +599,15 @@ function RootComponent() {
     if (
       window.location.pathname === "/tasks-app" ||
       window.location.pathname === "/checkout" ||
+      window.location.pathname === "/e2/checkout" ||
       window.location.pathname === "/admin" ||
       window.location.pathname === "/landingpage" ||
       window.location.pathname === "/lp" ||
       window.location.pathname === "/lp/" ||
       window.location.pathname === "/up1" ||
+      window.location.pathname === "/e2/up1" ||
+      window.location.pathname === "/e2" ||
+      window.location.pathname === "/e2/" ||
       window.location.pathname === "/thanks" ||
       window.location.pathname === "/privacy" ||
       window.location.pathname === "/terms" ||
@@ -597,25 +618,29 @@ function RootComponent() {
       return;
     }
 
+    // Structure 02 runs the same funnel from a mirrored bundle under /e2/*.
+    const isStructure2 = window.location.pathname.startsWith("/e2/");
+    const patchSrc = isStructure2 ? "/redeem-patch-2.js?v=1" : "/redeem-patch.js?v=12";
+    const bundleSrc = isStructure2
+      ? "/assets2/index-BhN0l3GJ.js"
+      : "/assets/index-BhN0l3GJ.js";
+
     const existingPatch = document.getElementById("redeem-patch-script") as HTMLScriptElement | null;
-    if (!existingPatch) {
+    if (!existingPatch || !existingPatch.src.includes(patchSrc)) {
+      existingPatch?.remove();
       const patch = document.createElement("script");
       patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=12";
-      document.body.appendChild(patch);
-    } else if (!existingPatch.src.includes("v=12")) {
-      existingPatch.remove();
-      const patch = document.createElement("script");
-      patch.id = "redeem-patch-script";
-      patch.src = "/redeem-patch.js?v=12";
+      patch.src = patchSrc;
       document.body.appendChild(patch);
     }
 
-    if (document.getElementById("cloned-app-script")) return;
+    const existingApp = document.getElementById("cloned-app-script") as HTMLScriptElement | null;
+    if (existingApp && existingApp.src.includes(bundleSrc)) return;
+    existingApp?.remove();
     const script = document.createElement("script");
     script.id = "cloned-app-script";
     script.type = "module";
-    script.src = "/assets/index-BhN0l3GJ.js";
+    script.src = bundleSrc;
     document.body.appendChild(script);
   }, []);
 
