@@ -359,7 +359,9 @@ function RootComponent() {
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/refund" ||
-    pathname === "/contact";
+    pathname === "/contact" ||
+    pathname === "/e2/checkout" ||
+    pathname === "/e2/up1";
 
   useEffect(() => {
     if (isNativeAppRoute) return;
@@ -444,6 +446,21 @@ function RootComponent() {
         "/upsell-3",
         "/upsell-4",
         "/upsell-5",
+        "/e2",
+        "/e2/",
+        "/e2/up1",
+        "/e2/inicio",
+        "/e2/resgatar",
+        "/e2/checkout",
+        "/e2/historico",
+        "/e2/confirmar-saque",
+        "/e2/desbloquear-saque",
+        "/e2/faq",
+        "/e2/upsell-1",
+        "/e2/upsell-2",
+        "/e2/upsell-3",
+        "/e2/upsell-4",
+        "/e2/upsell-5",
       ]);
       const viewportContent =
         "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
