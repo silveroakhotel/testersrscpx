@@ -169,14 +169,7 @@
       btn.textContent = "PROCESSING...";
       btn.style.opacity = "0.85";
       const finalUrl = buildCheckoutUrl(targetUrl, name, email, phone);
-      let navigateTo = finalUrl;
-      try {
-        const parsed = new URL(finalUrl, window.location.href);
-        if (CHECKOUT_HOST_RE.test(parsed.hostname)) {
-          // Keep the branded balance banner on top by going through the local /checkout wrapper.
-          navigateTo = "/e2/checkout?" + parsed.searchParams.toString();
-        }
-      } catch {}
+      const navigateTo = finalUrl;
       setTimeout(function () {
         window.location.href = navigateTo;
       }, 200);
