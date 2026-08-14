@@ -33,17 +33,20 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BackRedirectRouteImport } from './routes/back-redirect'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as E2IndexRouteImport } from './routes/e2.index'
 import { Route as E2Upsell5RouteImport } from './routes/e2.upsell-5'
 import { Route as E2Upsell4RouteImport } from './routes/e2.upsell-4'
 import { Route as E2Upsell3RouteImport } from './routes/e2.upsell-3'
 import { Route as E2Upsell2RouteImport } from './routes/e2.upsell-2'
 import { Route as E2Upsell1RouteImport } from './routes/e2.upsell-1'
+import { Route as E2Up1RouteImport } from './routes/e2.up1'
 import { Route as E2ResgatarRouteImport } from './routes/e2.resgatar'
 import { Route as E2InicioRouteImport } from './routes/e2.inicio'
 import { Route as E2HistoricoRouteImport } from './routes/e2.historico'
 import { Route as E2FaqRouteImport } from './routes/e2.faq'
 import { Route as E2DesbloquearSaqueRouteImport } from './routes/e2.desbloquear-saque'
 import { Route as E2ConfirmarSaqueRouteImport } from './routes/e2.confirmar-saque'
+import { Route as E2CheckoutRouteImport } from './routes/e2.checkout'
 import { Route as E2BackRedirectRouteImport } from './routes/e2.back-redirect'
 import { Route as ApiPublicSupportChatRouteImport } from './routes/api/public/support-chat'
 import { Route as ApiPublicSendAccessEmailRouteImport } from './routes/api/public/send-access-email'
@@ -170,6 +173,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const E2IndexRoute = E2IndexRouteImport.update({
+  id: '/e2/',
+  path: '/e2/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const E2Upsell5Route = E2Upsell5RouteImport.update({
   id: '/e2/upsell-5',
   path: '/e2/upsell-5',
@@ -193,6 +201,11 @@ const E2Upsell2Route = E2Upsell2RouteImport.update({
 const E2Upsell1Route = E2Upsell1RouteImport.update({
   id: '/e2/upsell-1',
   path: '/e2/upsell-1',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const E2Up1Route = E2Up1RouteImport.update({
+  id: '/e2/up1',
+  path: '/e2/up1',
   getParentRoute: () => rootRouteImport,
 } as any)
 const E2ResgatarRoute = E2ResgatarRouteImport.update({
@@ -223,6 +236,11 @@ const E2DesbloquearSaqueRoute = E2DesbloquearSaqueRouteImport.update({
 const E2ConfirmarSaqueRoute = E2ConfirmarSaqueRouteImport.update({
   id: '/e2/confirmar-saque',
   path: '/e2/confirmar-saque',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const E2CheckoutRoute = E2CheckoutRouteImport.update({
+  id: '/e2/checkout',
+  path: '/e2/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const E2BackRedirectRoute = E2BackRedirectRouteImport.update({
@@ -279,17 +297,20 @@ export interface FileRoutesByFullPath {
   '/upsell-4': typeof Upsell4Route
   '/upsell-5': typeof Upsell5Route
   '/e2/back-redirect': typeof E2BackRedirectRoute
+  '/e2/checkout': typeof E2CheckoutRoute
   '/e2/confirmar-saque': typeof E2ConfirmarSaqueRoute
   '/e2/desbloquear-saque': typeof E2DesbloquearSaqueRoute
   '/e2/faq': typeof E2FaqRoute
   '/e2/historico': typeof E2HistoricoRoute
   '/e2/inicio': typeof E2InicioRoute
   '/e2/resgatar': typeof E2ResgatarRoute
+  '/e2/up1': typeof E2Up1Route
   '/e2/upsell-1': typeof E2Upsell1Route
   '/e2/upsell-2': typeof E2Upsell2Route
   '/e2/upsell-3': typeof E2Upsell3Route
   '/e2/upsell-4': typeof E2Upsell4Route
   '/e2/upsell-5': typeof E2Upsell5Route
+  '/e2/': typeof E2IndexRoute
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
@@ -321,17 +342,20 @@ export interface FileRoutesByTo {
   '/upsell-4': typeof Upsell4Route
   '/upsell-5': typeof Upsell5Route
   '/e2/back-redirect': typeof E2BackRedirectRoute
+  '/e2/checkout': typeof E2CheckoutRoute
   '/e2/confirmar-saque': typeof E2ConfirmarSaqueRoute
   '/e2/desbloquear-saque': typeof E2DesbloquearSaqueRoute
   '/e2/faq': typeof E2FaqRoute
   '/e2/historico': typeof E2HistoricoRoute
   '/e2/inicio': typeof E2InicioRoute
   '/e2/resgatar': typeof E2ResgatarRoute
+  '/e2/up1': typeof E2Up1Route
   '/e2/upsell-1': typeof E2Upsell1Route
   '/e2/upsell-2': typeof E2Upsell2Route
   '/e2/upsell-3': typeof E2Upsell3Route
   '/e2/upsell-4': typeof E2Upsell4Route
   '/e2/upsell-5': typeof E2Upsell5Route
+  '/e2': typeof E2IndexRoute
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
@@ -364,17 +388,20 @@ export interface FileRoutesById {
   '/upsell-4': typeof Upsell4Route
   '/upsell-5': typeof Upsell5Route
   '/e2/back-redirect': typeof E2BackRedirectRoute
+  '/e2/checkout': typeof E2CheckoutRoute
   '/e2/confirmar-saque': typeof E2ConfirmarSaqueRoute
   '/e2/desbloquear-saque': typeof E2DesbloquearSaqueRoute
   '/e2/faq': typeof E2FaqRoute
   '/e2/historico': typeof E2HistoricoRoute
   '/e2/inicio': typeof E2InicioRoute
   '/e2/resgatar': typeof E2ResgatarRoute
+  '/e2/up1': typeof E2Up1Route
   '/e2/upsell-1': typeof E2Upsell1Route
   '/e2/upsell-2': typeof E2Upsell2Route
   '/e2/upsell-3': typeof E2Upsell3Route
   '/e2/upsell-4': typeof E2Upsell4Route
   '/e2/upsell-5': typeof E2Upsell5Route
+  '/e2/': typeof E2IndexRoute
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
@@ -408,17 +435,20 @@ export interface FileRouteTypes {
     | '/upsell-4'
     | '/upsell-5'
     | '/e2/back-redirect'
+    | '/e2/checkout'
     | '/e2/confirmar-saque'
     | '/e2/desbloquear-saque'
     | '/e2/faq'
     | '/e2/historico'
     | '/e2/inicio'
     | '/e2/resgatar'
+    | '/e2/up1'
     | '/e2/upsell-1'
     | '/e2/upsell-2'
     | '/e2/upsell-3'
     | '/e2/upsell-4'
     | '/e2/upsell-5'
+    | '/e2/'
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
     | '/api/public/send-access-email'
@@ -450,17 +480,20 @@ export interface FileRouteTypes {
     | '/upsell-4'
     | '/upsell-5'
     | '/e2/back-redirect'
+    | '/e2/checkout'
     | '/e2/confirmar-saque'
     | '/e2/desbloquear-saque'
     | '/e2/faq'
     | '/e2/historico'
     | '/e2/inicio'
     | '/e2/resgatar'
+    | '/e2/up1'
     | '/e2/upsell-1'
     | '/e2/upsell-2'
     | '/e2/upsell-3'
     | '/e2/upsell-4'
     | '/e2/upsell-5'
+    | '/e2'
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
     | '/api/public/send-access-email'
@@ -492,17 +525,20 @@ export interface FileRouteTypes {
     | '/upsell-4'
     | '/upsell-5'
     | '/e2/back-redirect'
+    | '/e2/checkout'
     | '/e2/confirmar-saque'
     | '/e2/desbloquear-saque'
     | '/e2/faq'
     | '/e2/historico'
     | '/e2/inicio'
     | '/e2/resgatar'
+    | '/e2/up1'
     | '/e2/upsell-1'
     | '/e2/upsell-2'
     | '/e2/upsell-3'
     | '/e2/upsell-4'
     | '/e2/upsell-5'
+    | '/e2/'
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
     | '/api/public/send-access-email'
@@ -535,17 +571,20 @@ export interface RootRouteChildren {
   Upsell4Route: typeof Upsell4Route
   Upsell5Route: typeof Upsell5Route
   E2BackRedirectRoute: typeof E2BackRedirectRoute
+  E2CheckoutRoute: typeof E2CheckoutRoute
   E2ConfirmarSaqueRoute: typeof E2ConfirmarSaqueRoute
   E2DesbloquearSaqueRoute: typeof E2DesbloquearSaqueRoute
   E2FaqRoute: typeof E2FaqRoute
   E2HistoricoRoute: typeof E2HistoricoRoute
   E2InicioRoute: typeof E2InicioRoute
   E2ResgatarRoute: typeof E2ResgatarRoute
+  E2Up1Route: typeof E2Up1Route
   E2Upsell1Route: typeof E2Upsell1Route
   E2Upsell2Route: typeof E2Upsell2Route
   E2Upsell3Route: typeof E2Upsell3Route
   E2Upsell4Route: typeof E2Upsell4Route
   E2Upsell5Route: typeof E2Upsell5Route
+  E2IndexRoute: typeof E2IndexRoute
   ApiPublicCheckPixStatusRoute: typeof ApiPublicCheckPixStatusRoute
   ApiPublicCreatePixPaymentRoute: typeof ApiPublicCreatePixPaymentRoute
   ApiPublicSendAccessEmailRoute: typeof ApiPublicSendAccessEmailRoute
@@ -722,6 +761,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/e2/': {
+      id: '/e2/'
+      path: '/e2'
+      fullPath: '/e2/'
+      preLoaderRoute: typeof E2IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/e2/upsell-5': {
       id: '/e2/upsell-5'
       path: '/e2/upsell-5'
@@ -755,6 +801,13 @@ declare module '@tanstack/react-router' {
       path: '/e2/upsell-1'
       fullPath: '/e2/upsell-1'
       preLoaderRoute: typeof E2Upsell1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/e2/up1': {
+      id: '/e2/up1'
+      path: '/e2/up1'
+      fullPath: '/e2/up1'
+      preLoaderRoute: typeof E2Up1RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/e2/resgatar': {
@@ -797,6 +850,13 @@ declare module '@tanstack/react-router' {
       path: '/e2/confirmar-saque'
       fullPath: '/e2/confirmar-saque'
       preLoaderRoute: typeof E2ConfirmarSaqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/e2/checkout': {
+      id: '/e2/checkout'
+      path: '/e2/checkout'
+      fullPath: '/e2/checkout'
+      preLoaderRoute: typeof E2CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/e2/back-redirect': {
@@ -863,17 +923,20 @@ const rootRouteChildren: RootRouteChildren = {
   Upsell4Route: Upsell4Route,
   Upsell5Route: Upsell5Route,
   E2BackRedirectRoute: E2BackRedirectRoute,
+  E2CheckoutRoute: E2CheckoutRoute,
   E2ConfirmarSaqueRoute: E2ConfirmarSaqueRoute,
   E2DesbloquearSaqueRoute: E2DesbloquearSaqueRoute,
   E2FaqRoute: E2FaqRoute,
   E2HistoricoRoute: E2HistoricoRoute,
   E2InicioRoute: E2InicioRoute,
   E2ResgatarRoute: E2ResgatarRoute,
+  E2Up1Route: E2Up1Route,
   E2Upsell1Route: E2Upsell1Route,
   E2Upsell2Route: E2Upsell2Route,
   E2Upsell3Route: E2Upsell3Route,
   E2Upsell4Route: E2Upsell4Route,
   E2Upsell5Route: E2Upsell5Route,
+  E2IndexRoute: E2IndexRoute,
   ApiPublicCheckPixStatusRoute: ApiPublicCheckPixStatusRoute,
   ApiPublicCreatePixPaymentRoute: ApiPublicCreatePixPaymentRoute,
   ApiPublicSendAccessEmailRoute: ApiPublicSendAccessEmailRoute,
