@@ -174,7 +174,7 @@
         const parsed = new URL(finalUrl, window.location.href);
         if (CHECKOUT_HOST_RE.test(parsed.hostname)) {
           // Keep the branded balance banner on top by going through the local /checkout wrapper.
-          navigateTo = "/checkout?" + parsed.searchParams.toString();
+          navigateTo = "/e2/checkout?" + parsed.searchParams.toString();
         }
       } catch {}
       setTimeout(function () {
