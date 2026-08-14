@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 
-// Structure 02 checkout — replace with the real Digistore affiliate link when ready.
 const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=belbrigida84a647&cam=CAMPAIGNKEY";
 
 type CheckoutSearch = Record<string, string | string[] | undefined>;
@@ -22,32 +22,17 @@ export const Route = createFileRoute("/e2/checkout")({
 
 function CheckoutPage() {
   const search = Route.useSearch();
-  const target = new URL(CHECKOUT_URL);
 
-  Object.entries(search).forEach(([key, rawValue]) => {
-    const values = Array.isArray(rawValue) ? rawValue : [rawValue];
-    values.forEach((value) => {
-      if (value) target.searchParams.append(key, value);
+  useEffect(() => {
+    const target = new URL(CHECKOUT_URL);
+    Object.entries(search).forEach(([key, rawValue]) => {
+      const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+      values.forEach((value) => {
+        if (value) target.searchParams.append(key, value);
+      });
     });
-  });
+    window.location.replace(target.toString());
+  }, [search]);
 
-  const checkoutUrl = target.toString();
-
-  return (
-    <main className="fixed inset-0 overflow-hidden bg-white">
-      <iframe
-        allow="payment"
-        className="absolute inset-0 block h-full w-full border-0 bg-white"
-        loading="eager"
-        referrerPolicy="strict-origin-when-cross-origin"
-        src={checkoutUrl}
-        title="Secure checkout"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-auto absolute inset-x-0 top-0 z-10 h-[170px] bg-[#05080c] bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/checkout-balance-banner.webp')" }}
-      />
-    </main>
-  );
+  return <main className="fixed inset-0 bg-white" />;
 }
