@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   if (window.__checkoutEmbedInstalled) return;
   window.__checkoutEmbedInstalled = true;
 
@@ -25,7 +25,7 @@
       if (!button || button.disabled) return;
 
       var label = (button.textContent || "").trim().toUpperCase();
-      if (label.indexOf("LIBERAR $") !== 0) return;
+      if (label.indexOf("RELEASE $") !== 0) return;
 
       showCheckout();
     },

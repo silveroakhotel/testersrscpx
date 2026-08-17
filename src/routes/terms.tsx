@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Termos de Serviço | Task Partners" },
-      { name: "description", content: "Termos de Serviço da Task Partners." },
+      { title: "Terms of Service | Task Partners" },
+      { name: "description", content: "Task Partners Terms of Service." },
     ],
   }),
   component: TermsPage,
@@ -42,19 +42,19 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function TermsPage() {
   return (
-    <LegalLayout label="Legal" title="Termos de Serviço">
-      <p>Ao usar a Task Partners, você concorda com estes termos. A Task Partners fornece um ambiente digital de produtividade, modelos, recursos e ferramentas de organização para fluxos de trabalho pessoais ou profissionais.</p>
-      <Section title="Acesso ao produto">
-        <p>O acesso é fornecido digitalmente após a compra. Você é responsável por manter seus dados de login seguros e usar o produto de forma legal e respeitosa.</p>
+    <LegalLayout label="Legal" title="Terms of Service">
+      <p>By using Task Partners, you agree to these terms. Task Partners provides a digital productivity workspace, templates, resources, and organization tools for personal or business workflow management.</p>
+      <Section title="Product Access">
+        <p>Access is provided digitally after purchase. You are responsible for keeping your login details secure and using the product in a lawful and respectful manner.</p>
       </Section>
-      <Section title="Uso permitido">
-        <p>Você não pode copiar, revender, redistribuir ou usar indevidamente os recursos da Task Partners sem permissão. O ambiente é destinado à organização, produtividade e acesso aos materiais digitais incluídos.</p>
+      <Section title="Acceptable Use">
+        <p>You may not copy, resell, redistribute, or misuse Task Partners resources without permission. The workspace is intended for organization, productivity, and access to included digital materials.</p>
       </Section>
-      <Section title="Alterações no serviço">
-        <p>Podemos atualizar conteúdos, funcionalidades e recursos para melhorar o produto. Nosso objetivo é manter o ambiente estável, útil e acessível.</p>
+      <Section title="Service Changes">
+        <p>We may update content, features, and resources to improve the product. We aim to keep the workspace stable, useful, and accessible.</p>
       </Section>
-      <Section title="Suporte">
-        <p>Para dúvidas sobre o serviço, entre em contato pelo e-mail <a className="font-bold text-[#2563EB]" href="mailto:support@taskpartners.live">support@taskpartners.live</a>.</p>
+      <Section title="Support">
+        <p>For service questions, contact <a className="font-bold text-[#2563EB]" href="mailto:support@taskpartners.live">support@taskpartners.live</a>.</p>
       </Section>
     </LegalLayout>
   );

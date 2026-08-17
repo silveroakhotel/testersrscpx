@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 export const Route = createFileRoute("/refund")({
   head: () => ({
     meta: [
-      { title: "Política de Reembolso | Task Partners" },
-      { name: "description", content: "Política de Reembolso da Task Partners." },
+      { title: "Refund Policy | Task Partners" },
+      { name: "description", content: "Task Partners Refund Policy." },
     ],
   }),
   component: RefundPage,
@@ -42,16 +42,16 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function RefundPage() {
   return (
-    <LegalLayout label="Política" title="Política de Reembolso">
-      <p>A Task Partners oferece garantia de reembolso de 14 dias. Se o produto não for adequado para você, entre em contato com nossa equipe de suporte dentro de 14 dias após a compra e auxiliaremos sua solicitação conforme esta política.</p>
-      <Section title="Elegibilidade">
-        <p>Solicitações de reembolso devem incluir o e-mail usado na compra e os detalhes relevantes do pedido. Solicitações enviadas após o período de 14 dias podem não ser elegíveis.</p>
+    <LegalLayout label="Policy" title="Refund Policy">
+      <p>Task Partners includes a 14-day money back guarantee. If the product is not the right fit for you, contact our support team within 14 days of purchase and we will assist with your refund request according to this policy.</p>
+      <Section title="Eligibility">
+        <p>Refund requests should include the email used for purchase and any relevant order details. Requests submitted after the 14-day period may not be eligible.</p>
       </Section>
-      <Section title="Processamento">
-        <p>Reembolsos aprovados são processados pelo mesmo processador de pagamento usado na compra. O prazo pode variar conforme o método de pagamento e a instituição financeira.</p>
+      <Section title="Processing">
+        <p>Approved refunds are processed through the original payment processor. Processing times may vary depending on the payment method and financial institution.</p>
       </Section>
-      <Section title="Como solicitar reembolso">
-        <p>Envie um e-mail para <a className="font-bold text-[#2563EB]" href="mailto:support@taskpartners.live">support@taskpartners.live</a> com o assunto "Solicitação de Reembolso" e inclua o e-mail usado na compra.</p>
+      <Section title="How To Request A Refund">
+        <p>Email <a className="font-bold text-[#2563EB]" href="mailto:support@taskpartners.live">support@taskpartners.live</a> with the subject line "Refund Request" and include your purchase email.</p>
       </Section>
     </LegalLayout>
   );
