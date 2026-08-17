@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Account verification and profile synchronization interface.">
-  <title>Balance | Task Partners</title>
+  <meta name="description" content="Interface de verificação de conta e sincronização de perfil.">
+  <title>Saldo | Task Partners</title>
 
   <script
     src="https://cdn.utmify.com.br/scripts/utms/latest.js"
@@ -40,7 +40,7 @@
     var trackedEvents = Object.create(null);
     var pageStartedAt = Date.now();
     var confirmationStarted = false;
-    var widgetContentReady = false;
+    var widgetContentPronto = false;
     var params = new URLSearchParams(window.location.search);
     var allowedCheckoutOrigins = new Set([
       "https://www.checkout-ds24.com"
@@ -53,58 +53,58 @@
       return cleaned || "unknown";
     }
 
-    function setClarityTag(key, value) {
+    function setClarezaTag(key, value) {
       if (typeof window.clarity !== "function") return;
       window.clarity("set", key, cleanTag(value));
     }
 
-    function sendTikTokEvent(eventName) {
+    function sendTikTokEvent(eventNome) {
       if (!window.ttq || typeof window.ttq.track !== "function") return;
 
       var properties = {
         contents: [{
           content_id: "UP1_PROFILE_SYNC",
           content_type: "product",
-          content_name: "Profile Synchronization"
+          content_name: "Perfil Synchronization"
         }],
         value: 37.00,
-        currency: "USD"
+        currency: "BRL"
       };
 
-      if (eventName === "up1_page_view") {
+      if (eventNome === "up1_page_view") {
         window.ttq.track("ViewContent", properties);
-      } else if (eventName === "up1_confirm_started") {
+      } else if (eventNome === "up1_confirm_started") {
         window.ttq.track("InitiateCheckout", properties);
       }
     }
 
-    function trackUp1Event(eventName, details) {
-      if (trackedEvents[eventName]) return;
-      trackedEvents[eventName] = true;
+    function trackUp1Event(eventNome, details) {
+      if (trackedEvents[eventNome]) return;
+      trackedEvents[eventNome] = true;
 
       if (typeof window.clarity === "function") {
-        window.clarity("event", eventName);
-        window.clarity("set", "up1_stage", eventName);
+        window.clarity("event", eventNome);
+        window.clarity("set", "up1_stage", eventNome);
 
         Object.keys(details || {}).forEach(function (key) {
-          setClarityTag("up1_" + key, details[key]);
+          setClarezaTag("up1_" + key, details[key]);
         });
 
-        if (eventName === "up1_confirm_started") {
+        if (eventNome === "up1_confirm_started") {
           window.clarity("upgrade", "up1_confirm_started");
         }
       }
 
-      sendTikTokEvent(eventName);
+      sendTikTokEvent(eventNome);
     }
 
     window.trackUp1Event = trackUp1Event;
 
-    setClarityTag("up1_source", params.get("utm_source") || params.get("src") || "direct");
-    setClarityTag("up1_campaign", params.get("utm_campaign") || "none");
-    setClarityTag("up1_has_venda_id", params.has("vendaId") ? "yes" : "no");
-    setClarityTag("up1_has_order", params.has("order") ? "yes" : "no");
-    setClarityTag("up1_device", window.innerWidth <= 768 ? "mobile" : "desktop");
+    setClarezaTag("up1_source", params.get("utm_source") || params.get("src") || "direct");
+    setClarezaTag("up1_campaign", params.get("utm_campaign") || "none");
+    setClarezaTag("up1_has_venda_id", params.has("vendaId") ? "yes" : "no");
+    setClarezaTag("up1_has_order", params.has("order") ? "yes" : "no");
+    setClarezaTag("up1_device", window.innerWidth <= 768 ? "mobile" : "desktop");
     trackUp1Event("up1_page_view");
 
     if (!params.has("vendaId")) {
@@ -141,7 +141,7 @@
       var type = event.data.type;
 
       if (type === "HEIGHT") {
-        widgetContentReady = true;
+        widgetContentPronto = true;
         trackUp1Event("up1_widget_content_ready");
         return;
       }
@@ -149,28 +149,28 @@
       if (type === "PIX_OPEN" || type === "CC_OPEN") {
         confirmationStarted = true;
         trackUp1Event("up1_confirm_started", {
-          payment_method: type === "PIX_OPEN" ? "pix" : "credit_card"
+          pagamento_method: type === "PIX_OPEN" ? "pix" : "credit_card"
         });
         return;
       }
 
       if (type === "PIX_SUCCESS") {
-        trackUp1Event("up1_payment_success", { payment_method: "pix" });
+        trackUp1Event("up1_pagamento_success", { pagamento_method: "pix" });
         return;
       }
 
       if (type === "CC_TOKEN") {
-        trackUp1Event("up1_card_details_submitted", { payment_method: "credit_card" });
+        trackUp1Event("up1_card_details_submitted", { pagamento_method: "credit_card" });
         return;
       }
 
       if (type === "CC_CLOSED" && !trackedEvents.up1_card_details_submitted) {
-        trackUp1Event("up1_payment_flow_closed");
+        trackUp1Event("up1_pagamento_flow_closed");
       }
     });
 
     window.setTimeout(function () {
-      if (!widgetContentReady) trackUp1Event("up1_widget_not_ready_8s");
+      if (!widgetContentPronto) trackUp1Event("up1_widget_not_ready_8s");
     }, 8000);
 
     window.setTimeout(function () {
@@ -186,7 +186,7 @@
 
       var seconds = Math.round((Date.now() - pageStartedAt) / 1000);
       var bucket = seconds < 5 ? "under_5s" : seconds < 15 ? "5_to_14s" : seconds < 30 ? "15_to_29s" : "30s_plus";
-      setClarityTag("up1_exit_time", bucket);
+      setClarezaTag("up1_exit_time", bucket);
       trackUp1Event("up1_exit_without_action");
     });
   })();
@@ -480,33 +480,33 @@
   </style>
 </head>
 <body>
-  <div class="loading-screen" id="loadingScreen" role="status" aria-label="Payment confirmed. Loading balance.">
+  <div class="loading-screen" id="loadingScreen" role="status" aria-label="Pagamento confirmado. Carregando saldo.">
     <div class="loading-content">
       <div class="loader-balls" aria-hidden="true">
         <span class="loader-ball loader-ball--pink"></span>
         <span class="loader-ball loader-ball--cyan"></span>
       </div>
-      <p class="loading-label">Payment confirmed</p>
+      <p class="loading-label">Pagamento confirmado</p>
     </div>
   </div>
 
   <main class="app-screen" id="appScreen" aria-hidden="true">
     <section class="terms-modal" aria-labelledby="termsTitle" aria-describedby="termsCopy termsHelper">
-      <header class="product-header">Creator Rewards</header>
+      <header class="product-header">Recompensas do Criador</header>
 
       <div class="terms-content">
-        <h1 class="terms-title" id="termsTitle">Complete account verification</h1>
-        <p class="terms-copy" id="termsCopy">Before your earnings can be transferred, you must review and accept the Creator Service Agreement and Distribution Terms.</p>
-        <p class="terms-helper" id="termsHelper">Required to continue</p>
+        <h1 class="terms-title" id="termsTitle">Concluir verificação da conta</h1>
+        <p class="terms-copy" id="termsCopy">Antes que seu saldo possa ser liberado, você precisa revisar e aceitar o Contrato de Serviço do Criador e os Termos de Distribuição.</p>
+        <p class="terms-helper" id="termsHelper">Obrigatório to continue</p>
 
         <div class="agreement-control">
           <input class="agreement-checkbox" id="termsAgreement" type="checkbox">
-          <label class="agreement-label" for="termsAgreement">I agree to the Creator Service Agreement and Distribution Terms.</label>
+          <label class="agreement-label" for="termsAgreement">Li e aceito o Contrato de Serviço do Criador e os Termos de Distribuição.</label>
         </div>
 
         <div class="upsell-actions" id="digistore-upsell-container">
-          <a class="upsell-btn upsell-btn--yes" href="https://www.checkout-ds24.com/answer/yes?template=light">Confirm &amp; Continue</a>
-          <a class="upsell-btn upsell-btn--no" href="https://www.checkout-ds24.com/answer/no">Cancel</a>
+          <a class="upsell-btn upsell-btn--yes" href="https://www.checkout-ds24.com/answer/yes?template=light">Confirmar e continuar</a>
+          <a class="upsell-btn upsell-btn--no" href="https://www.checkout-ds24.com/answer/no">Cancelar</a>
         </div>
 
       </div>

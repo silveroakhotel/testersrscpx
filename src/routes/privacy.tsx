@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy | Task Partners" },
-      { name: "description", content: "Task Partners Privacy Policy." },
+      { title: "Política de Privacidade | Task Partners" },
+      { name: "description", content: "Política de Privacidade da Task Partners." },
     ],
   }),
   component: PrivacyPage,
@@ -42,19 +42,19 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function PrivacyPage() {
   return (
-    <LegalLayout label="Legal" title="Privacy Policy">
-      <p>Task Partners respects your privacy and is committed to protecting the information you share with us. This policy explains how we collect, use, and safeguard basic account and support information.</p>
-      <Section title="Information We Collect">
-        <p>We may collect your name, email address, purchase details, support messages, and technical information needed to provide access to the workspace and related resources.</p>
+    <LegalLayout label="Legal" title="Política de Privacidade">
+      <p>A Task Partners respeita sua privacidade e se compromete a proteger as informações que você compartilha conosco. Esta política explica como coletamos, usamos e protegemos dados básicos de conta e suporte.</p>
+      <Section title="Informações que coletamos">
+        <p>Podemos coletar seu nome, endereço de e-mail, detalhes da compra, mensagens de suporte e informações técnicas necessárias para fornecer acesso ao painel e aos recursos relacionados.</p>
       </Section>
-      <Section title="How We Use Information">
-        <p>We use information to manage account access, deliver digital resources, respond to support requests, improve the product, and communicate important service updates.</p>
+      <Section title="Como usamos as informações">
+        <p>Usamos as informações para gerenciar o acesso à conta, entregar recursos digitais, responder solicitações de suporte, melhorar o produto e comunicar atualizações importantes do serviço.</p>
       </Section>
-      <Section title="Data Protection">
-        <p>We use reasonable administrative and technical safeguards to protect your information. No online service can guarantee absolute security, but we work to keep your data handled responsibly.</p>
+      <Section title="Proteção de dados">
+        <p>Usamos medidas administrativas e técnicas razoáveis para proteger suas informações. Nenhum serviço online pode garantir segurança absoluta, mas trabalhamos para tratar seus dados com responsabilidade.</p>
       </Section>
-      <Section title="Contact">
-        <p>For privacy questions, contact <a className="font-bold text-[#2563EB]" href="mailto:support@taskpartners.live">support@taskpartners.live</a>.</p>
+      <Section title="Contato">
+        <p>Para dúvidas sobre privacidade, entre em contato pelo e-mail <a className="font-bold text-[#2563EB]" href="mailto:support@taskpartners.live">support@taskpartners.live</a>.</p>
       </Section>
     </LegalLayout>
   );

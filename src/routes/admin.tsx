@@ -6,24 +6,24 @@ import { useMemo, useState } from "react";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin Dashboard" },
-      { name: "description", content: "TikTok Task Partners admin dashboard." },
+      { title: "Painel Administrativo" },
+      { name: "description", content: "Painel administrativo TikTok Task Partners." },
     ],
   }),
   component: AdminDashboard,
 });
 
-type AdminVideo = { id: number; title: string; url: string; category: string; reward: number; status: "Active" | "Inactive" };
-type Withdrawal = { id: number; user: string; amount: number; method: string; data: string; status: "Pending" | "Approved" | "Rejected" };
+type AdminVideo = { id: number; title: string; url: string; category: string; reward: number; status: "Ativo" | "Inativo" };
+type Withdrawal = { id: number; user: string; amount: number; method: string; data: string; status: "Pendente" | "Aprovado" | "Rejeitado" };
 
 const seedVideos: AdminVideo[] = [
-  { id: 1, title: "Beauty Launch Audit", url: "https://www.tiktok.com/embed/demo-1", category: "Beauty", reward: 15, status: "Active" },
-  { id: 2, title: "Tech Demo Review", url: "https://www.tiktok.com/embed/demo-2", category: "Technology", reward: 18, status: "Active" },
+  { id: 1, title: "Auditoria de lançamento de beleza", url: "https://www.tiktok.com/embed/demo-1", category: "Beleza", reward: 15, status: "Ativo" },
+  { id: 2, title: "Avaliação de demonstração tech", url: "https://www.tiktok.com/embed/demo-2", category: "Tecnologia", reward: 18, status: "Ativo" },
 ];
 
 const seedWithdrawals: Withdrawal[] = [
-  { id: 1001, user: "Mia Carter", amount: 1000, method: "PayPal Email", data: "mia@example.com", status: "Pending" },
-  { id: 1002, user: "Noah Brooks", amount: 1240, method: "Cash App", data: "$noahreviews", status: "Pending" },
+  { id: 1001, user: "Mia Carter", amount: 1000, method: "E-mail PayPal", data: "mia@example.com", status: "Pendente" },
+  { id: 1002, user: "Noah Brooks", amount: 1240, method: "Cash App", data: "noahreviews", status: "Pendente" },
 ];
 
 function AdminDashboard() {
@@ -50,7 +50,7 @@ function AdminDashboard() {
 
   function addVideo(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setVideos((value) => [{ id: Date.now(), title, url, category, reward: Math.min(20, Math.max(5, reward)), status: "Active" }, ...value]);
+    setVideos((value) => [{ id: Date.now(), title, url, category, reward: Math.min(20, Math.max(5, reward)), status: "Ativo" }, ...value]);
     setTitle("");
     setUrl("");
     setCategory("");
@@ -68,15 +68,15 @@ function AdminDashboard() {
           <div className="mb-5 flex items-center gap-3">
             <div className="grid h-12 w-12 place-items-center rounded-[8px] bg-blue-500"><ShieldCheck size={25} /></div>
             <div>
-              <h1 className="text-xl font-black">Admin Dashboard</h1>
-              <p className="text-sm text-slate-400">Role protected admin access</p>
+              <h1 className="text-xl font-black">Painel administrativo</h1>
+              <p className="text-sm text-slate-400">Acesso administrativo protegido</p>
             </div>
           </div>
           <input className="mb-3 h-12 w-full rounded-[8px] bg-white px-3 text-sm font-bold text-black outline-none" placeholder="admin@taskpartners.app" type="email" required />
-          <input className="mb-4 h-12 w-full rounded-[8px] bg-white px-3 text-sm font-bold text-black outline-none" placeholder="Password" type="password" required />
+          <input className="mb-4 h-12 w-full rounded-[8px] bg-white px-3 text-sm font-bold text-black outline-none" placeholder="Senha" type="password" required />
           <button className="flex h-12 w-full items-center justify-center gap-2 rounded-[8px] bg-blue-500 font-black" type="submit">
             {loading ? <Loader2 className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
-            Login as Admin
+            Entrar como administrador
           </button>
         </form>
       </main>
@@ -88,28 +88,28 @@ function AdminDashboard() {
       <section className="mx-auto w-full max-w-6xl">
         <header className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-black">TikTok Task Partners Admin</h1>
-            <p className="text-sm text-slate-400">Videos, limits, withdrawals, users, and review metrics.</p>
+            <h1 className="text-3xl font-black">Admin TikTok Task Partners</h1>
+            <p className="text-sm text-slate-400">Vídeos, limites, saques, usuários e métricas de avaliação.</p>
           </div>
-          <div className="rounded-[8px] bg-blue-500/15 px-4 py-2 text-sm font-black text-blue-200">Daily limit: {dailyLimit} videos/user</div>
+          <div className="rounded-[8px] bg-blue-500/15 px-4 py-2 text-sm font-black text-blue-200">Limite diário: {dailyLimit} vídeos/usuário</div>
         </header>
 
         <div className="mb-5 grid gap-3 sm:grid-cols-4">
-          <Stat icon={<UsersRound />} label="Users" value="1,248" />
-          <Stat icon={<Film />} label="Videos" value={String(videos.length)} />
-          <Stat icon={<DollarSign />} label="Total Balances" value={money(totalBalances)} />
-          <Stat icon={<CheckCircle2 />} label="Reviews" value="8,904" />
+          <Stat icon={<UsersRound />} label="Usuários" value="1.248" />
+          <Stat icon={<Film />} label="Vídeos" value={String(videos.length)} />
+          <Stat icon={<DollarSign />} label="Saldos totais" value={money(totalBalances)} />
+          <Stat icon={<CheckCircle2 />} label="Avaliações" value="8.904" />
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
           <section className="rounded-[8px] border border-white/10 bg-[#101827] p-4">
-            <h2 className="mb-4 text-xl font-black">Video Management</h2>
+            <h2 className="mb-4 text-xl font-black">Gerenciamento de vídeos</h2>
             <form onSubmit={addVideo} className="mb-4 grid gap-2 sm:grid-cols-5">
-              <input className="h-11 rounded-[8px] bg-white px-3 text-sm font-bold text-black" placeholder="Title" value={title} onChange={(event) => setTitle(event.target.value)} required />
-              <input className="h-11 rounded-[8px] bg-white px-3 text-sm font-bold text-black" placeholder="Video URL" value={url} onChange={(event) => setUrl(event.target.value)} required />
-              <input className="h-11 rounded-[8px] bg-white px-3 text-sm font-bold text-black" placeholder="Category" value={category} onChange={(event) => setCategory(event.target.value)} required />
+              <input className="h-11 rounded-[8px] bg-white px-3 text-sm font-bold text-black" placeholder="Título" value={title} onChange={(event) => setTitle(event.target.value)} required />
+              <input className="h-11 rounded-[8px] bg-white px-3 text-sm font-bold text-black" placeholder="URL do vídeo" value={url} onChange={(event) => setUrl(event.target.value)} required />
+              <input className="h-11 rounded-[8px] bg-white px-3 text-sm font-bold text-black" placeholder="Categoria" value={category} onChange={(event) => setCategory(event.target.value)} required />
               <input className="h-11 rounded-[8px] bg-white px-3 text-sm font-bold text-black" min={5} max={20} type="number" value={reward} onChange={(event) => setReward(Number(event.target.value))} required />
-              <button className="h-11 rounded-[8px] bg-blue-500 font-black" type="submit">Add</button>
+              <button className="h-11 rounded-[8px] bg-blue-500 font-black" type="submit">Adicionar</button>
             </form>
             <div className="space-y-2">
               {videos.map((video) => (
@@ -125,21 +125,21 @@ function AdminDashboard() {
 
           <aside className="space-y-5">
             <section className="rounded-[8px] border border-white/10 bg-[#101827] p-4">
-              <h2 className="mb-3 text-xl font-black">System Control</h2>
-              <label className="text-sm font-bold text-slate-300">Daily review limit</label>
+              <h2 className="mb-3 text-xl font-black">Controle do sistema</h2>
+              <label className="text-sm font-bold text-slate-300">Limite diário de avaliações</label>
               <input className="mt-2 h-12 w-full rounded-[8px] bg-white px-3 font-black text-black" min={5} max={10} type="number" value={dailyLimit} onChange={(event) => setDailyLimit(Number(event.target.value))} />
-              <p className="mt-2 text-xs text-slate-400">Allowed range: 5 to 10 videos per user per day.</p>
+              <p className="mt-2 text-xs text-slate-400">Faixa permitida: 5 a 10 vídeos por usuário por dia.</p>
             </section>
 
             <section className="rounded-[8px] border border-white/10 bg-[#101827] p-4">
-              <h2 className="mb-3 text-xl font-black">Withdrawal Moderation</h2>
+              <h2 className="mb-3 text-xl font-black">Moderação de saques</h2>
               <div className="space-y-2">
                 {withdrawals.map((item) => (
                   <div className="rounded-[8px] bg-white/5 p-3 text-sm" key={item.id}>
                     <div className="flex items-start justify-between gap-2"><div><p className="font-black">{item.user} - {money(item.amount)}</p><p className="text-xs text-slate-400">{item.method}: {item.data}</p></div><span className="text-xs font-black">{item.status}</span></div>
                     <div className="mt-3 flex gap-2">
-                      <button className="flex h-9 flex-1 items-center justify-center gap-1 rounded-[8px] bg-emerald-500 font-black" onClick={() => setWithdrawalStatus(item.id, "Approved")} type="button"><CheckCircle2 size={15} />Approve</button>
-                      <button className="flex h-9 flex-1 items-center justify-center gap-1 rounded-[8px] bg-rose-500 font-black" onClick={() => setWithdrawalStatus(item.id, "Rejected")} type="button"><XCircle size={15} />Reject</button>
+                      <button className="flex h-9 flex-1 items-center justify-center gap-1 rounded-[8px] bg-emerald-500 font-black" onClick={() => setWithdrawalStatus(item.id, "Aprovado")} type="button"><CheckCircle2 size={15} />Aprovar</button>
+                      <button className="flex h-9 flex-1 items-center justify-center gap-1 rounded-[8px] bg-rose-500 font-black" onClick={() => setWithdrawalStatus(item.id, "Rejeitado")} type="button"><XCircle size={15} />Rejeitar</button>
                     </div>
                   </div>
                 ))}
@@ -157,5 +157,5 @@ function Stat({ icon, label, value }: { icon: ReactNode; label: string; value: s
 }
 
 function money(value: number) {
-  return value.toLocaleString("en-US", { style: "currency", currency: "USD" });
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }

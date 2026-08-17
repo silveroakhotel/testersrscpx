@@ -3,8 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact | Task Partners" },
-      { name: "description", content: "Contact Task Partners support." },
+      { title: "Contato | Task Partners" },
+      { name: "description", content: "Entre em contato com o suporte da Task Partners." },
     ],
   }),
   component: ContactPage,
@@ -22,30 +22,30 @@ function ContactPage() {
           </span>
           Task Partners
         </a>
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#2563EB]">Support</p>
-        <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Contact Task Partners</h1>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#2563EB]">Suporte</p>
+        <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Contato Task Partners</h1>
         <p className="mt-5 text-base leading-8 text-slate-600">
-          Our support team can help with account access, product resources, billing questions, and refund requests.
+          Nossa equipe de suporte pode ajudar com acesso à conta, recursos do produto, dúvidas de cobrança e solicitações de reembolso.
         </p>
         <div className="mt-7 rounded-2xl border border-slate-200 bg-[#F8FAFC] p-5">
-          <strong className="block text-sm font-black text-[#0F172A]">Email Support</strong>
+          <strong className="block text-sm font-black text-[#0F172A]">E-mail de suporte</strong>
           <a className="mt-2 inline-flex font-black text-[#2563EB]" href="mailto:support@taskpartners.live">support@taskpartners.live</a>
         </div>
         <form className="mt-7 grid gap-4" action="mailto:support@taskpartners.live" method="post" encType="text/plain">
           <label className="grid gap-2 text-sm font-bold text-slate-700">
-            Name
+            Nome
             <input className="min-h-12 rounded-xl border border-slate-200 bg-white px-4 text-[#0F172A] outline-none transition focus:border-[#2563EB] focus:ring-4 focus:ring-blue-600/10" name="name" type="text" autoComplete="name" required />
           </label>
           <label className="grid gap-2 text-sm font-bold text-slate-700">
-            Email
+            E-mail
             <input className="min-h-12 rounded-xl border border-slate-200 bg-white px-4 text-[#0F172A] outline-none transition focus:border-[#2563EB] focus:ring-4 focus:ring-blue-600/10" name="email" type="email" autoComplete="email" required />
           </label>
           <label className="grid gap-2 text-sm font-bold text-slate-700">
-            Message
+            Mensagem
             <textarea className="min-h-32 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[#0F172A] outline-none transition focus:border-[#2563EB] focus:ring-4 focus:ring-blue-600/10" name="message" rows={5} required />
           </label>
           <button className="min-h-12 rounded-full bg-[#2563EB] px-6 text-sm font-black text-white shadow-lg shadow-blue-600/20 transition hover:bg-[#1D4ED8]" type="submit">
-            Send Message
+            Enviar mensagem
           </button>
         </form>
       </section>

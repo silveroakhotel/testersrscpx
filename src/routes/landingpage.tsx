@@ -5,60 +5,60 @@ import type { ReactNode } from "react";
 const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY";
 
 const problems = [
-  "You want extra income but do not know what skill to start with",
-  "You are tired of side hustles that require ads, inventory, or complicated tools",
-  "You see local tech problems everywhere but do not know how to turn them into paid jobs",
-  "You want something practical that can start this week",
+  "Você quer uma renda extra, mas ainda não sabe por qual habilidade começar",
+  "Você cansou de bicos que exigem anúncios, estoque ou ferramentas complicadas",
+  "Você vê problemas simples de tecnologia no dia a dia, mas não sabe como transformar isso em serviço pago",
+  "Você quer algo prático que possa começar ainda esta semana",
 ];
 
 const benefits = [
   {
     icon: <Wrench size={24} />,
-    title: "High-Demand Services",
-    text: "Learn the beginner-friendly computer services people already pay for: cleanups, speed fixes, SSD upgrades, setup help, and basic troubleshooting.",
+    title: "Serviços com alta demanda",
+    text: "Aprenda serviços simples de computador que as pessoas já pagam: limpeza, melhoria de velocidade, troca para SSD, configuração inicial e suporte básico.",
   },
   {
     icon: <DollarSign size={24} />,
-    title: "Simple Pricing Guide",
-    text: "Use practical pricing ranges so you can quote confidently, avoid undercharging, and know what to offer first.",
+    title: "Guia simples de preços",
+    text: "Use faixas de preço práticas para passar orçamento com confiança, evitar cobrar barato demais e saber o que oferecer primeiro.",
   },
   {
     icon: <Users size={24} />,
-    title: "First Client Playbook",
-    text: "Find local buyers through simple neighborhood channels without building a complicated brand first.",
+    title: "Plano para o primeiro cliente",
+    text: "Encontre compradores locais por canais simples da sua região, sem precisar criar uma marca complicada antes.",
   },
   {
     icon: <Home size={24} />,
-    title: "House Call Workflow",
-    text: "Understand how to handle local visits, basic service steps, and follow-up so customers feel taken care of.",
+    title: "Atendimento presencial",
+    text: "Entenda como lidar com visitas locais, etapas básicas do serviço e acompanhamento para deixar o cliente seguro.",
   },
   {
     icon: <TrendingUp size={24} />,
-    title: "Repeat Income System",
-    text: "Turn one-time fixes into referrals, repeat service, and a stronger monthly income path.",
+    title: "Sistema de recorrência",
+    text: "Transforme consertos pontuais em indicações, novos atendimentos e uma renda mensal mais previsível.",
   },
   {
     icon: <ShieldCheck size={24} />,
-    title: "Beginner Confidence",
-    text: "Use scripts, checklists, and clear next steps so you can start even if you are not a certified technician.",
+    title: "Confiança para iniciantes",
+    text: "Use scripts, checklists e próximos passos claros para começar mesmo sem ser um técnico certificado.",
   },
 ];
 
 const fitItems = [
-  "You want extra income without a big upfront investment",
-  "You are comfortable learning a practical tech skill",
-  "You want a simple path to your first paying client",
-  "You prefer local service work over another online gimmick",
-  "You want clear steps, scripts, and pricing guidance",
+  "Você quer renda extra sem um investimento inicial alto",
+  "Você topa aprender uma habilidade prática de tecnologia",
+  "Você quer um caminho simples até o primeiro cliente pagante",
+  "Você prefere prestar serviços locais em vez de depender de promessas online",
+  "Você quer passos claros, scripts e orientação de preços",
 ];
 
 export const Route = createFileRoute("/landingpage")({
   head: () => ({
     meta: [
-      { title: "Extra Income Fixing Computers" },
+      { title: "Renda Extra Consertando Computadores" },
       {
         name: "description",
-        content: "Learn how to turn beginner-friendly computer repair services into extra monthly income.",
+        content: "Aprenda como transformar serviços simples de manutenção de computadores em renda extra mensal.",
       },
     ],
   }),
@@ -75,7 +75,7 @@ function LandingPage() {
       <GuaranteeSection />
       <FinalOffer />
       <footer className="border-t border-white/10 bg-[#080808] px-5 py-8 text-center text-xs font-semibold text-[#8D98A7]">
-        Copyright 2025. All rights reserved.
+        Copyright 2025. Todos os direitos reservados.
       </footer>
     </main>
   );
@@ -88,30 +88,30 @@ function Hero() {
       <div className="mx-auto flex min-h-[92dvh] w-full max-w-5xl flex-col items-center justify-center py-16 text-center">
         <p className="inline-flex items-center gap-2 rounded-full border border-[#00E47C]/35 bg-[#00E47C]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#00E47C]">
           <CheckCircle2 size={15} />
-          Proven Method
+          Método comprovado
         </p>
 
         <h1 className="mt-8 max-w-5xl text-[clamp(3.2rem,10vw,7.2rem)] font-black uppercase leading-[0.9] text-white">
-          Make Money
-          <span className="block text-[#00E47C]">Fixing Computers</span>
+          Ganhe dinheiro
+          <span className="block text-[#00E47C]">Consertando computadores</span>
         </h1>
 
         <p className="mx-auto mt-7 max-w-2xl text-balance text-lg font-medium leading-8 text-[#D7DEE8] sm:text-xl">
-          A practical guide for turning simple computer repair services into $500-$1,500/month in extra income without expensive courses or advanced experience.
+          Um guia prático para transformar serviços simples de manutenção de computadores em R$500 a R$1.500 por mês de renda extra, sem cursos caros e sem experiência avançada.
         </p>
 
         <div className="mt-10 grid w-full max-w-3xl gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
           <div className="rounded-[8px] border border-white/12 bg-white/[0.07] p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,.32)]">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#9CA3AF]">Instant Access</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#9CA3AF]">Acesso Imediato</p>
             <div className="mt-3 flex items-end gap-3">
-              <p className="text-5xl font-black text-[#00E47C]">$37</p>
-              <p className="pb-2 text-sm font-bold text-[#AAB4C3]">one-time payment</p>
+              <p className="text-5xl font-black text-[#00E47C]">R$37</p>
+              <p className="pb-2 text-sm font-bold text-[#AAB4C3]">pagamento único</p>
             </div>
           </div>
-          <CtaButton label="Get Instant Access" />
+          <CtaButton label="Obter acesso imediato" />
         </div>
 
-        <p className="mt-5 text-sm font-semibold text-[#9CA3AF]">Secure payment | Instant access | 7-day guarantee</p>
+        <p className="mt-5 text-sm font-semibold text-[#9CA3AF]">Pagamento seguro | Acesso imediato | Garantia de 7 dias</p>
       </div>
     </section>
   );
@@ -121,10 +121,10 @@ function ProblemSection() {
   return (
     <SectionShell>
       <div className="mx-auto max-w-4xl">
-        <Eyebrow>The Problem</Eyebrow>
-        <SectionTitle>Does This Sound Like You?</SectionTitle>
+        <Eyebrow>O problema</Eyebrow>
+        <SectionTitle>Isso parece com você?</SectionTitle>
         <p className="mt-6 max-w-3xl text-lg font-medium leading-8 text-[#D7DEE8]">
-          Most people overcomplicate extra income. You do not need a huge audience, inventory, or a technical degree to start with basic computer services.
+          A maioria das pessoas complica demais a renda extra. Você não precisa de audiência, estoque ou diploma técnico para começar com serviços básicos de computador.
         </p>
         <div className="mt-9 grid gap-3">
           {problems.map((item) => (
@@ -143,10 +143,10 @@ function BenefitsSection() {
   return (
     <SectionShell tone="muted">
       <div className="mx-auto max-w-6xl">
-        <Eyebrow>What You Get</Eyebrow>
-        <SectionTitle>Everything You Need To Start</SectionTitle>
+        <Eyebrow>O que você recebe</Eyebrow>
+        <SectionTitle>Tudo que você precisa para começar</SectionTitle>
         <p className="mt-5 max-w-3xl text-lg font-medium leading-8 text-[#D7DEE8]">
-          A focused, practical roadmap built for someone who wants to start small, learn fast, and land paid work locally.
+          Um roteiro direto e prático para quem quer começar pequeno, aprender rápido e conseguir serviços pagos na própria região.
         </p>
         <div className="mt-11 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {benefits.map((item) => (
@@ -169,8 +169,8 @@ function FitSection() {
     <SectionShell>
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
         <div>
-          <Eyebrow>Who This Is For</Eyebrow>
-          <SectionTitle>This Guide Is For You If...</SectionTitle>
+          <Eyebrow>Para quem é</Eyebrow>
+          <SectionTitle>Este guia é para você se...</SectionTitle>
           <div className="mt-8 grid gap-4">
             {fitItems.map((item) => (
               <p className="flex items-start gap-3 text-base font-bold leading-7 text-[#EDF2F7]" key={item}>
@@ -181,10 +181,10 @@ function FitSection() {
           </div>
         </div>
         <div className="rounded-[8px] border border-[#00E47C]/30 bg-[#00E47C]/10 p-7 text-center shadow-[0_22px_60px_rgba(0,228,124,.08)]">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#00E47C]">Realistic Monthly Target</p>
-          <p className="mt-5 text-[clamp(3.4rem,11vw,6rem)] font-black uppercase leading-none text-[#00E47C]">$1,500</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#00E47C]">Meta mensal realista</p>
+          <p className="mt-5 text-[clamp(3.4rem,11vw,6rem)] font-black uppercase leading-none text-[#00E47C]">R$1.500</p>
           <p className="mx-auto mt-5 max-w-xl text-base font-semibold leading-7 text-[#D7DEE8]">
-            Possible with consistent effort, local demand, and repeat customers in your area.
+            Possível com consistência, demanda local e clientes recorrentes na sua região.
           </p>
         </div>
       </div>
@@ -199,10 +199,10 @@ function GuaranteeSection() {
         <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full border border-[#00E47C]/40 bg-[#00E47C]/10 text-[#00E47C]">
           <ShieldCheck size={40} />
         </div>
-        <Eyebrow centered>Guarantee</Eyebrow>
-        <SectionTitle centered>7-Day Money-Back Guarantee</SectionTitle>
+        <Eyebrow centered>Garantia</Eyebrow>
+        <SectionTitle centered>Garantia de 7 dias</SectionTitle>
         <p className="mx-auto mt-6 max-w-2xl text-lg font-medium leading-8 text-[#D7DEE8]">
-          If the guide is not useful for you, request a refund within 7 days. Simple, clear, and no complicated process.
+          Se o guia não for útil para você, solicite o reembolso em até 7 dias. Simples, claro e sem processo complicado.
         </p>
       </div>
     </SectionShell>
@@ -213,16 +213,16 @@ function FinalOffer() {
   return (
     <section className="bg-[#101512] px-5 py-18 text-center sm:py-24">
       <div className="mx-auto max-w-3xl rounded-[8px] border border-white/10 bg-white/[0.055] p-6 shadow-[0_30px_80px_rgba(0,0,0,.26)] sm:p-10">
-        <Eyebrow centered>Special Offer</Eyebrow>
-        <SectionTitle centered>Start Today</SectionTitle>
+        <Eyebrow centered>Oferta especial</Eyebrow>
+        <SectionTitle centered>Comece hoje</SectionTitle>
         <p className="mx-auto mt-5 max-w-2xl text-lg font-medium leading-8 text-[#D7DEE8]">
-          Get instant access to the full guide and start building your first local service offer today.
+          Tenha acesso imediato ao guia completo e comece hoje a montar sua primeira oferta de serviço local.
         </p>
         <p className="mt-8 text-5xl font-black text-[#00E47C]">
-          $37 <span className="text-base font-semibold text-[#9AA3AF]">one-time</span>
+          R$37 <span className="text-base font-semibold text-[#9AA3AF]">pagamento único</span>
         </p>
-        <CtaButton className="mx-auto mt-8" label="Claim My Access Now" />
-        <p className="mt-5 text-sm font-semibold text-[#9AA3AF]">Secure Payment | Instant Access | 7-Day Guarantee</p>
+        <CtaButton className="mx-auto mt-8" label="Garantir meu acesso agora" />
+        <p className="mt-5 text-sm font-semibold text-[#9AA3AF]">Pagamento Seguro | Acesso Imediato | Garantia de 7 dias</p>
       </div>
     </section>
   );

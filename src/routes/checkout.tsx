@@ -9,10 +9,10 @@ export const Route = createFileRoute("/checkout")({
   validateSearch: (search) => search as CheckoutSearch,
   head: () => ({
     meta: [
-      { title: "Secure Checkout | Task Partners" },
+      { title: "Checkout Seguro | Task Partners" },
       {
         name: "description",
-        content: "Complete your Task Partners order through our secure payment checkout.",
+        content: "Conclua seu pedido Task Partners pelo checkout de pagamento seguro.",
       },
       { name: "robots", content: "noindex, nofollow" },
     ],

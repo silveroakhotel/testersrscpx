@@ -1,12 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/thanks")({
   head: () => ({
     meta: [
-      { title: "Task Partners | Payment Confirmed" },
+      { title: "Task Partners | Pagamento Confirmado" },
       {
         name: "description",
-        content: "Your Task Partners payment has been confirmed. Access your dashboard and included resources.",
+        content: "Seu pagamento Task Partners foi confirmado. Acesse seu painel e os recursos incluídos.",
       },
       { name: "robots", content: "noindex, follow" },
     ],
@@ -203,17 +203,17 @@ function ThanksPage() {
             <div className="tp-check" aria-hidden="true">
               <CheckIcon size={34} />
             </div>
-            <h1 id="thanks-title" className="tp-title">Payment Confirmed</h1>
-            <p className="tp-subtitle">Welcome to Task Partners</p>
+            <h1 id="thanks-title" className="tp-title">Pagamento Confirmado</h1>
+            <p className="tp-subtitle">Bem-vindo ao Task Partners</p>
 
             <div className="tp-copy">
-              <p>Your payment has been successfully confirmed and your Task Partners account is now ready.</p>
-              <p>You can now sign in to your dashboard and access all available resources included with your account.</p>
+              <p>Seu pagamento foi confirmado com sucesso e sua conta Task Partners já está pronta.</p>
+              <p>Agora você pode acessar seu painel e todos os recursos disponíveis incluídos na sua conta.</p>
             </div>
 
             <div className="tp-button-row">
-              <a className="tp-primary" href="https://taskpartners.live/tasks-app" aria-label="Go to Task Partners dashboard">
-                Go to Dashboard
+              <a className="tp-primary" href="https://taskpartners.live/tasks-app" aria-label="Ir para o painel Task Partners">
+                Ir para o Painel
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -221,19 +221,19 @@ function ThanksPage() {
             </div>
 
             <section className="tp-support" aria-labelledby="support-title">
-              <h2 id="support-title">Need help?</h2>
-              <p>For account access, billing, refund requests, or technical support, contact our team.</p>
+              <h2 id="support-title">Precisa de ajuda?</h2>
+              <p>Para acesso à conta, cobrança, solicitações de reembolso ou suporte técnico, fale com nossa equipe.</p>
               <a className="tp-email" href="mailto:support@taskpartners.live">support@taskpartners.live</a>
             </section>
 
-            <p className="tp-note">The charge will be processed by Digistore24.com.</p>
+            <p className="tp-note">A cobrança será processada pela Digistore24.com.</p>
           </section>
 
           <footer className="tp-footer" aria-label="Footer links">
-            <a href="https://taskpartners.live/privacy">Privacy Policy</a>
-            <a href="https://taskpartners.live/terms">Terms of Service</a>
-            <a href="https://taskpartners.live/refund">Refund Policy</a>
-            <a href="https://taskpartners.live/contact">Contact</a>
+            <a href="https://taskpartners.live/privacy">Política de Privacidade</a>
+            <a href="https://taskpartners.live/terms">Termos de Serviço</a>
+            <a href="https://taskpartners.live/refund">Política de Reembolso</a>
+            <a href="https://taskpartners.live/contact">Contato</a>
           </footer>
         </div>
       </main>
