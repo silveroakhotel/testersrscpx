@@ -50,6 +50,7 @@ import { Route as E2CheckoutRouteImport } from './routes/e2.checkout'
 import { Route as E2BackRedirectRouteImport } from './routes/e2.back-redirect'
 import { Route as ApiPublicSupportChatRouteImport } from './routes/api/public/support-chat'
 import { Route as ApiPublicSendAccessEmailRouteImport } from './routes/api/public/send-access-email'
+import { Route as ApiPublicDigistoreIpnRouteImport } from './routes/api/public/digistore-ipn'
 import { Route as ApiPublicCreatePixPaymentRouteImport } from './routes/api/public/create-pix-payment'
 import { Route as ApiPublicCheckPixStatusRouteImport } from './routes/api/public/check-pix-status'
 
@@ -259,6 +260,11 @@ const ApiPublicSendAccessEmailRoute =
     path: '/api/public/send-access-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicDigistoreIpnRoute = ApiPublicDigistoreIpnRouteImport.update({
+  id: '/api/public/digistore-ipn',
+  path: '/api/public/digistore-ipn',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCreatePixPaymentRoute =
   ApiPublicCreatePixPaymentRouteImport.update({
     id: '/api/public/create-pix-payment',
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/e2/': typeof E2IndexRoute
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
+  '/api/public/digistore-ipn': typeof ApiPublicDigistoreIpnRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
   '/api/public/support-chat': typeof ApiPublicSupportChatRoute
 }
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
   '/e2': typeof E2IndexRoute
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
+  '/api/public/digistore-ipn': typeof ApiPublicDigistoreIpnRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
   '/api/public/support-chat': typeof ApiPublicSupportChatRoute
 }
@@ -404,6 +412,7 @@ export interface FileRoutesById {
   '/e2/': typeof E2IndexRoute
   '/api/public/check-pix-status': typeof ApiPublicCheckPixStatusRoute
   '/api/public/create-pix-payment': typeof ApiPublicCreatePixPaymentRoute
+  '/api/public/digistore-ipn': typeof ApiPublicDigistoreIpnRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
   '/api/public/support-chat': typeof ApiPublicSupportChatRoute
 }
@@ -451,6 +460,7 @@ export interface FileRouteTypes {
     | '/e2/'
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
+    | '/api/public/digistore-ipn'
     | '/api/public/send-access-email'
     | '/api/public/support-chat'
   fileRoutesByTo: FileRoutesByTo
@@ -496,6 +506,7 @@ export interface FileRouteTypes {
     | '/e2'
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
+    | '/api/public/digistore-ipn'
     | '/api/public/send-access-email'
     | '/api/public/support-chat'
   id:
@@ -541,6 +552,7 @@ export interface FileRouteTypes {
     | '/e2/'
     | '/api/public/check-pix-status'
     | '/api/public/create-pix-payment'
+    | '/api/public/digistore-ipn'
     | '/api/public/send-access-email'
     | '/api/public/support-chat'
   fileRoutesById: FileRoutesById
@@ -587,6 +599,7 @@ export interface RootRouteChildren {
   E2IndexRoute: typeof E2IndexRoute
   ApiPublicCheckPixStatusRoute: typeof ApiPublicCheckPixStatusRoute
   ApiPublicCreatePixPaymentRoute: typeof ApiPublicCreatePixPaymentRoute
+  ApiPublicDigistoreIpnRoute: typeof ApiPublicDigistoreIpnRoute
   ApiPublicSendAccessEmailRoute: typeof ApiPublicSendAccessEmailRoute
   ApiPublicSupportChatRoute: typeof ApiPublicSupportChatRoute
 }
@@ -880,6 +893,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSendAccessEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/digistore-ipn': {
+      id: '/api/public/digistore-ipn'
+      path: '/api/public/digistore-ipn'
+      fullPath: '/api/public/digistore-ipn'
+      preLoaderRoute: typeof ApiPublicDigistoreIpnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/create-pix-payment': {
       id: '/api/public/create-pix-payment'
       path: '/api/public/create-pix-payment'
@@ -939,6 +959,7 @@ const rootRouteChildren: RootRouteChildren = {
   E2IndexRoute: E2IndexRoute,
   ApiPublicCheckPixStatusRoute: ApiPublicCheckPixStatusRoute,
   ApiPublicCreatePixPaymentRoute: ApiPublicCreatePixPaymentRoute,
+  ApiPublicDigistoreIpnRoute: ApiPublicDigistoreIpnRoute,
   ApiPublicSendAccessEmailRoute: ApiPublicSendAccessEmailRoute,
   ApiPublicSupportChatRoute: ApiPublicSupportChatRoute,
 }
