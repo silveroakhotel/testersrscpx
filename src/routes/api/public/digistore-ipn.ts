@@ -60,6 +60,17 @@ export const Route = createFileRoute("/api/public/digistore-ipn")({
           return new Response("OK");
         }
 
+        // Server-side TikTok conversion (Events API 2.0)
+        await trackTikTokPurchase({
+          amount,
+          currency,
+          email,
+          orderId,
+          params,
+          productName,
+        });
+
+
         if (!resendKey) {
           console.error("[Digistore IPN] RESEND_API_KEY missing");
           return new Response("OK"); // never make Digistore retry forever
