@@ -112,6 +112,114 @@ export const Route = createFileRoute("/api/public/digistore-ipn")({
   },
 });
 
+async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Fires a CompletePayment conversion to the TikTok Events API (server-side). */
+async function trackTikTokPurchase({
+  amount,
+  currency,
+  email,
+  orderId,
+  params,
+  productName,
+}: {
+  amount: string;
+  currency: string;
+  email: string;
+  orderId: string;
+  params: Record<string, string>;
+  productName: string;
+}) {
+  const accessToken = process.env["TIKTOK_ACCESS_TOKEN"];
+  const pixelId = process.env["TIKTOK_PIXEL_ID"] ?? "D9LL0KBC77UFHPI0J730";
+  if (!accessToken) {
+    console.error("[Digistore IPN] TIKTOK_ACCESS_TOKEN missing - conversion not sent");
+    return;
+  }
+
+  // Digistore forwards click ids through the custom/tracking fields when set.
+  const trackingBlob = [
+    params["ttclid"],
+    params["custom"],
+    params["cam"],
+    params["campaignkey"],
+    params["tracking"],
+    params["affiliate_tracking"],
+  ]
+    .filter(Boolean)
+    .join("&");
+  const ttclid =
+    params["ttclid"] || (trackingBlob.match(/ttclid[=:]([^&|;,\s]+)/i)?.[1] ?? "");
+  const ttp = params["ttp"] || (trackingBlob.match(/ttp[=:]([^&|;,\s]+)/i)?.[1] ?? "");
+
+  const rawPhone = (params["address_phone_no"] ?? params["phone_no"] ?? params["phone"] ?? "").replace(
+    /[^\d+]/g,
+    "",
+  );
+
+  const user: Record<string, string> = {};
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) user["email"] = await sha256Hex(email);
+  if (rawPhone.length >= 8) {
+    user["phone"] = await sha256Hex(rawPhone.startsWith("+") ? rawPhone : `+1${rawPhone}`);
+  }
+  if (ttclid) user["ttclid"] = ttclid;
+  if (ttp) user["ttp"] = ttp;
+  if (params["ip"]) user["ip"] = params["ip"];
+
+  if (Object.keys(user).length === 0) {
+    console.error("[Digistore IPN] no TikTok identifiers available");
+    return;
+  }
+
+  const value = Number.parseFloat(String(amount).replace(",", ".")) || 0;
+
+  const payload = {
+    event_source: "web",
+    event_source_id: pixelId,
+    data: [
+      {
+        event: "CompletePayment",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: orderId || `ds-${Date.now()}`,
+        user,
+        properties: {
+          currency: currency || "USD",
+          value,
+          contents: [
+            {
+              content_id: params["product_id"] ?? "digistore-product",
+              content_type: "product",
+              content_name: productName,
+              price: value,
+              quantity: 1,
+            },
+          ],
+        },
+        page: { url: "https://taskpartners.live/thanks" },
+      },
+    ],
+  };
+
+  try {
+    const res = await fetch("https://business-api.tiktok.com/open_api/v1.3/event/track/", {
+      method: "POST",
+      headers: { "Access-Token": accessToken, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await res.json().catch(() => ({}) as { code?: number; message?: string });
+    if (!res.ok || (body as { code?: number }).code !== 0) {
+      console.error("[Digistore IPN] TikTok Events API failed", res.status, JSON.stringify(body));
+    }
+  } catch (error) {
+    console.error("[Digistore IPN] TikTok Events API error", error);
+  }
+}
+
 function flatten(input: unknown): Record<string, string> {
   if (!input || typeof input !== "object") return {};
   const out: Record<string, string> = {};
