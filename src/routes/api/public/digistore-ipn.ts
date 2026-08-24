@@ -176,7 +176,19 @@ async function trackTikTokPurchase({
     return;
   }
 
+  console.log(
+    "[Digistore IPN] TikTok identifiers",
+    JSON.stringify({
+      hasEmail: Boolean(user["email"]),
+      hasPhone: Boolean(user["phone"]),
+      hasTtclid: Boolean(ttclid),
+      hasTtp: Boolean(ttp),
+      orderId,
+    }),
+  );
+
   const value = Number.parseFloat(String(amount).replace(",", ".")) || 0;
+
 
   const payload = {
     event_source: "web",
