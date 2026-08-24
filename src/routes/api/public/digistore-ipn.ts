@@ -142,7 +142,7 @@ async function trackTikTokPurchase({
   productName: string;
 }) {
   const accessToken = process.env["TIKTOK_ACCESS_TOKEN"];
-  const pixelId = process.env["TIKTOK_PIXEL_ID"] ?? "D9LL0KBC77UFHPI0J730";
+  const pixelId = process.env["TIKTOK_PIXEL_ID"] ?? "D92LJQBC77U8UQ773LM0";
   if (!accessToken) {
     console.error("[Digistore IPN] TIKTOK_ACCESS_TOKEN missing - conversion not sent");
     return;
