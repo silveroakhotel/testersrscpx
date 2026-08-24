@@ -5,6 +5,11 @@
   var CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY";
 
   function checkoutUrlWithParams() {
+    try {
+      if (typeof window.forwardParamsToCheckout === "function") {
+        return window.forwardParamsToCheckout(CHECKOUT_URL);
+      }
+    } catch (error) {}
     var target = new URL(CHECKOUT_URL);
     new URLSearchParams(window.location.search).forEach(function (value, key) {
       if (value && !target.searchParams.has(key)) target.searchParams.set(key, value);

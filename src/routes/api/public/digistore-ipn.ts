@@ -50,7 +50,13 @@ export const Route = createFileRoute("/api/public/digistore-ipn")({
         const amount = params["amount"] ?? params["order_amount"] ?? "";
         const currency = params["currency"] ?? "USD";
 
+        console.log(
+          "[Digistore IPN] received",
+          JSON.stringify({ event, orderId, amount, currency, keys: Object.keys(params) }),
+        );
+
         // Only approved payments trigger the access email.
+
         const approved = event === "on_payment" || event === "connection_test" || event === "";
         if (!approved) {
           return new Response("OK");
@@ -176,7 +182,19 @@ async function trackTikTokPurchase({
     return;
   }
 
+  console.log(
+    "[Digistore IPN] TikTok identifiers",
+    JSON.stringify({
+      hasEmail: Boolean(user["email"]),
+      hasPhone: Boolean(user["phone"]),
+      hasTtclid: Boolean(ttclid),
+      hasTtp: Boolean(ttp),
+      orderId,
+    }),
+  );
+
   const value = Number.parseFloat(String(amount).replace(",", ".")) || 0;
+
 
   const payload = {
     event_source: "web",
@@ -214,7 +232,10 @@ async function trackTikTokPurchase({
     const body = await res.json().catch(() => ({}) as { code?: number; message?: string });
     if (!res.ok || (body as { code?: number }).code !== 0) {
       console.error("[Digistore IPN] TikTok Events API failed", res.status, JSON.stringify(body));
+    } else {
+      console.log("[Digistore IPN] TikTok CompletePayment sent", orderId, value, currency);
     }
+
   } catch (error) {
     console.error("[Digistore IPN] TikTok Events API error", error);
   }

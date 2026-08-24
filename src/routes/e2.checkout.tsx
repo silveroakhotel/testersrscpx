@@ -31,7 +31,14 @@ function CheckoutPage() {
         if (value) target.searchParams.append(key, value);
       });
     });
-    window.location.replace(target.toString());
+
+    // Pack TikTok click ids into `custom` so Digistore echoes them back in the IPN.
+    const forward = (window as unknown as {
+      forwardParamsToCheckout?: (url: string) => string;
+    }).forwardParamsToCheckout;
+    const finalUrl = typeof forward === "function" ? forward(target.toString()) : target.toString();
+
+    window.location.replace(finalUrl);
   }, [search]);
 
   return <main className="fixed inset-0 bg-white" />;
