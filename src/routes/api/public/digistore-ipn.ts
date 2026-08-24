@@ -50,7 +50,13 @@ export const Route = createFileRoute("/api/public/digistore-ipn")({
         const amount = params["amount"] ?? params["order_amount"] ?? "";
         const currency = params["currency"] ?? "USD";
 
+        console.log(
+          "[Digistore IPN] received",
+          JSON.stringify({ event, orderId, amount, currency, keys: Object.keys(params) }),
+        );
+
         // Only approved payments trigger the access email.
+
         const approved = event === "on_payment" || event === "connection_test" || event === "";
         if (!approved) {
           return new Response("OK");
