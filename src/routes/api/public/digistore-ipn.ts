@@ -226,7 +226,10 @@ async function trackTikTokPurchase({
     const body = await res.json().catch(() => ({}) as { code?: number; message?: string });
     if (!res.ok || (body as { code?: number }).code !== 0) {
       console.error("[Digistore IPN] TikTok Events API failed", res.status, JSON.stringify(body));
+    } else {
+      console.log("[Digistore IPN] TikTok CompletePayment sent", orderId, value, currency);
     }
+
   } catch (error) {
     console.error("[Digistore IPN] TikTok Events API error", error);
   }
