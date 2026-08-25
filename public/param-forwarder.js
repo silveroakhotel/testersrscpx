@@ -170,9 +170,11 @@
   }
 
   function appendParamsToInternalUrl(rawUrl) {
+    syncTikTokIdsIntoStore();
     var params = currentParams();
     var saved = storedParams();
-    if (!rawUrl || (!params.toString() && !saved.toString())) return rawUrl;
+    var ids = tikTokIds();
+    if (!rawUrl || (!params.toString() && !saved.toString() && !ids.ttclid && !ids.ttp)) return rawUrl;
 
     try {
       var url = new URL(rawUrl, window.location.href);
@@ -183,11 +185,13 @@
       saved.forEach(function (value, key) {
         if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
       });
+      ensureTikTokIds(url);
       return url.pathname + url.search + url.hash;
     } catch (error) {
       return rawUrl;
     }
   }
+
 
   // If the current page lost the params (hard redirect, refresh), restore them
   // into the address bar so every downstream step keeps them.
