@@ -50,12 +50,30 @@
     return readCookie(key);
   }
 
+  // Persist the full landing query string so params survive even if a page is
+  // reached without them (hard redirects, external returns, refreshes).
+  var TRACKED_PREFIXES = /^(utm_|sck|src|xcod|ttclid|ttp|fbclid|gclid|aff|cam|campaign|click_id|sub[0-9]?|ref)/i;
+
+  (function persistLandingParams() {
+    var stored = new URLSearchParams(load("__lp_qs") || "");
+    currentParams().forEach(function (value, key) {
+      if (value && TRACKED_PREFIXES.test(key)) stored.set(key, value);
+    });
+    var qs = stored.toString();
+    if (qs) store("__lp_qs", qs);
+  })();
+
+  function storedParams() {
+    return new URLSearchParams(load("__lp_qs") || "");
+  }
+
   // Persist TikTok click identifiers so they survive the whole funnel.
   (function persistTikTokIds() {
     var params = currentParams();
     store("__ttclid", params.get("ttclid") || readCookie("ttclid") || load("__ttclid"));
     store("__ttp", params.get("ttp") || readCookie("_ttp") || load("__ttp"));
   })();
+
 
   // The pixel may only drop the _ttp cookie after it loads, so re-check for a while.
   (function watchTtp() {
