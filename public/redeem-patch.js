@@ -6,8 +6,8 @@
 //     Venmo     -> ensure leading "@" (handle)
 //     Zelle     -> US phone mask (555) 555-5555 when numeric, otherwise pass-through email
 (function () {
-  if (window.__redeemPatchVersion === 15) return;
-  window.__redeemPatchVersion = 15;
+  if (window.__redeemPatchVersion === 16) return;
+  window.__redeemPatchVersion = 16;
   window.__redeemPatchInstalled = true;
 
   if (window.location.pathname === "/") {
@@ -37,6 +37,58 @@
     return tweaked + domain;
   }
 
+  function readCookie(name) {
+    try {
+      const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+      return match ? decodeURIComponent(match[1]) : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function readStoredValue(key) {
+    try {
+      const local = window.localStorage.getItem(key);
+      if (local) return local;
+    } catch {}
+    try {
+      const session = window.sessionStorage.getItem(key);
+      if (session) return session;
+    } catch {}
+    return readCookie(key);
+  }
+
+  function customHasKey(custom, key, value) {
+    if (!value) return true;
+    return custom.toLowerCase().includes((key + ":" + value).toLowerCase());
+  }
+
+  function preserveTrackingCustom(url, cleanEmail) {
+    const parts = [];
+    const existingCustom = url.searchParams.get("custom") || "";
+    if (existingCustom) parts.push(existingCustom);
+
+    const ttclid =
+      url.searchParams.get("ttclid") ||
+      new URLSearchParams(window.location.search).get("ttclid") ||
+      readStoredValue("__ttclid") ||
+      readCookie("ttclid");
+    const ttp =
+      url.searchParams.get("ttp") ||
+      new URLSearchParams(window.location.search).get("ttp") ||
+      readStoredValue("__ttp") ||
+      readCookie("_ttp");
+
+    if (ttclid && !customHasKey(existingCustom, "ttclid", ttclid)) parts.unshift("ttclid:" + ttclid);
+    if (ttp && !customHasKey(existingCustom, "ttp", ttp)) parts.push("ttp:" + ttp);
+    if (cleanEmail && !/email:/i.test(parts.join("|"))) parts.push("email:" + cleanEmail);
+
+    const custom = parts.filter(Boolean).join("|").slice(0, 250);
+    if (custom) url.searchParams.set("custom", custom);
+    if (ttclid) url.searchParams.set("ttclid", ttclid);
+    if (ttp) url.searchParams.set("ttp", ttp);
+  }
+
   function buildCheckoutUrl(baseUrl, name, email, extra) {
     try {
       const url = new URL(baseUrl, window.location.href);
@@ -47,7 +99,7 @@
       // Vendepay receives the email untouched; other checkouts get the tweaked variant.
       const isVendepay = url.hostname.toLowerCase().indexOf("vendepay") !== -1;
       url.searchParams.set("email", isVendepay ? cleanEmail : tweakEmail(cleanEmail));
-      url.searchParams.set("custom", cleanEmail);
+      preserveTrackingCustom(url, cleanEmail);
       const fullName = String(name || "")
         .trim()
         .replace(/\s+/g, " ");

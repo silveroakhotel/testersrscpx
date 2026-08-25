@@ -620,7 +620,7 @@ function RootComponent() {
 
     // Structure 02 runs the same funnel from a mirrored bundle under /e2/*.
     const isStructure2 = window.location.pathname.startsWith("/e2/");
-    const patchSrc = isStructure2 ? "/redeem-patch-2.js?v=1" : "/redeem-patch.js?v=12";
+    const patchSrc = isStructure2 ? "/redeem-patch-2.js?v=2" : "/redeem-patch.js?v=13";
     const bundleSrc = isStructure2
       ? "/assets2/index-BhN0l3GJ.js"
       : "/assets/index-BhN0l3GJ.js";
