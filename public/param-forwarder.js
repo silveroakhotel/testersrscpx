@@ -50,12 +50,30 @@
     return readCookie(key);
   }
 
+  // Persist the full landing query string so params survive even if a page is
+  // reached without them (hard redirects, external returns, refreshes).
+  var TRACKED_PREFIXES = /^(utm_|sck|src|xcod|ttclid|ttp|fbclid|gclid|aff|cam|campaign|click_id|sub[0-9]?|ref)/i;
+
+  (function persistLandingParams() {
+    var stored = new URLSearchParams(load("__lp_qs") || "");
+    currentParams().forEach(function (value, key) {
+      if (value && TRACKED_PREFIXES.test(key)) stored.set(key, value);
+    });
+    var qs = stored.toString();
+    if (qs) store("__lp_qs", qs);
+  })();
+
+  function storedParams() {
+    return new URLSearchParams(load("__lp_qs") || "");
+  }
+
   // Persist TikTok click identifiers so they survive the whole funnel.
   (function persistTikTokIds() {
     var params = currentParams();
     store("__ttclid", params.get("ttclid") || readCookie("ttclid") || load("__ttclid"));
     store("__ttp", params.get("ttp") || readCookie("_ttp") || load("__ttp"));
   })();
+
 
   // The pixel may only drop the _ttp cookie after it loads, so re-check for a while.
   (function watchTtp() {
@@ -103,6 +121,10 @@
       currentParams().forEach(function (value, key) {
         if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
       });
+      // Fallback: params captured on the landing page, kept for the whole funnel.
+      storedParams().forEach(function (value, key) {
+        if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
+      });
       if (CHECKOUT_HOSTS.has(url.hostname)) addTikTokTracking(url);
       return url.toString();
     } catch (error) {
@@ -126,7 +148,8 @@
 
   function appendParamsToInternalUrl(rawUrl) {
     var params = currentParams();
-    if (!rawUrl || !params.toString()) return rawUrl;
+    var saved = storedParams();
+    if (!rawUrl || (!params.toString() && !saved.toString())) return rawUrl;
 
     try {
       var url = new URL(rawUrl, window.location.href);
@@ -134,11 +157,28 @@
       params.forEach(function (value, key) {
         if (!url.searchParams.has(key)) url.searchParams.set(key, value);
       });
+      saved.forEach(function (value, key) {
+        if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
+      });
       return url.pathname + url.search + url.hash;
     } catch (error) {
       return rawUrl;
     }
   }
+
+  // If the current page lost the params (hard redirect, refresh), restore them
+  // into the address bar so every downstream step keeps them.
+  (function restoreParamsInAddressBar() {
+    try {
+      var restored = appendParamsToInternalUrl(
+        window.location.pathname + window.location.search + window.location.hash,
+      );
+      if (restored && restored !== window.location.pathname + window.location.search + window.location.hash) {
+        history.replaceState(history.state, "", restored);
+      }
+    } catch (error) {}
+  })();
+
 
   function patchHistoryMethod(methodName) {
     var original = history[methodName];
