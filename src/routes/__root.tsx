@@ -323,6 +323,7 @@ document.head.appendChild(utmifyTikTokPixel);`,
           }}
         />
         <script src="/param-forwarder.js" />
+        <script src="/tt-attrib.js" />
         <script
           dangerouslySetInnerHTML={{
             __html: `!function (w, d, t) {

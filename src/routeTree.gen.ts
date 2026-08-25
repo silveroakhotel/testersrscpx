@@ -53,6 +53,7 @@ import { Route as ApiPublicSendAccessEmailRouteImport } from './routes/api/publi
 import { Route as ApiPublicDigistoreIpnRouteImport } from './routes/api/public/digistore-ipn'
 import { Route as ApiPublicCreatePixPaymentRouteImport } from './routes/api/public/create-pix-payment'
 import { Route as ApiPublicCheckPixStatusRouteImport } from './routes/api/public/check-pix-status'
+import { Route as ApiPublicWebhooksDigistore24RouteImport } from './routes/api/public/webhooks/digistore24'
 
 const Upsell5Route = Upsell5RouteImport.update({
   id: '/upsell-5',
@@ -276,6 +277,12 @@ const ApiPublicCheckPixStatusRoute = ApiPublicCheckPixStatusRouteImport.update({
   path: '/api/public/check-pix-status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksDigistore24Route =
+  ApiPublicWebhooksDigistore24RouteImport.update({
+    id: '/api/public/webhooks/digistore24',
+    path: '/api/public/webhooks/digistore24',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/api/public/digistore-ipn': typeof ApiPublicDigistoreIpnRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
   '/api/public/support-chat': typeof ApiPublicSupportChatRoute
+  '/api/public/webhooks/digistore24': typeof ApiPublicWebhooksDigistore24Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -368,6 +376,7 @@ export interface FileRoutesByTo {
   '/api/public/digistore-ipn': typeof ApiPublicDigistoreIpnRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
   '/api/public/support-chat': typeof ApiPublicSupportChatRoute
+  '/api/public/webhooks/digistore24': typeof ApiPublicWebhooksDigistore24Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -415,6 +424,7 @@ export interface FileRoutesById {
   '/api/public/digistore-ipn': typeof ApiPublicDigistoreIpnRoute
   '/api/public/send-access-email': typeof ApiPublicSendAccessEmailRoute
   '/api/public/support-chat': typeof ApiPublicSupportChatRoute
+  '/api/public/webhooks/digistore24': typeof ApiPublicWebhooksDigistore24Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -463,6 +473,7 @@ export interface FileRouteTypes {
     | '/api/public/digistore-ipn'
     | '/api/public/send-access-email'
     | '/api/public/support-chat'
+    | '/api/public/webhooks/digistore24'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -509,6 +520,7 @@ export interface FileRouteTypes {
     | '/api/public/digistore-ipn'
     | '/api/public/send-access-email'
     | '/api/public/support-chat'
+    | '/api/public/webhooks/digistore24'
   id:
     | '__root__'
     | '/'
@@ -555,6 +567,7 @@ export interface FileRouteTypes {
     | '/api/public/digistore-ipn'
     | '/api/public/send-access-email'
     | '/api/public/support-chat'
+    | '/api/public/webhooks/digistore24'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -602,6 +615,7 @@ export interface RootRouteChildren {
   ApiPublicDigistoreIpnRoute: typeof ApiPublicDigistoreIpnRoute
   ApiPublicSendAccessEmailRoute: typeof ApiPublicSendAccessEmailRoute
   ApiPublicSupportChatRoute: typeof ApiPublicSupportChatRoute
+  ApiPublicWebhooksDigistore24Route: typeof ApiPublicWebhooksDigistore24Route
 }
 
 declare module '@tanstack/react-router' {
@@ -914,6 +928,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCheckPixStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/digistore24': {
+      id: '/api/public/webhooks/digistore24'
+      path: '/api/public/webhooks/digistore24'
+      fullPath: '/api/public/webhooks/digistore24'
+      preLoaderRoute: typeof ApiPublicWebhooksDigistore24RouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -962,6 +983,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDigistoreIpnRoute: ApiPublicDigistoreIpnRoute,
   ApiPublicSendAccessEmailRoute: ApiPublicSendAccessEmailRoute,
   ApiPublicSupportChatRoute: ApiPublicSupportChatRoute,
+  ApiPublicWebhooksDigistore24Route: ApiPublicWebhooksDigistore24Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
