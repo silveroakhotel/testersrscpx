@@ -17,34 +17,66 @@
     }
   }
 
-  function store(key, value) {
+  function writeCookie(name, value) {
+    if (!value) return;
     try {
-      if (value) window.localStorage.setItem(key, value);
+      var host = window.location.hostname.replace(/^www\./, "");
+      document.cookie =
+        name + "=" + encodeURIComponent(value) + ";path=/;max-age=31536000;SameSite=Lax;domain=." + host;
+      document.cookie = name + "=" + encodeURIComponent(value) + ";path=/;max-age=31536000;SameSite=Lax";
     } catch (error) {}
+  }
+
+  function store(key, value) {
+    if (!value) return;
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (error) {}
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch (error) {}
+    writeCookie(key, value);
   }
 
   function load(key) {
     try {
-      return window.localStorage.getItem(key) || "";
-    } catch (error) {
-      return "";
-    }
+      var v = window.localStorage.getItem(key);
+      if (v) return v;
+    } catch (error) {}
+    try {
+      var s = window.sessionStorage.getItem(key);
+      if (s) return s;
+    } catch (error) {}
+    return readCookie(key);
   }
 
   // Persist TikTok click identifiers so they survive the whole funnel.
   (function persistTikTokIds() {
     var params = currentParams();
-    store("__ttclid", params.get("ttclid") || "");
-    store("__ttp", params.get("ttp") || readCookie("_ttp"));
+    store("__ttclid", params.get("ttclid") || readCookie("ttclid") || load("__ttclid"));
+    store("__ttp", params.get("ttp") || readCookie("_ttp") || load("__ttp"));
+  })();
+
+  // The pixel may only drop the _ttp cookie after it loads, so re-check for a while.
+  (function watchTtp() {
+    var tries = 0;
+    var timer = window.setInterval(function () {
+      var ttp = readCookie("_ttp");
+      if (ttp) store("__ttp", ttp);
+      var ttclid = readCookie("ttclid");
+      if (ttclid) store("__ttclid", ttclid);
+      if (++tries > 20 || (ttp && load("__ttclid"))) window.clearInterval(timer);
+    }, 500);
   })();
 
   function tikTokIds() {
     var params = currentParams();
     return {
-      ttclid: params.get("ttclid") || load("__ttclid"),
-      ttp: params.get("ttp") || readCookie("_ttp") || load("__ttp"),
+      ttclid: params.get("ttclid") || load("__ttclid") || readCookie("ttclid"),
+      ttp: params.get("ttp") || load("__ttp") || readCookie("_ttp"),
     };
   }
+
 
   /**
    * Digistore24 only returns its own tracking fields in the IPN, so we pack the
