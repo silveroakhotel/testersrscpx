@@ -29,6 +29,15 @@ export const Route = createFileRoute("/api/public/digistore-ipn")({
           return new Response("invalid_body", { status: 400 });
         }
 
+        const event = (params["event"] ?? "").toLowerCase();
+
+        // Digistore's connection test may omit sha_sign. It does not contain a
+        // purchase and must not trigger conversion tracking or email delivery.
+        if (event === "connection_test") {
+          console.log("[Digistore IPN] connection test received");
+          return new Response("OK");
+        }
+
         // Signature check (Digistore24 SHA512 sha_sign)
         if (passphrase) {
           const provided = (params["sha_sign"] ?? "").toUpperCase();
@@ -39,7 +48,6 @@ export const Route = createFileRoute("/api/public/digistore-ipn")({
           }
         }
 
-        const event = (params["event"] ?? "").toLowerCase();
         const orderId = params["order_id"] ?? params["transaction_id"] ?? "";
         const email = (params["email"] ?? params["buyer_email"] ?? "").trim().toLowerCase();
         const firstName =
@@ -57,12 +65,8 @@ export const Route = createFileRoute("/api/public/digistore-ipn")({
 
         // Only approved payments trigger the access email.
 
-        const approved = event === "on_payment" || event === "connection_test" || event === "";
+        const approved = event === "on_payment" || event === "";
         if (!approved) {
-          return new Response("OK");
-        }
-
-        if (event === "connection_test") {
           return new Response("OK");
         }
 
