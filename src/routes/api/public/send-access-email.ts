@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 type EmailTemplate =
   | "progress_complete"
+  | "purchase_access"
   | "withdrawal_requested"
   | "withdrawal_verification"
   | "withdrawal_compliance"
