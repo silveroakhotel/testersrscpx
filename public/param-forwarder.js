@@ -83,9 +83,11 @@
       if (ttp) store("__ttp", ttp);
       var ttclid = readCookie("ttclid");
       if (ttclid) store("__ttclid", ttclid);
-      if (++tries > 20 || (ttp && load("__ttclid"))) window.clearInterval(timer);
+      if (typeof syncTikTokIdsIntoStore === "function") syncTikTokIdsIntoStore();
+      if (++tries > 40 || (ttp && load("__ttclid"))) window.clearInterval(timer);
     }, 500);
   })();
+
 
   function tikTokIds() {
     var params = currentParams();
