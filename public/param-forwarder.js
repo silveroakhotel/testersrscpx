@@ -83,18 +83,41 @@
       if (ttp) store("__ttp", ttp);
       var ttclid = readCookie("ttclid");
       if (ttclid) store("__ttclid", ttclid);
-      if (++tries > 20 || (ttp && load("__ttclid"))) window.clearInterval(timer);
+      if (typeof syncTikTokIdsIntoStore === "function") syncTikTokIdsIntoStore();
+      if (++tries > 40 || (ttp && load("__ttclid"))) window.clearInterval(timer);
     }, 500);
   })();
 
+
   function tikTokIds() {
     var params = currentParams();
+    var saved = storedParams();
     return {
-      ttclid: params.get("ttclid") || load("__ttclid") || readCookie("ttclid"),
-      ttp: params.get("ttp") || load("__ttp") || readCookie("_ttp"),
+      ttclid: params.get("ttclid") || saved.get("ttclid") || load("__ttclid") || readCookie("ttclid"),
+      ttp: params.get("ttp") || saved.get("ttp") || load("__ttp") || readCookie("_ttp"),
     };
   }
 
+  // Keep the click ids inside the persisted landing query string as well, so
+  // every internal navigation and the final checkout link carry them.
+  function syncTikTokIdsIntoStore() {
+    var ids = tikTokIds();
+    if (!ids.ttclid && !ids.ttp) return;
+    var stored = new URLSearchParams(load("__lp_qs") || "");
+    if (ids.ttclid) stored.set("ttclid", ids.ttclid);
+    if (ids.ttp) stored.set("ttp", ids.ttp);
+    store("__lp_qs", stored.toString());
+    if (ids.ttclid) store("__ttclid", ids.ttclid);
+    if (ids.ttp) store("__ttp", ids.ttp);
+  }
+
+  syncTikTokIdsIntoStore();
+
+  function ensureTikTokIds(url) {
+    var ids = tikTokIds();
+    if (ids.ttclid && !url.searchParams.get("ttclid")) url.searchParams.set("ttclid", ids.ttclid);
+    if (ids.ttp && !url.searchParams.get("ttp")) url.searchParams.set("ttp", ids.ttp);
+  }
 
   /**
    * Digistore24 only returns its own tracking fields in the IPN, so we pack the
@@ -108,15 +131,15 @@
     if (ids.ttclid) parts.push("ttclid:" + ids.ttclid);
     if (ids.ttp) parts.push("ttp:" + ids.ttp);
     var custom = parts.join("|").slice(0, 250);
-    url.searchParams.set("custom", custom);
-    if (ids.ttclid) url.searchParams.set("ttclid", ids.ttclid);
-    if (ids.ttp) url.searchParams.set("ttp", ids.ttp);
+    if (!url.searchParams.get("custom")) url.searchParams.set("custom", custom);
+    ensureTikTokIds(url);
   }
 
   function appendCurrentParams(rawUrl) {
     if (!rawUrl) return rawUrl;
 
     try {
+      syncTikTokIdsIntoStore();
       var url = new URL(rawUrl, window.location.href);
       currentParams().forEach(function (value, key) {
         if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
@@ -125,12 +148,14 @@
       storedParams().forEach(function (value, key) {
         if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
       });
+      ensureTikTokIds(url);
       if (CHECKOUT_HOSTS.has(url.hostname)) addTikTokTracking(url);
       return url.toString();
     } catch (error) {
       return rawUrl;
     }
   }
+
 
 
   function shouldDecorate(url) {
@@ -147,9 +172,11 @@
   }
 
   function appendParamsToInternalUrl(rawUrl) {
+    syncTikTokIdsIntoStore();
     var params = currentParams();
     var saved = storedParams();
-    if (!rawUrl || (!params.toString() && !saved.toString())) return rawUrl;
+    var ids = tikTokIds();
+    if (!rawUrl || (!params.toString() && !saved.toString() && !ids.ttclid && !ids.ttp)) return rawUrl;
 
     try {
       var url = new URL(rawUrl, window.location.href);
@@ -160,11 +187,13 @@
       saved.forEach(function (value, key) {
         if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
       });
+      ensureTikTokIds(url);
       return url.pathname + url.search + url.hash;
     } catch (error) {
       return rawUrl;
     }
   }
+
 
   // If the current page lost the params (hard redirect, refresh), restore them
   // into the address bar so every downstream step keeps them.
