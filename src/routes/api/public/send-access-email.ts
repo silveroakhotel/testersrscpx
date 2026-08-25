@@ -13,7 +13,9 @@ type AccessEmailBody = {
   balance?: number;
   count?: number;
   email?: string;
+  first_name?: string;
   name?: string;
+  order_id?: string;
   reference?: string;
   scheduledAt?: string;
   template?: EmailTemplate;
@@ -39,7 +41,7 @@ export const Route = createFileRoute("/api/public/send-access-email")({
         }
 
         const email = (body.email ?? "").trim().toLowerCase();
-        const firstName = (body.name ?? "").trim().split(/\s+/)[0] || "there";
+        const firstName = ((body.first_name ?? body.name) ?? "").trim().split(/\s+/)[0] || "there";
         const scheduledAt = body.scheduledAt ? new Date(body.scheduledAt) : null;
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -53,7 +55,7 @@ export const Route = createFileRoute("/api/public/send-access-email")({
           balance: Number(body.balance ?? 0),
           count: Number(body.count ?? 0),
           firstName,
-          reference: body.reference ?? "",
+          reference: (body.reference ?? body.order_id) ?? "",
           template: body.template,
         });
         if (!template) {
@@ -72,7 +74,9 @@ export const Route = createFileRoute("/api/public/send-access-email")({
           headers: {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
-            ...(body.reference && body.template ? { "Idempotency-Key": `${body.reference}-${body.template}` } : {}),
+            ...((body.reference ?? body.order_id) && body.template
+              ? { "Idempotency-Key": `${body.reference ?? body.order_id}-${body.template}` }
+              : {}),
           },
         });
 
@@ -98,6 +102,20 @@ function buildEmailTemplate(props: {
   const firstName = escapeHtml(props.firstName);
   const balance = usd(props.balance || 0);
   const reference = escapeHtml(props.reference || "Pending");
+
+  if (props.template === "purchase_access") {
+    return {
+      subject: "Your access is ready \u2014 open your dashboard",
+      html: emailShell({
+        body: `
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Hi ${firstName},</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Your payment was approved and your account is unlocked. You can open your dashboard and continue your payout review right away.</p>
+          <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Order reference: ${reference}</p>
+        `,
+        title: "Your access is ready",
+      }),
+    };
+  }
 
   if (props.template === "progress_complete") {
     return {
