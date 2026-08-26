@@ -9,10 +9,19 @@ export const Route = createFileRoute("/thanks")({
         content: "Your Task Partners payment has been confirmed. Access your dashboard and included resources.",
       },
       { name: "robots", content: "noindex, follow" },
+      { property: "og:title", content: "Task Partners | Payment Confirmed" },
+      {
+        property: "og:description",
+        content: "Your Task Partners payment has been confirmed. Access your dashboard now.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
+    scripts: [{ src: "/tt-purchase.js", defer: true }],
   }),
   component: ThanksPage,
 });
+
 
 const css = `
 .tp-thanks {
