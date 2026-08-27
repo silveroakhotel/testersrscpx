@@ -199,59 +199,47 @@ async function trackTikTokPurchase({
 
   const value = Number.parseFloat(String(amount).replace(",", ".")) || 0;
 
-  // Send to every configured pixel (site loads a new + a legacy pixel).
-  const pixelIds = Array.from(
-    new Set(
-      (process.env["TIKTOK_PIXEL_IDS"] ?? `${pixelId},D9LL0KBC77UFHPI0J730`)
-        .split(",")
-        .map((id) => id.trim())
-        .filter(Boolean),
-    ),
-  );
-
-  for (const targetPixel of pixelIds) {
-    const payload = {
-      event_source: "web",
-      event_source_id: targetPixel,
-      data: [
-        {
-          event: "CompletePayment",
-          event_time: Math.floor(Date.now() / 1000),
-          event_id: orderId || `ds-${Date.now()}`,
-          user,
-          properties: {
-            currency: currency || "USD",
-            value,
-            contents: [
-              {
-                content_id: params["product_id"] ?? "digistore-product",
-                content_type: "product",
-                content_name: productName,
-                price: value,
-                quantity: 1,
-              },
-            ],
-          },
-          page: { url: "https://taskpartners.live/thanks" },
+  const payload = {
+    event_source: "web",
+    event_source_id: pixelId,
+    data: [
+      {
+        event: "CompletePayment",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: orderId || `ds-${Date.now()}`,
+        user,
+        properties: {
+          currency: currency || "USD",
+          value,
+          contents: [
+            {
+              content_id: params["product_id"] ?? "digistore-product",
+              content_type: "product",
+              content_name: productName,
+              price: value,
+              quantity: 1,
+            },
+          ],
         },
-      ],
-    };
+        page: { url: "https://taskpartners.live/thanks" },
+      },
+    ],
+  };
 
-    try {
-      const res = await fetch("https://business-api.tiktok.com/open_api/v1.3/event/track/", {
-        method: "POST",
-        headers: { "Access-Token": accessToken, "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const body = await res.json().catch(() => ({}) as { code?: number; message?: string });
-      if (!res.ok || (body as { code?: number }).code !== 0) {
-        console.error("[Digistore IPN] TikTok Events API failed", targetPixel, res.status, JSON.stringify(body));
-      } else {
-        console.log("[Digistore IPN] TikTok CompletePayment sent", targetPixel, orderId, value, currency);
-      }
-    } catch (error) {
-      console.error("[Digistore IPN] TikTok Events API error", targetPixel, error);
+  try {
+    const res = await fetch("https://business-api.tiktok.com/open_api/v1.3/event/track/", {
+      method: "POST",
+      headers: { "Access-Token": accessToken, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const body = await res.json().catch(() => ({}) as { code?: number; message?: string });
+    if (!res.ok || (body as { code?: number }).code !== 0) {
+      console.error("[Digistore IPN] TikTok Events API failed", pixelId, res.status, JSON.stringify(body));
+    } else {
+      console.log("[Digistore IPN] TikTok CompletePayment sent", pixelId, orderId, value, currency);
     }
+  } catch (error) {
+    console.error("[Digistore IPN] TikTok Events API error", pixelId, error);
   }
 }
 
