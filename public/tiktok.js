@@ -3,8 +3,7 @@
   if (w.self !== w.top || w.__tiktokPixelLoaded) return;
   w.__tiktokPixelLoaded = true;
 
-  var NEW_PIXEL_ID = "D9LL0KBC77UFHPI0J730";
-  var LEGACY_PIXEL_ID = "D92LJQBC77U8UQ773LM0";
+  var PIXEL_ID = "D92LJQBC77U8UQ773LM0";
 
   w.TiktokAnalyticsObject = t;
   var ttq = (w[t] = w[t] || []);
@@ -61,8 +60,7 @@
     firstScript.parentNode.insertBefore(script, firstScript);
   };
 
-  ttq.load(NEW_PIXEL_ID);
-  ttq.load(LEGACY_PIXEL_ID);
+  ttq.load(PIXEL_ID);
 
   // /up1 immediately redirects to its standalone document, which fires the real PageView.
   if (w.location.pathname !== "/up1") ttq.page();
