@@ -10,7 +10,6 @@
   window.__redeemPatchVersion = 16;
   window.__redeemPatchInstalled = true;
 
-
   // ============ Checkout confirmation modal ============
   const CHECKOUT_HOST_RE = /checkout-ds24\.com\/product\/716458/i;
   // Vendepay template asks for phone; Digistore template asks for ZIP code.
@@ -72,7 +71,8 @@
       readStoredValue("__ttp") ||
       readCookie("_ttp");
 
-    if (ttclid && !customHasKey(existingCustom, "ttclid", ttclid)) parts.unshift("ttclid:" + ttclid);
+    if (ttclid && !customHasKey(existingCustom, "ttclid", ttclid))
+      parts.unshift("ttclid:" + ttclid);
     if (ttp && !customHasKey(existingCustom, "ttp", ttp)) parts.push("ttp:" + ttp);
     if (cleanEmail && !/email:/i.test(parts.join("|"))) parts.push("email:" + cleanEmail);
 
@@ -127,7 +127,6 @@
     }
   }
 
-
   function openConfirmModal(targetUrl) {
     if (document.getElementById("__confirmReleaseModal")) return;
     const overlay = document.createElement("div");
@@ -142,7 +141,6 @@
       '<div style="display:flex;justify-content:center;margin-bottom:16px;">' +
       '<div style="background:#fff;border-radius:999px;padding:8px 18px;font-size:11px;font-weight:800;letter-spacing:1.5px;color:#111;">CONFIRMATION</div>' +
       "</div>" +
-
       '<h2 style="margin:0 0 8px;font-size:18px;font-weight:800;color:#111;text-align:center;line-height:1.3;">Confirm your details</h2>' +
       '<p style="margin:0 0 18px;font-size:13px;color:#6b6b6b;text-align:center;line-height:1.4;">Verify your info below to release your reward.</p>' +
       '<div style="background:#fff;border-radius:14px;padding:18px 16px;">' +
@@ -218,7 +216,6 @@
       setTimeout(function () {
         window.location.href = navigateTo;
       }, 200);
-
     }
 
     btn.addEventListener("click", submit);
@@ -229,7 +226,8 @@
     });
   }
 
-  const CHECKOUT_URL = "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY";
+  const CHECKOUT_URL =
+    "https://www.checkout-ds24.com/product/716458?aff=hutlike26804&cam=CAMPAIGNKEY";
 
   function resolveCheckoutUrl() {
     try {
