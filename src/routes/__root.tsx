@@ -188,11 +188,6 @@ const earlyRootRedirectScript = String.raw`
   }
 
   if (window.location.pathname === "/" || window.location.pathname === "") {
-    if (window.location.search.length === 0) {
-      window.location.replace("/landingpage");
-      return;
-    }
-
     let verified = false;
     try {
       verified = window.localStorage.getItem("captcha_verified") === "true";
