@@ -193,7 +193,14 @@ const earlyRootRedirectScript = String.raw`
       return;
     }
 
-    window.location.replace("/inicio" + window.location.search + window.location.hash);
+    let verified = false;
+    try {
+      verified = window.localStorage.getItem("captcha_verified") === "true";
+    } catch (e) {}
+
+    if (verified) {
+      window.location.replace("/inicio" + window.location.search + window.location.hash);
+    }
   }
 })();
 `;
