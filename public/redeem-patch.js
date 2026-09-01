@@ -10,13 +10,6 @@
   window.__redeemPatchVersion = 16;
   window.__redeemPatchInstalled = true;
 
-  if (window.location.pathname === "/") {
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `/inicio${window.location.search}${window.location.hash}`,
-    );
-  }
 
   // ============ Checkout confirmation modal ============
   const CHECKOUT_HOST_RE = /checkout-ds24\.com\/product\/716458/i;

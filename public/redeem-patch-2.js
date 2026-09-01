@@ -10,13 +10,6 @@
   window.__redeemPatchVersion = 16;
   window.__redeemPatchInstalled = true;
 
-  if (window.location.pathname === "/e2" || window.location.pathname === "/e2/") {
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `/e2/inicio${window.location.search}${window.location.hash}`,
-    );
-  }
 
   // ============ Checkout confirmation modal ============
   const CHECKOUT_HOST_RE = /checkout-ds24\.com/i;
